@@ -2,6 +2,10 @@ import * as THREE from 'three';
 import { Engine } from './Engine';
 import { physics } from './physicsConfig.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { inject } from '@vercel/analytics';
+
+// Initialize Vercel Web Analytics
+inject();
 
 /**
  * Application runtime bootstrap.
