@@ -645,8 +645,7 @@ export function WebGLHeroBanner() {
             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-black/40 dark:text-white/40">Directional Air Lab v2.0</span>
           </div>
           <div
-            className="flex justify-center items-center mt-0 mb-8 w-full px-4 pointer-events-auto cursor-pointer"
-            onClick={() => window.dispatchEvent(new CustomEvent('trigger-easter-egg'))}
+            className="flex justify-center items-center mt-0 mb-8 w-full px-4 pointer-events-auto "
           >
             <Image
               src={darkMode ? "/icons/logo-white.png" : "/icons/logo-black.png"}
