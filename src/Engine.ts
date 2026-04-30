@@ -1,6 +1,5 @@
 import { Map as GameMap } from './Map';
 import { Car } from './Car/Car';
-import { createUI } from './ui';
 import { Controller } from './Controller';
 import { BallManager } from './Ball/BallManager';
 
@@ -175,18 +174,18 @@ export class Engine extends THREE.Group {
   private _stateEmitAccumulator: number = 0;
   private _carUpDir: THREE.Vector3 = new THREE.Vector3();
 
-   /**
-   * @param renderer Active renderer instance used by UI wiring.
-   * @param options Initialization options, including scenario config.
-   * @param scene The active THREE.Scene.
-   */
+  /**
+  * @param renderer Active renderer instance used by UI wiring.
+  * @param options Initialization options, including scenario config.
+  * @param scene The active THREE.Scene.
+  */
   constructor(renderer: THREE.WebGLRenderer, options: any = {}, private _scene?: THREE.Scene) {
     super();
 
     this._modeStateListeners = new Set();
     this.currentClosestBall = null;
     this._darkMode = options.darkMode || false;
-    
+
     if (this._scene) {
       this._scene.background = new THREE.Color(this._darkMode ? 0x000000 : 0xfafafa);
     }
@@ -459,7 +458,7 @@ export class Engine extends THREE.Group {
     this._darkMode = isDark;
     this.sky?.setDarkMode(isDark);
     this.map?.setDarkMode(isDark);
-    
+
     if (this._keyLight) this._keyLight.intensity = isDark ? 0.6 : 2.0;
     if (this._fillLight) this._fillLight.intensity = isDark ? 0.8 : 3.5;
     if (this._rimLight) this._rimLight.intensity = isDark ? 0.5 : 2.5;
