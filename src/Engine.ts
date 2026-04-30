@@ -1,6 +1,6 @@
 import { Map as GameMap } from './Map';
 import { Car } from './Car/Car';
-import { createUI } from './Ui';
+import { createUI } from './ui';
 import { Controller } from './Controller';
 import { BallManager } from './Ball/BallManager';
 
