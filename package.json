@@ -1,6 +1,9 @@
 {
   "name": "airdribble",
   "version": "1.0.0",
+  "workspaces": [
+    "apps/*"
+  ],
   "description": "",
   "main": "index.js",
   "scripts": {
