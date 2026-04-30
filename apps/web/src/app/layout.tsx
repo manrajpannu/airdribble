@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import AppShell from "@/components/app-shell";
 import "./globals.css";
 
@@ -23,6 +24,7 @@ export default function RootLayout({
     <html lang="en" className={`h-full antialiased ${poppins.variable}`}>
       <body className="min-h-full bg-background text-foreground font-poppins">
         <AppShell>{children}</AppShell>
+        <SpeedInsights />
       </body>
     </html>
   );
