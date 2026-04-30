@@ -27,12 +27,6 @@ export type GunState = {
 export class Gun extends THREE.Group {
   private hostScene: THREE.Object3D;
   private owner: GunOwner;
-  private _shootSounds: HTMLAudioElement[];
-  private _hitSounds: HTMLAudioElement[];
-  private _reloadSounds: HTMLAudioElement[];
-  private _shootSoundIndex: number;
-  private _hitSoundIndex: number;
-  private _reloadSoundIndex: number;
   private _shootAccumulator: number;
   private _defaultShootRate: number;
   private _enabled: boolean;

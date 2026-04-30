@@ -198,6 +198,13 @@ export class BallManager extends THREE.Group {
         if (typeof ball.respawn === 'function') ball.respawn();
     }
 
+    /**
+     * @param {THREE.Ray} forwardVector
+     * @param {boolean} boostHeld
+     * @param {number} dt
+     * @param {THREE.Vector3|null} upDir
+     * @param {any} options
+     */
     update(forwardVector, boostHeld, dt, upDir = null, options = {}) {
         const bulletsEnabled = Boolean(options?.bulletsEnabled);
         const carPosition = options?.carPosition ?? null;

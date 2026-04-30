@@ -22,7 +22,7 @@ const MAX_STEPS_PER_FRAME = 8;
  * Returns lifecycle handles so host apps (Next.js/React) can dispose cleanly.
  *
  * @param {HTMLElement} container
- * @param {{ onModeStateChange?: (state: any) => void, challengeConfig?: any }} [options]
+ * @param {{ modeName?: string, darkMode?: boolean, onModeStateChange?: (state: any) => void, challengeConfig?: any }} [options]
  */
 export function initRlDartApp(container, options = {}) {
   if (!container) {
