@@ -1,8 +1,8 @@
-# rl-dart (Rocket-League: Directional-Air-Roll-Trainer)
+# Airdribble
 
-A Rocket League air roll trainer and visualization tool. This project helps players practice and visualize air roll mechanics, featuring a customizable car model, ball, and camera system.
+A Rocket League aim training platform. This project helps players practice and visualize mechanics, featuring a customizable car model, ball, and camera system.
 
-[Live demo](https://manrajpannu.github.io/rl-dart/)
+[Live demo](https://manrajpannu.github.io/airdribble/)
 
 https://github.com/user-attachments/assets/6278cd9b-d782-4125-8ba6-1a806838323a
 
@@ -125,8 +125,8 @@ Read the full discussion and feedback [here](https://www.reddit.com/r/RocketLeag
 ### Installation
 1. Clone the repository:
    ```sh
-   git clone https://github.com/manrajpannu/rl-dart.git
-   cd rl-dart
+   git clone https://github.com/manrajpannu/airdribble.git
+   cd airdribble
    ```
 2. Install dependencies:
    ```sh
@@ -142,7 +142,7 @@ Open your browser to [http://localhost:3000](http://localhost:3000) (or the port
 
 ## Project Structure
 ```
-rl-dart/
+airdribble/
 ├── index.html
 ├── styles.css
 ├── src/
