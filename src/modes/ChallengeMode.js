@@ -1,7 +1,5 @@
 import FreeplayMode from './Freeplay.js';
 
-const LAST_BEST_SCORE = 2000;
-const BAR_MAX_SCORE = LAST_BEST_SCORE;
 const CURSOR_AHEAD_COLOR = '#ff0000';
 const CURSOR_BEHIND_COLOR = '#d3d3d3';
 
@@ -102,6 +100,7 @@ class ChallengeMode extends FreeplayMode {
         pointsPerKill = 50,
         pointsPerHit = 10,
         pointsPerMiss = 0,
+        id = null,
         ...freeplayOptions
     } = {}) {
         super({
@@ -113,6 +112,8 @@ class ChallengeMode extends FreeplayMode {
         });
         this.timeElapsed = timeLimit;
         this.timeLimit = timeLimit;
+        this.scenarioId = id;
+        this.bestScore = 0;
         this._paused = false;
         this._completed = false;
         this.completed = false;
@@ -194,6 +195,12 @@ class ChallengeMode extends FreeplayMode {
         this.completed = false;
         this._cursorProgress = 0;
         this._lastHudTime = null;
+        
+        if (this.scenarioId && typeof window !== 'undefined') {
+            const raw = window.localStorage.getItem(`airdribble-best-score:${this.scenarioId}`);
+            this.bestScore = raw ? Number(raw) : 0;
+        }
+
         this._bindPauseHotkey();
         if (this._car && typeof this._car.setNeutralState === 'function') {
             this._car.setNeutralState();
@@ -245,6 +252,7 @@ class ChallengeMode extends FreeplayMode {
             kills: query('[data-challenge="kills"]'),
             time: query('[data-challenge="time"]'),
             percent: query('[data-challenge="percent"]'),
+            barWrapper: query('.challenge-hud__bar'),
             barFill: query('[data-challenge="bar-fill"]'),
             barCursor: query('[data-challenge="bar-cursor"]'),
         };
@@ -266,13 +274,13 @@ class ChallengeMode extends FreeplayMode {
         const fields = this._challengeHudFields;
         const shots = Math.max(0, Number(this._shots ?? 0));
         const percentValue = shots > 0 ? (this.hits / shots) * 100 : 0;
-        const bestScore = LAST_BEST_SCORE;
+        const bestScore = this.bestScore > 0 ? this.bestScore : null;
         const timeLimit = Math.max(1, Number(this.timeLimit || 0));
         const elapsedSeconds = Math.max(0, timeLimit - Math.max(0, this.timeElapsed));
-        const barMax = Math.max(1, BAR_MAX_SCORE, bestScore);
-        const fillRatio = Math.min(1, Math.max(0, this.score / barMax));
-        const cursorScore = (bestScore / timeLimit) * elapsedSeconds;
-        const cursorRatio = Math.min(1, Math.max(0, cursorScore / barMax));
+        const barMax = Math.max(1, bestScore || 1);
+        const fillRatio = bestScore ? Math.min(1, Math.max(0, this.score / barMax)) : 0;
+        const cursorScore = bestScore ? (bestScore / timeLimit) * elapsedSeconds : 0;
+        const cursorRatio = bestScore ? Math.min(1, Math.max(0, cursorScore / barMax)) : 0;
         const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
         const deltaSeconds = this._lastHudTime ? Math.max(0, (now - this._lastHudTime) / 1000) : 0;
         this._lastHudTime = now;
@@ -282,18 +290,25 @@ class ChallengeMode extends FreeplayMode {
         if (fields.kills) fields.kills.textContent = `Kills ${this.kills}`;
         if (fields.time) fields.time.textContent = this._formatTimeRemaining(this.timeElapsed);
         if (fields.percent) fields.percent.textContent = `${percentValue.toFixed(0)}%`;
-        if (fields.barFill) {
-            fields.barFill.style.width = `${(fillRatio * 100).toFixed(2)}%`;
+        
+        if (fields.barWrapper) {
+            fields.barWrapper.style.display = bestScore ? '' : 'none';
         }
-        if (fields.barCursor) {
-            fields.barCursor.style.left = `${(this._cursorProgress * 100).toFixed(2)}%`;
-            const cursorAheadOfCurrent = this._cursorProgress > (fillRatio + 0.002);
-            if (cursorAheadOfCurrent) {
-                fields.barCursor.classList.add('cursor-rainbow');
-                fields.barCursor.style.backgroundColor = '';
-            } else {
-                fields.barCursor.classList.remove('cursor-rainbow');
-                fields.barCursor.style.backgroundColor = CURSOR_BEHIND_COLOR;
+        
+        if (bestScore) {
+            if (fields.barFill) {
+                fields.barFill.style.width = `${(fillRatio * 100).toFixed(2)}%`;
+            }
+            if (fields.barCursor) {
+                fields.barCursor.style.left = `${(this._cursorProgress * 100).toFixed(2)}%`;
+                const cursorAheadOfCurrent = this._cursorProgress > (fillRatio + 0.002);
+                if (cursorAheadOfCurrent) {
+                    fields.barCursor.classList.add('cursor-rainbow');
+                    fields.barCursor.style.backgroundColor = '';
+                } else {
+                    fields.barCursor.classList.remove('cursor-rainbow');
+                    fields.barCursor.style.backgroundColor = CURSOR_BEHIND_COLOR;
+                }
             }
         }
     }

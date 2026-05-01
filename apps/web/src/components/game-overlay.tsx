@@ -67,10 +67,12 @@ export default function GameOverlay({
           </Badge>
           <h1 className="text-4xl font-black tracking-tighter text-white uppercase">{scenarioTitle}</h1>
           <p className="text-white/60 font-medium max-w-md line-clamp-2">{scenarioDescription}</p>
-          <div className="flex items-center gap-4 mt-1 border-t border-white/5">
-            <div className="text-sm font-bold uppercase tracking-[0.2em] text-white/60">Personal Best</div>
-            <div className="text-xl font-mono font-bold text-white tracking-widest">{bestScore}</div>
-          </div>
+          {bestScore > 0 && (
+            <div className="flex items-center gap-4 mt-1 border-t border-white/5">
+              <div className="text-sm font-bold uppercase tracking-[0.2em] text-white/60">Personal Best</div>
+              <div className="text-xl font-mono font-bold text-white tracking-widest">{bestScore}</div>
+            </div>
+          )}
         </div>
 
         {/* Center: Main Menu */}

@@ -243,12 +243,17 @@ export default function GamePage() {
     router.push("/");
   };
 
+  const combinedChallengeConfig = useMemo(
+    () => ({ ...challengeConfig, id: scenarioId }),
+    [challengeConfig, scenarioId]
+  );
+
   return (
     <section className="fixed inset-0 overflow-hidden bg-background">
       <GameClient
         fullscreen
         onModeStateChange={onModeStateChange}
-        challengeConfig={scenarioId === "freeplay" ? freeplayConfig : challengeConfig}
+        challengeConfig={scenarioId === "freeplay" ? freeplayConfig : combinedChallengeConfig}
         darkMode={darkMode}
         modeName={scenarioId === "freeplay" ? "Freeplay" : "Challenge"}
       />
