@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronUp, Info, MessageCircle, Play, Users, Moon, Sun } from "lucide-react";
+import { ChevronUp, Info, MessageCircle, Play, Users, Moon, Sun, GitBranch } from "lucide-react";
 
 import {
   Sidebar,
@@ -112,6 +112,21 @@ export function AppSidebar() {
               {darkMode ? <Sun className="size-4 shrink-0" /> : <Moon className="size-4 shrink-0" />}
               <span>{darkMode ? "Light Mode" : "Dark Mode"}</span>
             </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              render={
+                <a 
+                  href="https://github.com/manrajpannu/airdribble" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="flex items-center gap-2 w-full"
+                >
+                  <GitBranch className="size-4 shrink-0" />
+                  <span>GitHub</span>
+                </a>
+              }
+            />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
