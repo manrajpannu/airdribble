@@ -1,4 +1,4 @@
-# Airdribble
+# airdribble
 
 A Rocket League aim training platform. This project helps players practice and visualize mechanics, featuring a customizable car model, ball, and camera system.
 

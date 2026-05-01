@@ -451,8 +451,8 @@ export function WebGLHeroBanner() {
           easterEggActive = false;
         }
       } else {
-        // Randomly trigger the easter egg (approx every ~45-90 seconds)
-        if (Math.random() < 0.00025) {
+        // Randomly trigger the easter egg (approx every 300 seconds)
+        if (Math.random() < 0.00005) {
           handleEasterEgg();
         }
       }

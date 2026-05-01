@@ -13,6 +13,27 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "airdribble",
   description: "Rocket League Directional Air Roll Trainer",
+  openGraph: {
+    title: "airdribble",
+    description: "Rocket League Directional Air Roll Trainer",
+    siteName: "airdribble",
+    images: [
+      {
+        url: "/icons/icon_square_lg.png",
+        width: 512,
+        height: 512,
+        alt: "airdribble Logo",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "airdribble",
+    description: "Rocket League Directional Air Roll Trainer",
+    images: ["/icons/icon_square_lg.png"],
+  },
 };
 
 export default function RootLayout({
