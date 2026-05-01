@@ -24,6 +24,7 @@ export default function GamePage() {
   const [bestScore, setBestScore] = useState(0);
   const [countdownValue, setCountdownValue] = useState<number | null>(null);
   const [isTutorial, setIsTutorial] = useState(false);
+  const [showTutorialComplete, setShowTutorialComplete] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [freeplayConfig, setFreeplayConfig] = useState({
     numBalls: 1,
@@ -130,15 +131,21 @@ export default function GamePage() {
 
       if (!bootPauseAppliedRef.current) {
         bootPauseAppliedRef.current = true;
-        setIsPaused(true);
-        dispatchEscapeToGame();
-        startCountdown(() => {
-          dispatchEscapeToGame();
+        
+        if (scenarioId === "tutorial") {
+          // No countdown for tutorial
           setIsPaused(false);
-        });
+        } else {
+          setIsPaused(true);
+          dispatchEscapeToGame();
+          startCountdown(() => {
+            dispatchEscapeToGame();
+            setIsPaused(false);
+          });
+        }
       }
     },
-    [bestScoreKey, dispatchEscapeToGame, startCountdown]
+    [bestScoreKey, dispatchEscapeToGame, startCountdown, scenarioId]
   );
 
   useEffect(() => {
@@ -184,7 +191,10 @@ export default function GamePage() {
 
   useEffect(() => {
     const onTutorialComplete = () => {
-      router.push("/");
+      setShowTutorialComplete(true);
+      setTimeout(() => {
+        router.push("/");
+      }, 2000);
     };
     window.addEventListener("tutorial-complete", onTutorialComplete);
     return () => window.removeEventListener("tutorial-complete", onTutorialComplete);
@@ -255,24 +265,45 @@ export default function GamePage() {
         onModeStateChange={onModeStateChange}
         challengeConfig={scenarioId === "freeplay" ? freeplayConfig : combinedChallengeConfig}
         darkMode={darkMode}
-        modeName={scenarioId === "freeplay" ? "Freeplay" : "Challenge"}
+        modeName={scenarioId === "tutorial" ? "Tutorial" : scenarioId === "freeplay" ? "Freeplay" : "Challenge"}
       />
 
       {scenarioId === "freeplay" && (
         <FreeplayMenu config={freeplayConfig} onChange={setFreeplayConfig} />
       )}
 
-      <GameOverlay
-        isPaused={isPaused}
-        countdownValue={countdownValue}
-        scenarioTitle={scenarioTitle}
-        scenarioDescription={scenarioDescription}
-        bestScore={bestScore}
-        onResume={resumeGame}
-        onRestart={restartGame}
-        onOpenSettings={openSettings}
-        onExit={exitGame}
-      />
+      {scenarioId === "tutorial" && !showTutorialComplete && (
+        <div className="absolute bottom-12 right-12 z-[20000]">
+          <button 
+            className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold uppercase tracking-wider rounded-xl backdrop-blur-md transition-all active:scale-95"
+            onClick={() => router.push("/")}
+          >
+            Skip Tutorial
+          </button>
+        </div>
+      )}
+
+      {showTutorialComplete && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-[30000] backdrop-blur-sm animate-in fade-in duration-500">
+          <h1 className="text-4xl md:text-6xl font-black text-white uppercase tracking-widest animate-in zoom-in-150 duration-700 ease-out fill-mode-forwards">
+            Tutorial Complete
+          </h1>
+        </div>
+      )}
+
+      {scenarioId !== "tutorial" && (
+        <GameOverlay
+          isPaused={isPaused}
+          countdownValue={countdownValue}
+          scenarioTitle={scenarioTitle}
+          scenarioDescription={scenarioDescription}
+          bestScore={bestScore}
+          onResume={resumeGame}
+          onRestart={restartGame}
+          onOpenSettings={openSettings}
+          onExit={exitGame}
+        />
+      )}
 
       {/* <div className="pointer-events-none absolute left-5 top-5 z-20 border-2 border-border bg-card px-3 py-2 text-xs uppercase tracking-[0.2em] text-foreground shadow-[var(--shadow-xs)]">
         {scenarioId.replace(/-/g, " ")}

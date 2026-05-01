@@ -160,7 +160,7 @@ export class BallManager extends THREE.Group {
      * @param {Object} healthObj
      * @param {Object} reticleObj
      */
-    createBall(position, size, movementClass, healthObj, reticleObj = null, appearanceObj = null) {
+    createBall(position, size, movementClass, healthObj = undefined, reticleObj = undefined, appearanceObj = undefined) {
         // Resolve movement class if it's a string name
         let actualMovementClass = movementClass;
         if (typeof movementClass === 'string') {

@@ -47,7 +47,14 @@ export class Ball extends THREE.Group {
     * @param {{ onHoverEffect?: 'shimmer' | 'glitter' | 'stroke' | 'outerGlow' | 'none' } | null} appearance
      * Optional appearance config.
      */
-    constructor(position = new THREE.Vector3(0, 3, -3), radius = 0.9125, movement = null, health = null, reticle = null, appearance = null) {
+    constructor(
+        position = new THREE.Vector3(0, 3, -3),
+        radius = 0.9125,
+        movement = {},
+        health = { maxHealth: 1, health: 1, damageAmount: 1, dps: 1, holdSliderEnabled: false, sliderDrainRate: 0, holdDurationSeconds: 0, killEffect: 'confetti' },
+        reticle = { type: 'cross', enabled: true, color: '#ff2222', effect: 'none' },
+        appearance = { onHoverEffect: 'none', isStriped: false }
+    ) {
         super();
 
         this.modelUrl = withAssetBase('models/ball/scene.gltf');

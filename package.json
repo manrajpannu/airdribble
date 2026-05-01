@@ -28,6 +28,7 @@
     "@paper-design/shaders-react": "^0.0.76",
     "dat.gui": "^0.7.9",
     "stats.js": "^0.17.0",
-    "three": "^0.183.2"
+    "three": "^0.183.2",
+    "troika-three-text": "^0.52.4"
   }
 }

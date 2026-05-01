@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircleDot, Crosshair, Layers, Zap, Loader2, MoreVertical } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -30,6 +30,16 @@ export default function PlayScenarios() {
   const router = useRouter();
   const [loadingScenario, setLoadingScenario] = useState<Scenario | null>(null);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const hasCompleted = window.localStorage.getItem("airdribble-tutorial-completed");
+      if (!hasCompleted) {
+        window.localStorage.setItem("airdribble-tutorial-completed", "true");
+        router.push("/game/tutorial");
+      }
+    }
+  }, [router]);
+
   const subtitle = useMemo(
     () => "Choose a scenario to launch full-screen training.",
     []
@@ -41,6 +51,8 @@ export default function PlayScenarios() {
       router.push(`/game/${scenario.id}`);
     }, 850);
   };
+
+  const filteredScenarios = SCENARIOS.filter(s => s.id !== "tutorial");
 
   return (
     <>
@@ -55,7 +67,7 @@ export default function PlayScenarios() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {SCENARIOS.map((scenario) => (
+          {filteredScenarios.map((scenario) => (
             <Card
               key={scenario.id}
               className="group cursor-pointer overflow-hidden hover:border-primary transition-colors relative"

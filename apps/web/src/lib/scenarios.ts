@@ -38,6 +38,15 @@ export type Scenario = {
 
 export const SCENARIOS: Scenario[] = [
   {
+    id: "tutorial",
+    title: "Tutorial",
+    description: "Learn the basics of moving, air rolling, and shooting.",
+    tags: ["basics", "tutorial"],
+    thumbnail: "from-zinc-500/20 to-zinc-500/5",
+    icon: "tracking",
+    config: {},
+  },
+  {
     id: "one-shot",
     title: "One Shot",
     description: "Make accurate and powerful shots to score goals.",

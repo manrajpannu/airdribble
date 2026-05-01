@@ -6,6 +6,7 @@ import { BallManager } from './Ball/BallManager';
 import * as THREE from 'three';
 import ChallengeMode from './modes/ChallengeMode';
 import FreeplayMode from './modes/Freeplay';
+import TutorialMode from './modes/TutorialMode';
 import { Ball } from './Ball/Ball';
 import { FlowMovement } from './Ball/Movement/FlowMovement';
 import { ToonSky } from './environment/ToonSky';
@@ -279,6 +280,8 @@ export class Engine extends THREE.Group {
 
     if (modeName === 'Freeplay') {
       this.currentMode = new FreeplayMode(challengeConfig);
+    } else if (modeName === 'Tutorial') {
+      this.currentMode = new TutorialMode(challengeConfig);
     } else {
       this.currentMode = new ChallengeMode(challengeConfig);
     }
@@ -422,6 +425,11 @@ export class Engine extends THREE.Group {
         killEffect: 'shockwave',
         ...options,
       }));
+      return;
+    }
+
+    if (modeName === 'Tutorial') {
+      this.setMode(new TutorialMode(options));
       return;
     }
 
