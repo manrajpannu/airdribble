@@ -1,0 +1,341 @@
+definitions:
+  database.Challenge:
+    properties:
+      active:
+        type: boolean
+      config_json:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      difficulty:
+        type: integer
+      duration_ms:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+      seed_type:
+        type: string
+      updated_at:
+        type: string
+    required:
+    - config_json
+    - difficulty
+    - duration_ms
+    - name
+    - seed_type
+    type: object
+  database.GuestUser:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      ip_address:
+        type: string
+      location:
+        type: string
+      rank_id:
+        type: integer
+      token:
+        type: string
+      username:
+        type: string
+    required:
+    - username
+    type: object
+  database.Rank:
+    properties:
+      division:
+        $ref: '#/definitions/sql.NullInt64'
+      id:
+        type: integer
+      name:
+        type: string
+      tier_number:
+        $ref: '#/definitions/sql.NullInt64'
+    required:
+    - name
+    type: object
+  database.Score:
+    properties:
+      challenge_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      score:
+        type: integer
+      session_token:
+        type: string
+      user_token:
+        type: string
+    required:
+    - score
+    type: object
+  gin.H:
+    additionalProperties: {}
+    type: object
+  sql.NullInt64:
+    properties:
+      int64:
+        format: int64
+        type: integer
+      valid:
+        description: Valid is true if Int64 is not NULL
+        type: boolean
+    type: object
+info:
+  contact: {}
+  description: This is the API documentation for the RL-Dart application.
+  title: RL-Dart API
+  version: "1.0"
+paths:
+  /api/v1/challenge:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific challenge using its ID
+      parameters:
+      - description: Challenge ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      summary: Get a challenge by ID
+      tags:
+      - challenges
+  /api/v1/challenges:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all challenges
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/database.Challenge'
+              type: array
+            type: array
+      summary: Get all challenges
+      tags:
+      - challenges
+  /api/v1/challenges/{challenge_id}/session:
+    post:
+      consumes:
+      - application/json
+      description: Starts a new session for a challenge and returns the session token
+      parameters:
+      - description: ID of the challenge to start a session for
+        in: path
+        name: challenge_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Session successfully created
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Invalid challenge ID, Challenge ID does not exist, or Missing
+            user_token cookie
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Database error or Failed to generate token/create challenge
+            session
+          schema:
+            $ref: '#/definitions/gin.H'
+      summary: Start a new challenge session
+      tags:
+      - challenge_sessions
+  /api/v1/challenges/session/end:
+    patch:
+      consumes:
+      - application/json
+      description: Marks a challenge session as completed
+      parameters:
+      - description: Score information
+        in: body
+        name: score
+        required: true
+        schema:
+          $ref: '#/definitions/database.Score'
+      produces:
+      - application/json
+      responses: {}
+      summary: End a challenge session
+      tags:
+      - challenge_sessions
+  /api/v1/leaderboard:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the global leaderboard for a specific challenge
+      parameters:
+      - description: Challenge ID
+        in: query
+        name: challenge_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                additionalProperties: true
+                type: object
+              type: array
+            type: array
+      summary: Get challenge leaderboard
+      tags:
+      - leaderboards
+  /api/v1/me/best-score:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the best score for the authenticated user for a given
+        challenge
+      parameters:
+      - description: Challenge ID
+        in: query
+        name: challenge_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/database.Score'
+      summary: Get best score for current user
+      tags:
+      - scores
+  /api/v1/me/percentile:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the percentile rank for the authenticated user for a given
+        challenge
+      parameters:
+      - description: Challenge ID
+        in: query
+        name: challenge_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              format: float64
+              type: number
+            type: object
+      summary: Get percentile rank for current user
+      tags:
+      - scores
+  /api/v1/me/scores:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all scores for the authenticated user for a given challenge
+      parameters:
+      - description: Challenge ID
+        in: query
+        name: challenge_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/database.Score'
+              type: array
+            type: array
+      summary: Get scores for current user
+      tags:
+      - scores
+  /api/v1/rank:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific rank using its ID
+      parameters:
+      - description: Rank ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      summary: Get a rank by ID
+      tags:
+      - ranks
+  /api/v1/ranks:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all ranks
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/database.Rank'
+              type: array
+            type: array
+      summary: Get all ranks
+      tags:
+      - ranks
+  /api/v1/users/guest:
+    post:
+      consumes:
+      - application/json
+      description: creates a guest user account in the database and returns a token
+      parameters:
+      - description: Guest user info
+        in: body
+        name: guest_user
+        required: true
+        schema:
+          $ref: '#/definitions/database.GuestUser'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a guest user and returns a token
+      tags:
+      - users
+swagger: "2.0"

@@ -1,0 +1,20 @@
+root = "."
+
+include = ["**/*.go", "**/*.html", "**/*.tmpl"]
+exclude = ["vendor", "node_modules", ".git", "tmp"]
+
+[build]
+cmd = "go build -o bin/api.exe ./cmd/api"
+bin = "bin/api.exe"
+delay = 500
+
+# Force Air to run the binary directly
+[log]
+level = "debug"
+
+[screen]
+clear_on_rebuild = true
+
+# *** FIX: Force the executor to run the binary directly ***
+[run]
+cmd = ["./bin/api.exe"]
