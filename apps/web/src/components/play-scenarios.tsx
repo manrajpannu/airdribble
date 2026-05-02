@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ChallengeResultsModal } from "@/components/challenge-results-modal";
 import { CircleDot, Crosshair, Layers, Zap, Loader2, MoreVertical } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +29,31 @@ function ScenarioIcon({ icon }: { icon: Scenario["icon"] }) {
 
 export default function PlayScenarios() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loadingScenario, setLoadingScenario] = useState<Scenario | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const resultId = searchParams?.get("resultId");
+
+  useEffect(() => {
+    if (resultId) {
+      setIsModalOpen(true);
+    }
+  }, [resultId]);
+
+  const handleModalOpenChange = (open: boolean) => {
+    setIsModalOpen(open);
+    if (!open && resultId) {
+      router.replace("/play/challenge", { scroll: false });
+    }
+  };
+
+  const handleReplay = (scenarioId: string) => {
+    setIsModalOpen(false);
+    if (scenarioId) {
+      router.push(`/game/${scenarioId}`);
+    }
+  };
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -114,9 +139,9 @@ export default function PlayScenarios() {
                           <span className="text-muted-foreground">Targets</span>
                           <span className="font-medium">{scenario.config.numBalls ?? 1}</span>
                         </div>
-                        
+
                         <Separator className="my-2" />
-                        
+
                         <div className="grid gap-1.5">
                           <span className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground">Scoring Rules</span>
                           <div className="flex justify-between items-center text-xs">
@@ -175,6 +200,13 @@ export default function PlayScenarios() {
           </Card>
         </div>
       )}
+
+      <ChallengeResultsModal
+        open={isModalOpen}
+        onOpenChange={handleModalOpenChange}
+        resultId={resultId}
+        onReplay={handleReplay}
+      />
     </>
   );
 }

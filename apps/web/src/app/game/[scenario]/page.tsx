@@ -35,6 +35,7 @@ export default function GamePage() {
   const bootPauseAppliedRef = useRef(false);
   const needsTutorialRef = useRef<boolean | null>(null); // null = not checked yet
   const modeStateRef = useRef<any>(null); // Use ref instead of state to prevent 30Hz re-renders
+  const hasRedirectedRef = useRef(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -123,7 +124,10 @@ export default function GamePage() {
 
       const score = Number(state?.score ?? 0);
       const safeScore = Number.isFinite(score) ? Math.max(0, Math.floor(score)) : 0;
+      
+      let newBest = 0;
       setBestScore((currentBest) => {
+        newBest = Math.max(safeScore, currentBest);
         if (safeScore <= currentBest) return currentBest;
         window.localStorage.setItem(bestScoreKey, String(safeScore));
         return safeScore;
@@ -143,9 +147,23 @@ export default function GamePage() {
             setIsPaused(false);
           });
         }
+      } else if (state?.completed && !hasRedirectedRef.current) {
+        hasRedirectedRef.current = true;
+        
+        // Mock saving to a database
+        const resultId = crypto.randomUUID();
+        const mockResultData = {
+          score: safeScore,
+          bestScore: newBest,
+          scenarioId: scenarioId,
+          title: scenarioTitle,
+        };
+        window.localStorage.setItem(`mock_result_${resultId}`, JSON.stringify(mockResultData));
+
+        router.push(`/play/challenge?resultId=${resultId}`);
       }
     },
-    [bestScoreKey, dispatchEscapeToGame, startCountdown, scenarioId]
+    [bestScoreKey, dispatchEscapeToGame, startCountdown, scenarioId, router, scenarioTitle]
   );
 
   useEffect(() => {

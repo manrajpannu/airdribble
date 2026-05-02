@@ -57,6 +57,7 @@ export function AppSidebar() {
               src={darkMode ? "/icons/logo-white.png" : "/icons/logo-black.png"}
               alt="airdribble logo"
               fill
+              sizes="144px"
               className="object-contain object-left pr-12"
               priority
             />

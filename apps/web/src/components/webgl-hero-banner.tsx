@@ -100,10 +100,11 @@ export function WebGLHeroBanner() {
     camera.position.y = -2.5;
 
     // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
     renderer.setClearColor(0x000000, 0);
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Since the canvas has a heavy CSS blur, we don't need high resolution or antialiasing
+    renderer.setPixelRatio(1);
 
     if (mountRef.current) {
       mountRef.current.innerHTML = "";
@@ -144,7 +145,7 @@ export function WebGLHeroBanner() {
     }
 
     const balls: BallData[] = [];
-    const geometry = new THREE.SphereGeometry(1, 48, 48); // Smoother spheres
+    const geometry = new THREE.SphereGeometry(1, 16, 16); // Lower poly since it's blurred
     const colors = ["#ff0055", "#00ffaa", "#00f7ff", "#0004ff", "#ff00bf", "#00ff08", "#ff0077", "#0084ff", "#ffcc00", "#ff6a00"];
 
     const createBall = (isInitial = false) => {
@@ -554,6 +555,7 @@ export function WebGLHeroBanner() {
         if (elapsed >= sys.duration) {
           scene.remove(sys.points);
           sys.points.geometry.dispose();
+          sys.material.dispose();
           confettiSystems.splice(i, 1);
         }
       }

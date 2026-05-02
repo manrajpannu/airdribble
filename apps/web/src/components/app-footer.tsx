@@ -10,6 +10,7 @@ export function AppFooter() {
             src="/icons/logo-white-fill.png"
             alt="airdribble logo white"
             fill
+            sizes="192px"
             className="object-contain hidden dark:block"
             priority
           />
@@ -17,6 +18,7 @@ export function AppFooter() {
             src="/icons/logo-black-fill.png"
             alt="airdribble logo black"
             fill
+            sizes="192px"
             className="object-contain block dark:hidden"
             priority
           />

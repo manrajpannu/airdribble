@@ -121,6 +121,7 @@ export default function GameOverlay({
               src={"/icons/logo-white-fill.png"}
               alt="airdribble logo"
               fill
+              sizes="256px"
               className="object-contain object-left"
               priority
             />

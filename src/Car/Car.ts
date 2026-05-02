@@ -50,6 +50,28 @@ export class Car extends THREE.Group {
   private _torusDrawOnTop?: boolean;
   private _lastAxisOfRotation: THREE.Vector3 | null;
 
+  // Pre-allocated scratch objects to avoid per-frame GC pressure
+  private _scratchInputVec = new THREE.Vector3();
+  private _scratchDrag = new THREE.Vector3();
+  private _scratchQuat = new THREE.Quaternion();
+  private _scratchEuler = new THREE.Euler();
+  private _scratchRotMat = new THREE.Matrix4();
+  private _scratchWorldPos = new THREE.Vector3();
+  private _scratchWorldQuat = new THREE.Quaternion();
+  private _fwdOrigin = new THREE.Vector3();
+  private _fwdDir = new THREE.Vector3();
+  private _fwdRay = new THREE.Ray();
+  private _camForwardDir = new THREE.Vector3();
+  private _camLookAt = new THREE.Vector3();
+  private _camSphereCenter = new THREE.Vector3();
+  private _camTargetOnSphere = new THREE.Vector3();
+  private _camVec = new THREE.Vector3();
+  private _camCurrentOnSphere = new THREE.Vector3();
+  private _camSlerpedVec = new THREE.Vector3();
+  private _camTargetVec = new THREE.Vector3();
+  private _camNewPos = new THREE.Vector3();
+  private _camSmoothLookAt = new THREE.Vector3();
+
   inertiaTimerX: number;
   inertiaTimerY: number;
   inertiaTimerZ: number;
@@ -246,45 +268,41 @@ export class Car extends THREE.Group {
    * Integrates one rotation step using input impulses + drag damping.
    */
   rotate(yaw: number, pitch: number, roll: number, dt: number): void {
-    const inputVec = new THREE.Vector3(pitch, yaw, roll);
-    if (inputVec.lengthSq() > 1) inputVec.normalize();
+    this._scratchInputVec.set(pitch, yaw, roll);
+    if (this._scratchInputVec.lengthSq() > 1) this._scratchInputVec.normalize();
 
-    this.rotationVelocity.x += inputVec.x * this.rotationSpeed.x * dt;
-    this.rotationVelocity.y += inputVec.y * this.rotationSpeed.y * dt;
-    this.rotationVelocity.z += inputVec.z * this.rotationSpeed.z * dt;
+    this.rotationVelocity.x += this._scratchInputVec.x * this.rotationSpeed.x * dt;
+    this.rotationVelocity.y += this._scratchInputVec.y * this.rotationSpeed.y * dt;
+    this.rotationVelocity.z += this._scratchInputVec.z * this.rotationSpeed.z * dt;
 
     this._updateInertiaTimers(pitch, yaw, roll, dt);
 
-    const drag = new THREE.Vector3(this.airDragCoefficient.x, this.airDragCoefficient.y, this.airDragCoefficient.z);
-    this.rotationVelocity.multiply(drag);
+    this._scratchDrag.set(this.airDragCoefficient.x, this.airDragCoefficient.y, this.airDragCoefficient.z);
+    this.rotationVelocity.multiply(this._scratchDrag);
     if (this.rotationVelocity.lengthSq() < 1e-3) this.rotationVelocity.set(0, 0, 0);
 
-    const q = new THREE.Quaternion().setFromEuler(
-      new THREE.Euler(
-        this.rotationVelocity.x * dt,
-        this.rotationVelocity.y * dt,
-        -this.rotationVelocity.z * dt,
-      ),
+    this._scratchEuler.set(
+      this.rotationVelocity.x * dt,
+      this.rotationVelocity.y * dt,
+      -this.rotationVelocity.z * dt,
     );
+    this._scratchQuat.setFromEuler(this._scratchEuler);
+    this._scratchRotMat.makeRotationFromQuaternion(this._scratchQuat);
 
-    const rotMat = new THREE.Matrix4().makeRotationFromQuaternion(q);
-
-    this.matrix.multiply(rotMat);
+    this.matrix.multiply(this._scratchRotMat);
     this.matrix.decompose(this.position, this.quaternion, this.scale);
     this.scale.set(1, 1, 1);
 
-    const axis = this.findAxisOfRotation(rotMat);
+    const axis = this.findAxisOfRotation(this._scratchRotMat);
     this.updateAxisOfRotation(axis);
   }
 
   boost(boostHeld: boolean, dt: number): void {
     if (boostHeld) {
       this.updateMatrixWorld();
-      const worldPos = new THREE.Vector3();
-      this.getWorldPosition(worldPos);
-      const worldQuat = new THREE.Quaternion();
-      this.getWorldQuaternion(worldQuat);
-      this.Boost.emitParticles(worldPos, worldQuat, dt);
+      this.getWorldPosition(this._scratchWorldPos);
+      this.getWorldQuaternion(this._scratchWorldQuat);
+      this.Boost.emitParticles(this._scratchWorldPos, this._scratchWorldQuat, dt);
     }
 
     this.Boost.updateParticles(dt);
@@ -439,11 +457,10 @@ export class Car extends THREE.Group {
   }
 
   getForwardVector(): THREE.Ray {
-    const origin = new THREE.Vector3();
-    const forward = new THREE.Vector3(0, 0, -1);
-    this.getWorldPosition(origin);
-    forward.applyQuaternion(this.quaternion);
-    return new THREE.Ray(origin, forward.normalize());
+    this.getWorldPosition(this._fwdOrigin);
+    this._fwdDir.set(0, 0, -1).applyQuaternion(this.quaternion).normalize();
+    this._fwdRay.set(this._fwdOrigin, this._fwdDir);
+    return this._fwdRay;
   }
 
   updateFov(): void {
@@ -472,42 +489,42 @@ export class Car extends THREE.Group {
   updateCamera(ballPosition: THREE.Vector3 | null, ballCam: boolean, dt: number): void {
     if (!ballPosition) ballCam = false;
 
-    const forwardDir = new THREE.Vector3();
-    let lookAt = new THREE.Vector3();
     const alpha = ballCam ? 0.04 : 0.004;
 
-    const sphereCenter = this.position.clone().add(this.Up.clone().multiplyScalar(physics.camera.height));
-    let targetOnSphere: THREE.Vector3;
+    // sphereCenter = position + Up * camera.height
+    this._camSphereCenter.copy(this.Up).multiplyScalar(physics.camera.height).add(this.position);
 
     if (ballCam) {
-      forwardDir.subVectors(ballPosition, this.position).normalize();
-      lookAt = ballPosition.clone();
-      targetOnSphere = sphereCenter.clone().sub(forwardDir.clone().multiplyScalar(physics.camera.distance));
+      this._camForwardDir.subVectors(ballPosition, this.position).normalize();
+      this._camLookAt.copy(ballPosition);
     } else {
-      forwardDir.copy(this.forward).applyQuaternion(this.quaternion).normalize();
-      lookAt = this.position.clone().add(this.Up.clone().multiplyScalar(physics.camera.height));
-      targetOnSphere = sphereCenter.clone().sub(forwardDir.clone().multiplyScalar(physics.camera.distance));
+      this._camForwardDir.copy(this.forward).applyQuaternion(this.quaternion).normalize();
+      this._camLookAt.copy(this.Up).multiplyScalar(physics.camera.height).add(this.position);
     }
 
-    const camVec = this.camera.position.clone().sub(sphereCenter);
-    if (camVec.lengthSq() === 0) {
-      camVec.set(0, 0, 1);
+    // targetOnSphere = sphereCenter - forwardDir * camera.distance
+    this._camTargetOnSphere.copy(this._camForwardDir).multiplyScalar(physics.camera.distance);
+    this._camTargetOnSphere.subVectors(this._camSphereCenter, this._camTargetOnSphere);
+
+    this._camVec.subVectors(this.camera.position, this._camSphereCenter);
+    if (this._camVec.lengthSq() === 0) {
+      this._camVec.set(0, 0, 1);
     } else {
-      camVec.normalize();
+      this._camVec.normalize();
     }
 
-    camVec.multiplyScalar(physics.camera.distance);
-    const currentOnSphere = sphereCenter.clone().add(camVec);
+    this._camVec.multiplyScalar(physics.camera.distance);
+    this._camCurrentOnSphere.addVectors(this._camSphereCenter, this._camVec);
 
-    let slerpedVec = currentOnSphere.clone().sub(sphereCenter).normalize();
-    const targetVec = targetOnSphere.clone().sub(sphereCenter).normalize();
-    slerpedVec = slerpedVec.lerp(targetVec, alpha).normalize();
+    this._camSlerpedVec.subVectors(this._camCurrentOnSphere, this._camSphereCenter).normalize();
+    this._camTargetVec.subVectors(this._camTargetOnSphere, this._camSphereCenter).normalize();
+    this._camSlerpedVec.lerp(this._camTargetVec, alpha).normalize();
 
-    const newCameraPos = sphereCenter.clone().add(slerpedVec.multiplyScalar(physics.camera.distance));
-    this.camera.position.copy(newCameraPos);
+    this._camNewPos.copy(this._camSlerpedVec).multiplyScalar(physics.camera.distance).add(this._camSphereCenter);
+    this.camera.position.copy(this._camNewPos);
 
-    const smoothLookAt = new THREE.Vector3().lerpVectors(this.LookAt, lookAt, alpha);
-    this.camera.lookAt(smoothLookAt);
+    this._camSmoothLookAt.lerpVectors(this.LookAt, this._camLookAt, alpha);
+    this.camera.lookAt(this._camSmoothLookAt);
   }
 
   loadCarModel(modelConfig: any): boolean {

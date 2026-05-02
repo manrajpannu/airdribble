@@ -64,7 +64,8 @@ export function initRlDartApp(container, options = {}) {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.85;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.debug.checkShaderErrors = false;
   renderer.domElement.style.display = "block";
   container.appendChild(renderer.domElement);
 
@@ -168,11 +169,37 @@ export function initRlDartApp(container, options = {}) {
       engine.offModeStateChange(modeStateListener);
     }
 
-    if (typeof engine.stopCurrentMode === 'function') {
-      engine.stopCurrentMode();
+    // Dispose engine (controller listeners, mode, ball manager, gamepad listener)
+    if (typeof engine.dispose === 'function') {
+      engine.dispose();
+    }
+
+    // Traverse scene graph and dispose all GPU resources
+    scene.traverse((obj) => {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) {
+        const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
+        for (const mat of materials) {
+          // Dispose all textures attached to the material
+          for (const key of Object.keys(mat)) {
+            const val = mat[key];
+            if (val && typeof val === 'object' && typeof val.dispose === 'function' && val.isTexture) {
+              val.dispose();
+            }
+          }
+          mat.dispose();
+        }
+      }
+    });
+
+    // Dispose environment map
+    if (scene.environment) {
+      scene.environment.dispose();
+      scene.environment = null;
     }
 
     renderer.dispose();
+    renderer.forceContextLoss();
     renderer.domElement.remove();
     fpsOverlay.remove();
     if (shouldSetContainerRelative) {

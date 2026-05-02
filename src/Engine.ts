@@ -174,6 +174,7 @@ export class Engine extends THREE.Group {
   private _rimLight!: THREE.DirectionalLight;
   private _stateEmitAccumulator: number = 0;
   private _carUpDir: THREE.Vector3 = new THREE.Vector3();
+  private _onGamepadConnected: ((e: GamepadEvent) => void) | null = null;
 
   /**
   * @param renderer Active renderer instance used by UI wiring.
@@ -306,7 +307,7 @@ export class Engine extends THREE.Group {
 
     // createUI(this.car, this.controller, undefined, this.map, renderer, this);
 
-    window.addEventListener('gamepadconnected', e => {
+    this._onGamepadConnected = (e: GamepadEvent) => {
       const gp = navigator.getGamepads()[e.gamepad.index];
       if (!gp) return;
       console.log(
@@ -316,7 +317,8 @@ export class Engine extends THREE.Group {
         gp.buttons.length,
         gp.axes.length,
       );
-    });
+    };
+    window.addEventListener('gamepadconnected', this._onGamepadConnected);
 
     this._emitModeState();
   }
@@ -498,5 +500,39 @@ export class Engine extends THREE.Group {
   private _emitModeState(): void {
     const state = this.getModeState();
     this._modeStateListeners.forEach(listener => listener(state));
+  }
+
+  /**
+   * Disposes all engine resources, event listeners, and sub-systems.
+   * Must be called when the game is unmounted to prevent memory leaks.
+   */
+  dispose(): void {
+    // Stop current mode and unbind its listeners
+    if (this.currentMode && typeof this.currentMode.stop === 'function') {
+      this.currentMode.stop();
+    }
+
+    // Remove ball manager event listeners
+    if (this._onHit) this.BallManager.off('hit', this._onHit);
+    if (this._onKill) this.BallManager.off('killed', this._onKill);
+
+    // Dispose controller (removes all global keyboard/mouse/gamepad listeners)
+    if (this.controller && typeof (this.controller as any).dispose === 'function') {
+      (this.controller as any).dispose();
+    }
+
+    // Remove engine-level gamepad listener
+    if (this._onGamepadConnected) {
+      window.removeEventListener('gamepadconnected', this._onGamepadConnected);
+      this._onGamepadConnected = null;
+    }
+
+    // Clear mode state listeners
+    this._modeStateListeners.clear();
+
+    // Clear ball manager
+    if (this.BallManager && typeof this.BallManager.clear === 'function') {
+      this.BallManager.clear();
+    }
   }
 }

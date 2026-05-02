@@ -62,22 +62,39 @@ export class Controller {
       this.gamepadIndex = null;
       this.ballCam = true;
       
-      window.addEventListener('gamepadconnected', (e) => this.gamepadIndex = e.gamepad.index);
-      window.addEventListener('gamepaddisconnected', (e) => {if (this.gamepadIndex === e.gamepad.index) this.gamepadIndex = null});
+      // Store handler references for cleanup in dispose()
+      this._onGamepadConnected = (e) => this.gamepadIndex = e.gamepad.index;
+      this._onGamepadDisconnected = (e) => { if (this.gamepadIndex === e.gamepad.index) this.gamepadIndex = null; };
+      this._onKeyDown = (e) => this.handleKey(e.code, true);
+      this._onKeyUp = (e) => this.handleKey(e.code, false);
+      this._onMouseDown = (e) => { if (e.button === 0) this.leftMouse = true; };
+      this._onMouseUp = (e) => { if (e.button === 0) this.leftMouse = false; };
+
+      window.addEventListener('gamepadconnected', this._onGamepadConnected);
+      window.addEventListener('gamepaddisconnected', this._onGamepadDisconnected);
       this.airRollLeftButton = 2; // Default X
       this.airRollRightButton = 3; // Default Y
       this.airRollFreeButton = 0; // Default A
       this.boostButton = 4; // Default LB
       
       this.leftMouse = false;
-      document.addEventListener("keydown", (e) => this.handleKey(e.code, true));
-      document.addEventListener("keyup", (e) => this.handleKey(e.code, false));
-      window.addEventListener("mousedown", (e) => {
-          if (e.button === 0) this.leftMouse = true;
-      });
-      window.addEventListener("mouseup", (e) => {
-          if (e.button === 0) this.leftMouse = false;
-      });
+      document.addEventListener("keydown", this._onKeyDown);
+      document.addEventListener("keyup", this._onKeyUp);
+      window.addEventListener("mousedown", this._onMouseDown);
+      window.addEventListener("mouseup", this._onMouseUp);
+    }
+
+    /**
+     * Removes all global event listeners registered by this controller.
+     * Must be called when the engine is disposed to prevent memory leaks.
+     */
+    dispose() {
+      window.removeEventListener('gamepadconnected', this._onGamepadConnected);
+      window.removeEventListener('gamepaddisconnected', this._onGamepadDisconnected);
+      document.removeEventListener("keydown", this._onKeyDown);
+      document.removeEventListener("keyup", this._onKeyUp);
+      window.removeEventListener("mousedown", this._onMouseDown);
+      window.removeEventListener("mouseup", this._onMouseUp);
     }
 
     isLeftMouse() {
