@@ -164,5 +164,6 @@ func (app *Application) endChallengeSession(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message":       "Session ended and Score saved",
 		"session_token": sessionToken,
+		"score":         score.Score,
 	})
 }

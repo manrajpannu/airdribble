@@ -148,7 +148,7 @@ export const api = {
     ),
 
   endSession: (score: number) =>
-    apiFetch<{ message: string; session_token: string }>(
+    apiFetch<{ message: string; session_token: string; score: number }>(
       "/api/v1/challenges/session/end",
       { method: "PATCH", body: JSON.stringify({ score }) }
     ),
