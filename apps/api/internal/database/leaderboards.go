@@ -57,6 +57,8 @@ func (m *LeaderboardModel) Get(challengeID int) ([]*Leaderboard, error) {
 
 	for rows.Next() {
 		var l Leaderboard
+		var rankID sql.NullInt64
+		var rankName sql.NullString
 		err := rows.Scan(
 			&l.ID,
 			&l.UserToken,
@@ -68,13 +70,20 @@ func (m *LeaderboardModel) Get(challengeID int) ([]*Leaderboard, error) {
 
 			&l.User.Name,
 
-			&l.User.Rank.ID,
-			&l.User.Rank.Name,
+			&rankID,
+			&rankName,
 			&l.User.Rank.TierNumber,
 			&l.User.Rank.Division,
 		)
 		if err != nil {
 			return nil, err
+		}
+
+		if rankID.Valid {
+			l.User.Rank.ID = int(rankID.Int64)
+		}
+		if rankName.Valid {
+			l.User.Rank.Name = rankName.String
 		}
 
 		leaderboards = append(leaderboards, &l)
@@ -85,6 +94,8 @@ func (m *LeaderboardModel) Get(challengeID int) ([]*Leaderboard, error) {
 
 func (m *LeaderboardModel) GetBestScore(userToken string, challengeID int) (*Leaderboard, error) {
 	var l Leaderboard
+	var rankID sql.NullInt64
+	var rankName sql.NullString
 	err := m.DB.QueryRow(`
 		SELECT 
 			l.id, 
@@ -112,11 +123,18 @@ func (m *LeaderboardModel) GetBestScore(userToken string, challengeID int) (*Lea
 		&l.CreatedAt,
 		&l.UpdatedAt,
 		&l.User.Name,
-		&l.User.Rank.ID,
-		&l.User.Rank.Name,
+		&rankID,
+		&rankName,
 		&l.User.Rank.TierNumber,
 		&l.User.Rank.Division,
 	)
+
+	if rankID.Valid {
+		l.User.Rank.ID = int(rankID.Int64)
+	}
+	if rankName.Valid {
+		l.User.Rank.Name = rankName.String
+	}
 	if err == sql.ErrNoRows {
 		return nil, nil
 	} else if err != nil {

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 
 // ─── Query Keys ────────────────────────────────────────────────────────────────
 // Centralised here so invalidation is consistent across the app
@@ -25,20 +25,25 @@ export function useMe() {
     queryKey: queryKeys.me,
     queryFn: () =>
       api.getMe().catch((err: Error) => {
-        const msg = err.message ?? "";
         // 400 = no cookie yet, 404 = cookie exists but user not in DB
         // Both mean "no user yet" — return null so GuestInit creates one
         if (
-          msg.includes("400") ||
-          msg.includes("404") ||
-          msg.includes("Missing user_token") ||
-          msg.includes("User not found")
+          (err instanceof ApiError && (err.status === 400 || err.status === 404)) ||
+          err.message?.includes("Missing user_token") ||
+          err.message?.includes("User not found")
         ) {
           return null;
         }
-        throw err;
+        throw err; // Real server error — let React Query handle retry
       }),
-    retry: false, // Don't retry on 400/404 — expected on first load
+    retry: (failureCount, error) => {
+      // Don't retry expected auth failures
+      if (error instanceof ApiError && (error.status === 400 || error.status === 404)) {
+        return false;
+      }
+      return failureCount < 3;
+    },
+    staleTime: Infinity, // Don't refetch user info repeatedly during a session
   });
 }
 
@@ -96,19 +101,19 @@ export function useRanks() {
 
 // ─── Score Hooks ──────────────────────────────────────────────────────────────
 
-export function useUserScores(challengeId: number) {
+export function useUserScores(challengeId: number, enabled: boolean = true) {
   return useQuery({
     queryKey: queryKeys.userScores(challengeId),
     queryFn: () => api.getUserScores(challengeId),
-    enabled: !!challengeId,
+    enabled: !!challengeId && enabled,
   });
 }
 
-export function useUserBestScore(challengeId: number) {
+export function useUserBestScore(challengeId: number, enabled: boolean = true) {
   return useQuery({
     queryKey: queryKeys.userBestScore(challengeId),
     queryFn: () => api.getUserBestScore(challengeId),
-    enabled: !!challengeId,
+    enabled: !!challengeId && enabled,
   });
 }
 

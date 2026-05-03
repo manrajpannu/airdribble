@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, memo } from "react";
 
 type RuntimeHandle = {
   dispose?: () => void;
@@ -14,13 +14,13 @@ type GameClientProps = {
   modeName?: string;
 };
 
-export default function GameClient({
+export const GameClient = memo(({
   fullscreen = false,
   onModeStateChange,
   challengeConfig,
   darkMode = false,
   modeName = "Challenge",
-}: GameClientProps) {
+}: GameClientProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const engineRef = useRef<any>(null);
 
@@ -95,4 +95,6 @@ export default function GameClient({
       <div className="h-full w-full" id="three-container" ref={containerRef} />
     </div>
   );
-}
+});
+
+export default GameClient;

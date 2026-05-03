@@ -1,18 +1,84 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
-async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    credentials: "include", // always send cookies (user_token, session_token)
-    headers: { "Content-Type": "application/json" },
-    ...options,
-  });
+/** Determines if a failed request should be retried */
+function isRetryable(status: number): boolean {
+  // Retry on server errors (5xx) and rate limits (429), never on client errors (4xx)
+  return status >= 500 || status === 429;
+}
 
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error ?? `Request failed: ${res.status}`);
+/** Sleep for a given number of milliseconds */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+const MAX_RETRIES = 3;
+const BASE_DELAY_MS = 300; // 300ms, 900ms, 2700ms exponential backoff
+
+async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const res = await fetch(`${API_BASE}${path}`, {
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        ...options,
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        const error = new ApiError(
+          body.error ?? `Request failed: ${res.status}`,
+          res.status
+        );
+
+        // Don't retry client errors (4xx except 429)
+        if (!isRetryable(res.status)) {
+          throw error;
+        }
+
+        lastError = error;
+
+        // If we have retries left, back off and try again
+        if (attempt < MAX_RETRIES) {
+          await sleep(BASE_DELAY_MS * Math.pow(3, attempt));
+          continue;
+        }
+
+        throw error;
+      }
+
+      // Handle 204 No Content
+      if (res.status === 204) return {} as T;
+
+      return res.json();
+    } catch (err) {
+      // Network errors (fetch itself threw — offline, DNS, CORS, etc.)
+      if (err instanceof ApiError) {
+        throw err; // Already handled above
+      }
+
+      lastError = err instanceof Error ? err : new Error(String(err));
+
+      if (attempt < MAX_RETRIES) {
+        await sleep(BASE_DELAY_MS * Math.pow(3, attempt));
+        continue;
+      }
+    }
   }
 
-  return res.json();
+  throw lastError ?? new Error("Request failed after retries");
+}
+
+/** Custom error class that carries the HTTP status code */
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────

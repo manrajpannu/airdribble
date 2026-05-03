@@ -42,11 +42,15 @@ type ChallengeResultsDialogProps = {
   open: boolean;
   challengeName: string;
   modeState: ChallengeModeState | null;
+  /** The user's all-time best score from the API (GET /me/best-score) */
   highScore: number;
+  /** All past scores for this challenge from the API (GET /me/scores) */
   scoreHistory: ChallengeScorePoint[];
   onDone: () => void;
   onReplay: () => void;
   onOpenStats: () => void;
+  isLoading?: boolean;
+  isError?: boolean;
 };
 
 function formatNumber(value: number) {
@@ -192,6 +196,8 @@ export default function ChallengeResultsDialog({
   onDone,
   onReplay,
   onOpenStats,
+  isLoading,
+  isError,
 }: ChallengeResultsDialogProps) {
   const [activeTab, setActiveTab] = useState("leaderboard")
   const [selectedStat, setSelectedStat] = useState<"Damage" | "Hits" | "Kills" | "Total">("Total")
@@ -231,7 +237,30 @@ export default function ChallengeResultsDialog({
           </Badge>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x overflow-y-auto">
+        {isLoading ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-12 min-h-[400px]">
+             <div className="relative w-16 h-16 flex items-center justify-center mb-6">
+                <div className="absolute inset-0 rounded-full border-2 border-primary/20" />
+                <div className="absolute inset-0 rounded-full border-t-2 border-primary animate-spin" />
+                <div className="absolute inset-2 rounded-full border-b border-primary/40 animate-spin" style={{ animationDuration: "0.8s" }} />
+                <div className="absolute inset-[1.4rem] rounded-full bg-primary/20 animate-pulse" />
+              </div>
+              <p className="text-muted-foreground animate-pulse font-medium">Calculating results and fetching leaderboard...</p>
+          </div>
+        ) : isError ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-12 min-h-[300px]">
+            <p className="text-destructive font-semibold mb-2">Failed to load results</p>
+            <p className="text-sm text-muted-foreground text-center mb-6 max-w-xs">
+              Could not fetch your score data. Your score was still saved — check back later.
+            </p>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={onDone}>Done</Button>
+              <Button onClick={onReplay}>Replay</Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x overflow-y-auto">
           <div className="p-6 space-y-6">
             <div>
               <h3 className="font-semibold text-lg">Score History</h3>
@@ -245,9 +274,9 @@ export default function ChallengeResultsDialog({
                   <p className="text-4xl font-bold text-primary">{formatNumber(finalScore)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-muted-foreground">Current High Score</p>
-                  <p className="text-xl font-semibold text-foreground">{formatNumber(highScore)}</p>
-                </div>
+                    <p className="text-sm font-medium text-muted-foreground">Personal Best</p>
+                    <p className="text-xl font-semibold text-foreground">{formatNumber(highScore)}</p>
+                  </div>
               </div>
 
               <ScoreChart points={scoreHistory} finalScore={finalScore} highScore={highScore} />
@@ -396,6 +425,8 @@ export default function ChallengeResultsDialog({
             </Button>
           </div>
         </div>
+          </>
+        )}
       </div>
     </div>
   )

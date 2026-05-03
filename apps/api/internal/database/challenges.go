@@ -78,7 +78,7 @@ func scanChallenge(scan func(dest ...interface{}) error) (*Challenge, error) {
 
 const selectCols = `SELECT id, slug, title, description, tags, thumbnail, icon, duration_ms, difficulty, active, config_json, created_at, updated_at`
 
-// GetAll retrieves all active challenges from the database.
+// GetAll retrieves all active challenges from the database with partial config data.
 func (m *ChallengeModel) GetAll() ([]*Challenge, error) {
 	rows, err := m.DB.Query(selectCols + ` FROM challenges WHERE active = 1 ORDER BY difficulty ASC`)
 	if err != nil {
@@ -92,6 +92,16 @@ func (m *ChallengeModel) GetAll() ([]*Challenge, error) {
 		if err != nil {
 			return nil, err
 		}
+		
+		// Strip down config to only what's needed for the scenario cards
+		summaryConfig := make(map[string]interface{})
+		for _, key := range []string{"timeLimit", "health", "numBalls", "pointsPerKill", "pointsPerHit", "pointsPerMiss"} {
+			if val, ok := c.Config[key]; ok {
+				summaryConfig[key] = val
+			}
+		}
+		c.Config = summaryConfig
+
 		challenges = append(challenges, c)
 	}
 	return challenges, rows.Err()

@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import AppShell from "@/components/app-shell";
 import { QueryProvider } from "@/components/query-provider";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -47,6 +48,14 @@ export default function RootLayout({
       <body className="min-h-full bg-background text-foreground font-poppins">
         <QueryProvider>
           <AppShell>{children}</AppShell>
+          <Toaster
+            position="bottom-right"
+            richColors
+            closeButton
+            toastOptions={{
+              duration: 4000,
+            }}
+          />
         </QueryProvider>
         <Analytics />
       </body>

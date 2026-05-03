@@ -101,6 +101,7 @@ class ChallengeMode extends FreeplayMode {
         pointsPerHit = 10,
         pointsPerMiss = 0,
         id = null,
+        bestScore = 0,
         ...freeplayOptions
     } = {}) {
         super({
@@ -113,7 +114,7 @@ class ChallengeMode extends FreeplayMode {
         this.timeElapsed = timeLimit;
         this.timeLimit = timeLimit;
         this.scenarioId = id;
-        this.bestScore = 0;
+        this.bestScore = bestScore;
         this._paused = false;
         this._completed = false;
         this.completed = false;
@@ -196,7 +197,7 @@ class ChallengeMode extends FreeplayMode {
         this._cursorProgress = 0;
         this._lastHudTime = null;
         
-        if (this.scenarioId && typeof window !== 'undefined') {
+        if (this.scenarioId && typeof window !== 'undefined' && !this.bestScore) {
             const raw = window.localStorage.getItem(`airdribble-best-score:${this.scenarioId}`);
             this.bestScore = raw ? Number(raw) : 0;
         }

@@ -1,20 +1,48 @@
 "use client";
 
 import { useMe, useRanks } from "@/hooks/use-api";
-import { User, Calendar, MapPin, Trophy } from "lucide-react";
+import { User, Calendar, MapPin, Trophy, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function ProfilePage() {
-  const { data: user, isLoading: isUserLoading } = useMe();
-  const { data: ranks, isLoading: isRanksLoading } = useRanks();
+  const { data: user, isLoading: isUserLoading, isError: isUserError, refetch: refetchUser } = useMe();
+  const { data: ranks, isLoading: isRanksLoading, isError: isRanksError, refetch: refetchRanks } = useRanks();
 
-  if (isUserLoading || isRanksLoading) {
+  const isLoading = isUserLoading || isRanksLoading;
+  const isError = isUserError || isRanksError;
+
+  if (isLoading) {
     return (
       <div className="flex-1 p-6 flex justify-center mt-12">
         <div className="animate-pulse flex flex-col gap-4 items-center">
           <div className="size-24 rounded-full bg-muted" />
           <div className="h-6 w-32 bg-muted rounded" />
           <div className="h-4 w-24 bg-muted rounded" />
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex-1 p-6 flex flex-col items-center justify-center mt-12 gap-4">
+        <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-6 text-center max-w-md">
+          <p className="text-sm text-destructive font-medium mb-1">Failed to load profile</p>
+          <p className="text-xs text-destructive/70 mb-4">
+            Could not connect to the server. Please check your connection and try again.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              refetchUser();
+              refetchRanks();
+            }}
+          >
+            <RefreshCw className="size-3.5 mr-2" />
+            Retry
+          </Button>
         </div>
       </div>
     );
