@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/manrajpannu/airdribble/apps/api/internal/database"
 )
 
 // getRanks retrieves all ranks from the database

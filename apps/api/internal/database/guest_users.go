@@ -11,13 +11,13 @@ type GuestUserModel struct {
 }
 
 type GuestUser struct {
-	ID        int    `json:"id"`
-	Username  string `json:"username"`
-	Token     string `json:"token"`
-	RankID    *int   `json:"rank_id"`
-	Location  string `json:"location"`
-	IPAddress string `json:"ip_address"`
-	CreatedAt string `json:"created_at"`
+	ID        int     `json:"id"`
+	Username  string  `json:"username"`
+	Token     string  `json:"token"`
+	RankID    *int    `json:"rank_id"`
+	Location  *string `json:"location"`
+	IPAddress *string `json:"ip_address"`
+	CreatedAt *string `json:"created_at"`
 }
 
 func (m *GuestUserModel) Insert(guest_user *GuestUser) error {
@@ -46,4 +46,31 @@ func (m *GuestUserModel) Update(guest_user *GuestUser) error {
 	}
 
 	return nil
+}
+
+func (m *GuestUserModel) GetByToken(token string) (*GuestUser, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `SELECT id, username, token, rank_id, location, ip_address, created_at FROM guest_users WHERE token = ?`
+
+	var guest_user GuestUser
+	err := m.DB.QueryRowContext(ctx, query, token).Scan(
+		&guest_user.ID,
+		&guest_user.Username,
+		&guest_user.Token,
+		&guest_user.RankID,
+		&guest_user.Location,
+		&guest_user.IPAddress,
+		&guest_user.CreatedAt,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &guest_user, nil
 }

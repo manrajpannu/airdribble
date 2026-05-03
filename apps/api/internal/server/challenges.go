@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/manrajpannu/airdribble/apps/api/internal/database"
 )
 
 // getChallenges retrieves all challenges from the database

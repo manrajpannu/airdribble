@@ -32,7 +32,8 @@ func (app *Application) createGuestUser(c *gin.Context) {
 
 	guest_user.Username = fmt.Sprintf("Guest-%s", token[:6])
 
-	guest_user.IPAddress = c.ClientIP()
+	ip := c.ClientIP()
+	guest_user.IPAddress = &ip
 	guest_user.Token = token
 
 	err = app.models.GuestUser.Insert(&guest_user)
@@ -51,8 +52,41 @@ func (app *Application) createGuestUser(c *gin.Context) {
 		true,
 	)
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "guest user created",
+		"message":  "guest user created",
+		"username": guest_user.Username,
 	})
+}
+
+// getMe returns the current authenticated user's profile
+//
+// @Summary Get current user profile
+// @Description Retrieve the profile information for the currently authenticated user based on their user_token cookie. Returns their username, current rank, and account metadata.
+// @Tags users
+// @Produce json
+// @Success 200 {object} database.GuestUser "User profile found"
+// @Failure 400 {object} map[string]string "Missing user_token cookie"
+// @Failure 404 {object} map[string]string "User not found"
+// @Failure 500 {object} map[string]string "Internal server error — database query failed"
+// @Router /api/v1/users/me [get]
+func (app *Application) getMe(c *gin.Context) {
+	userToken, err := c.Cookie("user_token")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing user_token cookie"})
+		return
+	}
+
+	user, err := app.models.GuestUser.GetByToken(userToken)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user"})
+		return
+	}
+
+	if user == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 // getUserScores returns all historical scores for the authenticated user on a challenge

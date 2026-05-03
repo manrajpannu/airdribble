@@ -28,6 +28,23 @@ definitions:
     - name
     - seed_type
     type: object
+  database.GuestUser:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      ip_address:
+        type: string
+      location:
+        type: string
+      rank_id:
+        type: integer
+      token:
+        type: string
+      username:
+        type: string
+    type: object
   database.Rank:
     properties:
       division:
@@ -454,6 +471,38 @@ paths:
       tags:
       - users
   /api/v1/users/me:
+    get:
+      description: Retrieve the profile information for the currently authenticated
+        user based on their user_token cookie. Returns their username, current rank,
+        and account metadata.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile found
+          schema:
+            $ref: '#/definitions/database.GuestUser'
+        "400":
+          description: Missing user_token cookie
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error — database query failed
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get current user profile
+      tags:
+      - users
     patch:
       consumes:
       - application/json

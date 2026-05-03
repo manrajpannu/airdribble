@@ -535,6 +535,51 @@ const docTemplate = `{
             }
         },
         "/api/v1/users/me": {
+            "get": {
+                "description": "Retrieve the profile information for the currently authenticated user based on their user_token cookie. Returns their username, current rank, and account metadata.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get current user profile",
+                "responses": {
+                    "200": {
+                        "description": "User profile found",
+                        "schema": {
+                            "$ref": "#/definitions/database.GuestUser"
+                        }
+                    },
+                    "400": {
+                        "description": "Missing user_token cookie",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error — database query failed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
             "patch": {
                 "description": "Allows a guest user to personalise their profile by setting a custom display name and their Rocket League rank. This converts a \"basic guest\" into an \"improved guest\" with a real identity on the leaderboard. Both fields are optional — send only the ones you want to update. Authentication is via the ` + "`" + `user_token` + "`" + ` HttpOnly cookie. The rank_id must correspond to a valid rank from GET /api/v1/ranks.",
                 "consumes": [
@@ -629,6 +674,32 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "database.GuestUser": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ip_address": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "rank_id": {
+                    "type": "integer"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
