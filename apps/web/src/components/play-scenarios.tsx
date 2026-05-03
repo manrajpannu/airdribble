@@ -114,11 +114,18 @@ export default function PlayScenarios() {
         staleTime: 5 * 60 * 1000,
       });
 
-      // 2. Start the session on the backend
+      // 2. Prefetch user's best score for this challenge
+      const prefetchBestScore = queryClient.prefetchQuery({
+        queryKey: queryKeys.userBestScore(scenario.id),
+        queryFn: () => api.getUserBestScore(scenario.id),
+        staleTime: 5 * 60 * 1000,
+      });
+
+      // 3. Start the session on the backend
       const startSession = startSessionMutation.mutateAsync(scenario.id);
 
-      // Wait for both to complete before navigating
-      await Promise.all([prefetchChallenge, startSession]);
+      // Wait for all to complete before navigating
+      await Promise.all([prefetchChallenge, prefetchBestScore, startSession]);
       
       router.push(`/game/${scenario.slug}`);
     } catch {

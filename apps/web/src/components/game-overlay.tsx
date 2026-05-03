@@ -10,7 +10,7 @@ interface GameOverlayProps {
   countdownValue: number | null;
   scenarioTitle: string;
   scenarioDescription: string;
-  bestScore: number;
+  bestScore: number | null;
   onResume: () => void;
   onRestart: () => void;
   onOpenSettings: () => void;
@@ -55,10 +55,10 @@ export default function GameOverlay({
   }
   if (isPaused) {
     return (
-      <div className="pointer-events-auto absolute inset-0 z-[12000] backdrop-blur-2xl bg-black/10 flex flex-col items-center justify-center animate-in fade-in duration-500">
+      <div className="pointer-events-auto absolute inset-0 z-12000 backdrop-blur-2xl bg-black/10 flex flex-col items-center justify-center animate-in fade-in duration-500">
         {/* Decorative Gradients */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-black/60 to-transparent opacity-40" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-black/60 to-transparent opacity-40" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-linear-to-b from-black/60 to-transparent opacity-40" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-linear-to-t from-black/60 to-transparent opacity-40" />
 
         {/* Top-Left: Scenario Info */}
         <div className="absolute left-6 top-4 z-10 space-y-1 animate-in slide-in-from-top-4 duration-500">
@@ -67,18 +67,21 @@ export default function GameOverlay({
           </Badge>
           <h1 className="text-4xl font-black tracking-tighter text-white uppercase">{scenarioTitle}</h1>
           <p className="text-white/60 font-medium max-w-md line-clamp-2">{scenarioDescription}</p>
-          {bestScore > 0 && (
-            <div className="flex items-center gap-4 mt-1 border-t border-white/5">
-              <div className="text-sm font-bold uppercase tracking-[0.2em] text-white/60">Personal Best</div>
-              <div className="text-xl font-mono font-bold text-white tracking-widest">{bestScore}</div>
-            </div>
-          )}
+            {bestScore !== null && (
+              <div className="flex items-center gap-4 mt-1 border-t border-white/5">
+                <div className="text-sm font-bold uppercase tracking-[0.2em] text-white/60">Personal Best</div>
+                <div className="text-xl font-mono font-bold text-white tracking-widest">
+                  {bestScore}
+                </div>
+              </div>
+            )}
+
         </div>
 
         {/* Center: Main Menu */}
         <div className="relative z-10 w-full flex flex-col items-center animate-in zoom-in-95 duration-500">
           <div className="mb-12 text-center w-full px-4">
-            <h2 className="text-8xl md:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/10 tracking-tight leading-none select-none whitespace-nowrap">
+            <h2 className="text-8xl md:text-9xl font-black text-transparent bg-clip-text bg-linear-to-b from-white to-white/10 tracking-tight leading-none select-none whitespace-nowrap">
               PAUSED
             </h2>
           </div>

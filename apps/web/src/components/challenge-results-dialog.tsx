@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 export type ChallengeScorePoint = {
@@ -131,60 +132,158 @@ function useScoreMetrics(state: ChallengeModeState | null) {
   }, [state])
 }
 
-function ScoreChart({ points, finalScore, highScore }: { points: ChallengeScorePoint[]; finalScore: number; highScore: number }) {
-  const width = 620
-  const height = 260
-  const padded = 18
+function ScoreChart({
+  points,
+  finalScore,
+  highScore,
+  range,
+  onRangeChange,
+}: {
+  points: ChallengeScorePoint[];
+  finalScore: number;
+  highScore: number;
+  range: number;
+  onRangeChange: (range: number) => void;
+}) {
+  const width = 800;
+  const height = 350;
+  const paddedX = 40;
+  const paddedY = 30;
 
-  const chartPoints = points.length > 1 ? points : [{ elapsed: 0, score: 0 }, { elapsed: 1, score: finalScore }]
-  const maxScore = Math.max(100, finalScore, highScore, ...chartPoints.map((point) => point.score))
-  const maxElapsed = Math.max(1, ...chartPoints.map((point) => point.elapsed))
-  const values = chartPoints.map((point) => ({
-    x: padded + (point.elapsed / maxElapsed) * (width - padded * 2),
-    y: height - padded - (point.score / maxScore) * (height - padded * 2),
-  }))
-  const lastPoint = values[values.length - 1]
-  const area = `M ${padded} ${height - padded} ${values.map((point) => `L ${point.x} ${point.y}`).join(" ")} L ${lastPoint?.x ?? padded} ${height - padded} Z`
-  const line = values.map((point) => `${point.x},${point.y}`).join(" ")
-  const percentile25 = values[Math.max(0, Math.floor(values.length * 0.25))]
-  const percentile50 = values[Math.max(0, Math.floor(values.length * 0.5))]
+  const chartPoints = points.length > 0 ? points : [{ elapsed: 0, score: 0 }, { elapsed: 1, score: finalScore }];
+  const maxScore = Math.max(100, finalScore, highScore, ...chartPoints.map((point) => point.score)) * 1.1;
+  const minScore = 0;
+  
+  const values = chartPoints.map((point, i) => {
+    const xProgress = chartPoints.length > 1 ? i / (chartPoints.length - 1) : 1;
+    return {
+      x: paddedX + xProgress * (width - paddedX * 2),
+      y: height - paddedY - ((point.score - minScore) / (maxScore - minScore)) * (height - paddedY * 2),
+      score: point.score
+    };
+  });
+
+  const lastPoint = values[values.length - 1];
+  const area = `M ${paddedX} ${height - paddedY} ${values.map((point) => `L ${point.x} ${point.y}`).join(" ")} L ${lastPoint?.x ?? paddedX} ${height - paddedY} Z`;
+  const line = values.map((point) => `${point.x},${point.y}`).join(" ");
 
   return (
-    <div className="rounded-lg border bg-card p-3 shadow-sm text-foreground">
-      <div className="mb-2 flex items-center justify-between text-xs font-semibold text-muted-foreground">
-        <span>Score Progression</span>
-        <span>Line Chart</span>
+    <div className="rounded-xl border bg-card/50 p-6 shadow-sm text-foreground">
+      <div className="mb-6 flex items-center justify-between">
+        <div className="space-y-1">
+          <h3 className="font-semibold text-lg flex items-center gap-2">
+            <ChartColumn className="h-5 w-5 text-primary" />
+            Performance Trend
+          </h3>
+          <p className="text-xs text-muted-foreground">Historical score progression</p>
+        </div>
+        <div className="flex bg-muted/50 p-1 rounded-lg border">
+          {[10, 25, 50].map((r) => (
+            <Button
+              key={r}
+              variant={range === r ? "secondary" : "ghost"}
+              size="sm"
+              className={cn(
+                "h-7 px-3 text-xs font-medium transition-all",
+                range === r ? "shadow-sm bg-background text-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
+              onClick={() => onRangeChange(r)}
+            >
+              Last {r}
+            </Button>
+          ))}
+        </div>
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-56 w-full text-primary">
-        <defs>
-          <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="currentColor" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="currentColor" stopOpacity="0.0" />
-          </linearGradient>
-        </defs>
-        <rect x={0} y={0} width={width} height={height} fill="transparent" />
-        <line x1={padded} y1={height - padded} x2={width - padded} y2={height - padded} stroke="currentColor" strokeOpacity="0.2" strokeWidth="1" />
-        <line x1={padded} y1={padded} x2={padded} y2={height - padded} stroke="currentColor" strokeOpacity="0.2" strokeWidth="1" />
-        {percentile25 ? (
-          <g>
-            <line x1={padded} y1={percentile25.y} x2={width - padded} y2={percentile25.y} stroke="currentColor" strokeDasharray="4 4" strokeOpacity="0.2" strokeWidth="1" />
-            <text x={width - padded} y={percentile25.y - 4} textAnchor="end" className="fill-muted-foreground text-[10px]">25th</text>
-          </g>
-        ) : null}
-        {percentile50 ? (
-          <g>
-            <line x1={padded} y1={percentile50.y} x2={width - padded} y2={percentile50.y} stroke="currentColor" strokeDasharray="2 2" strokeOpacity="0.3" strokeWidth="1" />
-            <text x={width - padded} y={percentile50.y - 4} textAnchor="end" className="fill-muted-foreground text-[10px]">50th</text>
-          </g>
-        ) : null}
-        <path d={area} fill="url(#scoreFill)" />
-        <polyline points={line} fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-        {values.map((point, index) => (
-          <circle key={`${point.x}-${index}`} cx={point.x} cy={point.y} r={3} fill="currentColor" />
-        ))}
-      </svg>
+      
+      <div className="relative group">
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto max-h-[300px] text-primary overflow-visible">
+          <defs>
+            <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="currentColor" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="currentColor" stopOpacity="0.01" />
+            </linearGradient>
+            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          {/* Grid Lines */}
+          {[0, 0.25, 0.5, 0.75, 1].map((p) => {
+            const y = height - paddedY - p * (height - paddedY * 2);
+            const scoreLabel = Math.round(minScore + p * (maxScore - minScore));
+            return (
+              <g key={p}>
+                <line 
+                  x1={paddedX} y1={y} x2={width - paddedX} y2={y} 
+                  stroke="currentColor" strokeOpacity="0.05" strokeWidth="1" 
+                />
+                <text 
+                  x={paddedX - 8} y={y + 4} 
+                  textAnchor="end" 
+                  className="fill-muted-foreground text-[10px] font-medium"
+                >
+                  {scoreLabel}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Area Fill */}
+          <path d={area} fill="url(#scoreFill)" className="transition-all duration-500 ease-in-out" />
+          
+          {/* Trend Line */}
+          <polyline 
+            points={line} 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="3" 
+            strokeLinejoin="round" 
+            strokeLinecap="round" 
+            className="transition-all duration-500 ease-in-out"
+            filter="url(#glow)"
+          />
+
+          {/* Points */}
+          {values.map((point, index) => (
+            <g key={`${point.x}-${index}`} className="group/point">
+              <circle 
+                cx={point.x} cy={point.y} r={index === values.length - 1 ? 5 : 3} 
+                fill={index === values.length - 1 ? "currentColor" : "var(--background)"} 
+                stroke="currentColor"
+                strokeWidth="2"
+                className="transition-all duration-300 group-hover/point:r-5 cursor-crosshair"
+              />
+              <title>{`Score: ${point.score}`}</title>
+            </g>
+          ))}
+
+          {/* High Score Reference */}
+          {highScore > 0 && highScore < maxScore && (
+            <g>
+              <line 
+                x1={paddedX} 
+                y1={height - paddedY - ((highScore - minScore) / (maxScore - minScore)) * (height - paddedY * 2)} 
+                x2={width - paddedX} 
+                y2={height - paddedY - ((highScore - minScore) / (maxScore - minScore)) * (height - paddedY * 2)} 
+                stroke="currentColor" 
+                strokeDasharray="4 4" 
+                strokeOpacity="0.3" 
+                strokeWidth="1.5" 
+              />
+              <text 
+                x={width - paddedX + 8} 
+                y={height - paddedY - ((highScore - minScore) / (maxScore - minScore)) * (height - paddedY * 2) + 4} 
+                className="fill-primary/60 text-[10px] font-bold"
+              >
+                BEST
+              </text>
+            </g>
+          )}
+        </svg>
+      </div>
     </div>
-  )
+  );
 }
 
 export default function ChallengeResultsDialog({
@@ -202,6 +301,7 @@ export default function ChallengeResultsDialog({
   const [activeTab, setActiveTab] = useState("leaderboard")
   const [selectedStat, setSelectedStat] = useState<"Damage" | "Hits" | "Kills" | "Total">("Total")
   const [friendsOnly, setFriendsOnly] = useState(false)
+  const [historyRange, setHistoryRange] = useState(25)
 
   const metrics = useScoreMetrics(modeState)
   const finalScore = metrics.score
@@ -214,6 +314,8 @@ export default function ChallengeResultsDialog({
   const betterThan = leaderboard.filter((row) => finalScore >= row.score).length
   const percentile = Math.round((betterThan / leaderboard.length) * 100)
   const isSessionBest = finalScore >= highScore
+
+  const displayHistory = useMemo(() => scoreHistory.slice(-historyRange), [scoreHistory, historyRange])
 
   if (!open) return null
 
@@ -229,7 +331,7 @@ export default function ChallengeResultsDialog({
       <div className="pointer-events-auto w-full max-w-6xl rounded-xl border bg-card shadow-lg overflow-hidden flex flex-col max-h-[90vh]">
         <div className="border-b bg-muted/30 px-6 py-4 flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-muted-foreground">Post-Challenge Results</p>
+            <p className="text-sm font-medium text-muted-foreground">Results</p>
             <h2 className="text-2xl font-bold tracking-tight text-foreground">{challengeName}</h2>
           </div>
           <Badge variant={isSessionBest ? "default" : "secondary"}>
@@ -261,153 +363,207 @@ export default function ChallengeResultsDialog({
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x overflow-y-auto">
-          <div className="p-6 space-y-6">
-            <div>
-              <h3 className="font-semibold text-lg">Score History</h3>
-              <p className="text-sm text-muted-foreground">Track how the run built over time.</p>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="flex items-end justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Final Score</p>
-                  <p className="text-4xl font-bold text-primary">{formatNumber(finalScore)}</p>
-                </div>
-                <div className="text-right">
-                    <p className="text-sm font-medium text-muted-foreground">Personal Best</p>
-                    <p className="text-xl font-semibold text-foreground">{formatNumber(highScore)}</p>
+              {/* Column 1: Score History & Calculation (2/3 width) */}
+              <div className="md:col-span-2 p-6 space-y-8">
+                <section className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-xl tracking-tight">Score History</h3>
+                      <p className="text-sm text-muted-foreground mt-1">Track your performance over the last {historyRange} sessions.</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="flex flex-wrap justify-end gap-2 mb-1">
+                        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">{percentile}th percentile</Badge>
+                        {isSessionBest && <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/20 hover:bg-amber-500/30">New Personal Best!</Badge>}
+                      </div>
+                    </div>
                   </div>
-              </div>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div className="lg:col-span-3">
+                      <ScoreChart 
+                        points={displayHistory} 
+                        finalScore={finalScore} 
+                        highScore={highScore} 
+                        range={historyRange}
+                        onRangeChange={setHistoryRange}
+                      />
+                    </div>
+                    
+                    <div className="flex flex-col justify-between gap-4">
+                      <div className="p-5 rounded-xl border bg-card/50 space-y-1">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Final Score</p>
+                        <p className="text-5xl font-black text-primary leading-none">{formatNumber(finalScore)}</p>
+                      </div>
+                      
+                      <div className="p-5 rounded-xl border bg-card/50 space-y-1">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Personal Best</p>
+                        <p className="text-3xl font-bold text-foreground leading-none">{formatNumber(highScore)}</p>
+                      </div>
 
-              <ScoreChart points={scoreHistory} finalScore={finalScore} highScore={highScore} />
+                      <div className="p-5 rounded-xl border bg-card/50 space-y-1">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Session Median</p>
+                        <p className="text-3xl font-bold text-foreground leading-none">{formatNumber(medianScore)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
 
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="outline">25th percentile</Badge>
-                <Badge variant="outline">50th percentile</Badge>
-                <Badge>{percentile}th percentile</Badge>
-              </div>
-            </div>
-          </div>
+                <Separator className="opacity-50" />
 
-          <div className="p-6 space-y-6">
-            <div>
-              <h3 className="font-semibold text-lg">Score Calculation</h3>
-              <p className="text-sm text-muted-foreground">Damage, hits, kills, and total breakdown.</p>
-            </div>
-            
-            <div className="grid gap-2 grid-cols-2">
-              {scoreRows.map((row) => {
-                const active = selectedStat === row.label
-                return (
-                  <Button
-                    key={row.label}
-                    variant={active ? "default" : "outline"}
-                    className="h-auto flex-col items-start py-4 px-4 justify-start text-left"
-                    onClick={() => setSelectedStat(row.label)}
-                  >
-                    <span className="text-xs text-muted-foreground font-normal opacity-80">{row.label}</span>
-                    <span className="text-xl font-bold">{row.value}</span>
-                  </Button>
-                )
-              })}
-            </div>
-
-            <div className="rounded-lg border bg-muted/20 p-4">
-              <div className="mb-3 flex flex-wrap gap-2">
-                <Badge variant="secondary">ACC {metrics.accuracy.toFixed(1)}%</Badge>
-                <Badge variant="secondary">EFF {metrics.damageEfficiency.toFixed(1)}%</Badge>
-                <Badge variant="secondary">KDR {metrics.kdr.toFixed(2)}</Badge>
-              </div>
-              <div className="flex items-end justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total</p>
-                  <p className="text-3xl font-bold text-foreground">{formatNumber(finalScore)}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-6 space-y-6 flex flex-col">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-lg">Leaderboard</h3>
-                <p className="text-sm text-muted-foreground">Compare with others.</p>
-              </div>
-              <label className="flex items-center gap-2 text-sm font-medium">
-                <input
-                  type="checkbox"
-                  checked={friendsOnly}
-                  onChange={(event) => setFriendsOnly(event.target.checked)}
-                  className="rounded border-input text-primary focus:ring-primary"
-                />
-                Friends Only
-              </label>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-md border bg-card p-3 text-center">
-                <div className="text-xs text-muted-foreground mb-1">Entries</div>
-                <div className="font-semibold text-foreground">{entriesCount}</div>
-              </div>
-              <div className="rounded-md border bg-card p-3 text-center">
-                <div className="text-xs text-muted-foreground mb-1">Median</div>
-                <div className="font-semibold text-foreground">{formatNumber(medianScore)}</div>
-              </div>
-              <div className="rounded-md border bg-card p-3 text-center">
-                <div className="text-xs text-muted-foreground mb-1">Percentile</div>
-                <div className="font-semibold text-foreground">{percentile}th</div>
-              </div>
-            </div>
-
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
-                <TabsTrigger value="analysis">Analysis</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="leaderboard" className="flex-1 overflow-auto mt-4 rounded-md border">
-                <Table>
-                  <TableHeader className="bg-muted/50 sticky top-0">
-                    <TableRow>
-                      <TableHead className="w-16">Rank</TableHead>
-                      <TableHead>Player</TableHead>
-                      <TableHead className="text-right">Score</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {visibleLeaderboard.map((row) => {
-                      const rank = leaderboard.findIndex((candidate) => candidate.player === row.player) + 1;
-                      const isMe = row.player === "You";
+                <section className="space-y-6">
+                  <div>
+                    <h3 className="font-bold text-xl tracking-tight">Score Calculation</h3>
+                    <p className="text-sm text-muted-foreground mt-1">Detailed breakdown of your session performance.</p>
+                  </div>
+                  
+                  <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+                    {scoreRows.map((row) => {
+                      const active = selectedStat === row.label
                       return (
-                        <TableRow key={row.player} className={isMe ? "bg-primary/5" : ""}>
-                          <TableCell className="font-medium text-muted-foreground">#{rank}</TableCell>
-                          <TableCell className={isMe ? "font-bold text-primary" : "font-medium"}>{row.player}</TableCell>
-                          <TableCell className="text-right font-semibold">{formatNumber(row.score)}</TableCell>
-                        </TableRow>
-                      );
+                        <Button
+                          key={row.label}
+                          variant={active ? "default" : "outline"}
+                          className={cn(
+                            "h-auto flex-col items-start py-5 px-5 transition-all duration-200",
+                            active ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : "hover:bg-muted/50"
+                          )}
+                          onClick={() => setSelectedStat(row.label)}
+                        >
+                          <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">{row.label}</span>
+                          <span className="text-2xl font-black">{row.value}</span>
+                        </Button>
+                      )
                     })}
-                  </TableBody>
-                </Table>
-              </TabsContent>
+                  </div>
 
-              <TabsContent value="analysis" className="mt-4 space-y-4">
-                <div className="rounded-md border bg-card p-4">
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Selected Stat</p>
-                  <p className="text-xl font-bold">{selectedStat}</p>
-                  <p className="text-sm text-muted-foreground mt-2">Select a stat card in the center panel to focus.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="rounded-xl border bg-primary/5 p-5 flex flex-col items-center justify-center text-center">
+                      <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Accuracy</p>
+                      <p className="text-2xl font-black text-primary">{metrics.accuracy.toFixed(1)}%</p>
+                    </div>
+                    <div className="rounded-xl border bg-muted/30 p-5 flex flex-col items-center justify-center text-center">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Efficiency</p>
+                      <p className="text-2xl font-black text-foreground">{metrics.damageEfficiency.toFixed(1)}%</p>
+                    </div>
+                    <div className="rounded-xl border bg-muted/30 p-5 flex flex-col items-center justify-center text-center">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">KDR</p>
+                      <p className="text-2xl font-black text-foreground">{metrics.kdr.toFixed(2)}</p>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              {/* Column 2: Leaderboard (1/3 width) */}
+              <div className="p-6 space-y-6 flex flex-col bg-muted/5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-xl tracking-tight">Leaderboard</h3>
+                    <p className="text-sm text-muted-foreground mt-1">Global rankings for this challenge.</p>
+                  </div>
+                  <label className="flex items-center gap-2 text-sm font-medium cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={friendsOnly}
+                      onChange={(event) => setFriendsOnly(event.target.checked)}
+                      className="rounded border-input text-primary focus:ring-primary w-4 h-4"
+                    />
+                    <span className="group-hover:text-primary transition-colors">Friends</span>
+                  </label>
                 </div>
-                <div className="rounded-md border bg-card p-4">
-                  <p className="text-sm font-medium text-muted-foreground mb-2">Quick Summary</p>
-                  <ul className="list-disc space-y-1 pl-4 text-sm">
-                    <li>Accuracy is {metrics.accuracy.toFixed(1)}%.</li>
-                    <li>Damage efficiency is {metrics.damageEfficiency.toFixed(1)}%.</li>
-                    <li>You landed {metrics.hits} hits and {metrics.kills} kills.</li>
-                  </ul>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-xl border bg-card p-3 text-center shadow-sm">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter mb-1">Entries</div>
+                    <div className="font-bold text-foreground">{formatNumber(entriesCount)}</div>
+                  </div>
+                  <div className="rounded-xl border bg-card p-3 text-center shadow-sm">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter mb-1">Median</div>
+                    <div className="font-bold text-foreground">{formatNumber(medianScore)}</div>
+                  </div>
+                  <div className="rounded-xl border bg-card p-3 text-center shadow-sm">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter mb-1">Top %</div>
+                    <div className="font-bold text-foreground">{100 - percentile}%</div>
+                  </div>
                 </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-        </div>
+
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+                  <TabsList className="grid w-full grid-cols-2 bg-muted/50">
+                    <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+                    <TabsTrigger value="analysis">Analysis</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="leaderboard" className="flex-1 overflow-auto mt-4 rounded-xl border bg-card shadow-sm">
+                    <Table>
+                      <TableHeader className="bg-muted/50 sticky top-0 z-10">
+                        <TableRow className="hover:bg-transparent">
+                          <TableHead className="w-16 font-bold text-[10px] uppercase">Rank</TableHead>
+                          <TableHead className="font-bold text-[10px] uppercase">Player</TableHead>
+                          <TableHead className="text-right font-bold text-[10px] uppercase">Score</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {visibleLeaderboard.map((row) => {
+                          const rank = leaderboard.findIndex((candidate) => candidate.player === row.player) + 1;
+                          const isMe = row.player === "You";
+                          return (
+                            <TableRow key={row.player} className={cn(
+                              "transition-colors",
+                              isMe ? "bg-primary/10 hover:bg-primary/15" : "hover:bg-muted/40"
+                            )}>
+                              <TableCell className="font-bold text-muted-foreground/60">#{rank}</TableCell>
+                              <TableCell className={cn(
+                                "flex items-center gap-2",
+                                isMe ? "font-black text-primary" : "font-semibold"
+                              )}>
+                                {row.player}
+                                {row.friend && !isMe && <Badge className="h-4 px-1 text-[8px] bg-sky-500">FRIEND</Badge>}
+                              </TableCell>
+                              <TableCell className="text-right font-bold tracking-tight">{formatNumber(row.score)}</TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TabsContent>
+
+                  <TabsContent value="analysis" className="mt-4 space-y-4 flex-1">
+                    <div className="rounded-xl border bg-card p-5 shadow-sm space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-8 bg-primary rounded-full" />
+                        <div>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Focusing On</p>
+                          <p className="text-xl font-black">{selectedStat}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Your performance in <span className="font-bold text-foreground">{selectedStat}</span> is currently 
+                        at <span className="font-bold text-foreground">{metrics[selectedStat.toLowerCase() as keyof typeof metrics]}</span>. 
+                        Select other cards in the center panel to compare.
+                      </p>
+                    </div>
+                    
+                    <div className="rounded-xl border bg-card p-5 shadow-sm">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Quick Summary</p>
+                      <ul className="space-y-3">
+                        {[
+                          { label: "Accuracy", value: `${metrics.accuracy.toFixed(1)}%`, desc: "precision in your shots" },
+                          { label: "Efficiency", value: `${metrics.damageEfficiency.toFixed(1)}%`, desc: "damage dealt vs possible" },
+                          { label: "KDR", value: metrics.kdr.toFixed(2), desc: "kills per hit ratio" }
+                        ].map(item => (
+                          <li key={item.label} className="flex gap-3 text-sm">
+                            <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                            <p className="text-muted-foreground">
+                              <span className="font-bold text-foreground">{item.label} is {item.value}</span>, reflecting your {item.desc}.
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </div>
 
         <div className="border-t bg-muted/10 p-4 flex items-center justify-between">
           <div className="flex gap-2">
@@ -420,8 +576,12 @@ export default function ChallengeResultsDialog({
               <ChartColumn className="mr-2 h-4 w-4" /> Stats
             </Button>
             <Button variant="outline" onClick={onDone}>Done</Button>
-            <Button onClick={onReplay}>
-              <RotateCcw className="mr-2 h-4 w-4" /> Replay
+            <Button
+              onClick={onReplay}
+              className="group border-border transition-colors hover:border-black hover:bg-white active:bg-white focus-visible:bg-white hover:text-black"
+            >
+              <RotateCcw className="mr-2 h-4 w-4 transition-transform duration-300 group-hover:-rotate-90 " />
+              <span>Replay</span>
             </Button>
           </div>
         </div>

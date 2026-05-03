@@ -92,7 +92,7 @@ class ChallengeMode extends FreeplayMode {
         if (overlay) overlay.remove();
     }
     /**
-     * @param {import('./Freeplay.js').FreeplayOptions & { timeLimit?: number }} options
+     * @param {import('./Freeplay.js').FreeplayOptions & { timeLimit?: number, bestScore?: number }} options
      */
     constructor({
         timeLimit = 60,
@@ -197,9 +197,12 @@ class ChallengeMode extends FreeplayMode {
         this._cursorProgress = 0;
         this._lastHudTime = null;
         
-        if (this.scenarioId && typeof window !== 'undefined' && !this.bestScore) {
+        if (this.scenarioId && typeof window !== 'undefined') {
             const raw = window.localStorage.getItem(`airdribble-best-score:${this.scenarioId}`);
-            this.bestScore = raw ? Number(raw) : 0;
+            // Use localStorage value if available, otherwise keep the value from config
+            if (raw) {
+                this.bestScore = Number(raw);
+            }
         }
 
         this._bindPauseHotkey();

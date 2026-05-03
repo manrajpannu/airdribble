@@ -28,7 +28,6 @@ export default function GamePage() {
   const [showTutorialComplete, setShowTutorialComplete] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [freeplayConfig, setFreeplayConfig] = useState({ numBalls: 1, size: 1.5, boundary: 20 });
-  const [bestScore, setBestScore] = useState(0);
 
   const callbacksRef = useRef({
     scenarioId: "",
@@ -67,19 +66,11 @@ export default function GamePage() {
   // ── Challenge session mutations ────────────────────────────────
   const endSessionMutation = useEndSession();
 
-  // ── Fetch user's best score for this challenge ─────────────────
+
+
+
   const { data: bestScoreData } = useUserBestScore(challengeDbId ?? 0, !!challengeDbId);
-  
-  useEffect(() => {
-    if (bestScoreData) {
-      setBestScore(bestScoreData.score);
-    }
-  }, [bestScoreData]);
-
-
-
-
-
+  const bestScore = bestScoreData?.score ?? null;
 
   // ── Dark mode sync ─────────────────────────────────────────────
   useEffect(() => {

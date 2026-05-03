@@ -122,7 +122,7 @@ export function AppSidebar() {
                 <span>{(mounted && darkMode) ? "Light Mode" : "Dark Mode"}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem>
+            {/* <SidebarMenuItem>
               <SidebarMenuButton
                 render={
                   <a
@@ -136,7 +136,7 @@ export function AppSidebar() {
                   </a>
                 }
               />
-            </SidebarMenuItem>
+            </SidebarMenuItem> */}
 
             {/* User profile at the very bottom */}
             <SidebarSeparator />
@@ -144,8 +144,8 @@ export function AppSidebar() {
               <DropdownMenu>
                 <DropdownMenuTrigger
                   render={
-                    <SidebarMenuButton 
-                      size="lg" 
+                    <SidebarMenuButton
+                      size="lg"
                       className="w-full justify-start data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                       render={
                         <button type="button" className="flex items-center gap-3 w-full">
@@ -172,8 +172,8 @@ export function AppSidebar() {
                     />
                   }
                 />
-                <DropdownMenuContent 
-                  side="top" 
+                <DropdownMenuContent
+                  side="top"
                   className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
                   sideOffset={4}
                 >
