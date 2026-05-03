@@ -19,17 +19,26 @@ export const queryKeys = {
 
 // ─── User Hooks ───────────────────────────────────────────────────────────────
 
-/** Fetches the current user profile. Returns null if not logged in (404). */
+/** Fetches the current user profile. Returns null if not logged in (400/404). */
 export function useMe() {
   return useQuery({
     queryKey: queryKeys.me,
-    queryFn: () => api.getMe().catch((err) => {
-      // 404 means "not a guest yet" — that's fine, not an error
-      if (err.message?.includes("404") || err.message?.includes("User not found")) {
-        return null;
-      }
-      throw err;
-    }),
+    queryFn: () =>
+      api.getMe().catch((err: Error) => {
+        const msg = err.message ?? "";
+        // 400 = no cookie yet, 404 = cookie exists but user not in DB
+        // Both mean "no user yet" — return null so GuestInit creates one
+        if (
+          msg.includes("400") ||
+          msg.includes("404") ||
+          msg.includes("Missing user_token") ||
+          msg.includes("User not found")
+        ) {
+          return null;
+        }
+        throw err;
+      }),
+    retry: false, // Don't retry on 400/404 — expected on first load
   });
 }
 

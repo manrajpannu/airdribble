@@ -31,10 +31,12 @@ const navItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const { data: user, isLoading } = useMe();
 
   useEffect(() => {
+    setMounted(true);
     if (typeof window === "undefined") return;
     const saved = window.localStorage.getItem("airdribble-theme");
     const prefersDark = saved === "dark";
@@ -51,6 +53,8 @@ export function AppSidebar() {
     });
   };
 
+  const logoSrc = (mounted && darkMode) ? "/icons/logo-white.png" : "/icons/logo-black.png";
+
   return (
     <>
       <GuestInit />
@@ -59,7 +63,7 @@ export function AppSidebar() {
           <div className="flex flex-col gap-4">
             <div className="relative h-9 w-full">
               <Image
-                src={darkMode ? "/icons/logo-white.png" : "/icons/logo-black.png"}
+                src={logoSrc}
                 alt="airdribble logo"
                 fill
                 className="object-contain object-left pr-12"
@@ -114,8 +118,8 @@ export function AppSidebar() {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton onClick={toggleDarkMode}>
-                {darkMode ? <Sun className="size-4 shrink-0" /> : <Moon className="size-4 shrink-0" />}
-                <span>{darkMode ? "Light Mode" : "Dark Mode"}</span>
+                {(mounted && darkMode) ? <Sun className="size-4 shrink-0" /> : <Moon className="size-4 shrink-0" />}
+                <span>{(mounted && darkMode) ? "Light Mode" : "Dark Mode"}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
@@ -137,25 +141,47 @@ export function AppSidebar() {
             {/* User profile at the very bottom */}
             <SidebarSeparator />
             <SidebarMenuItem>
-              <div className="flex items-center gap-3 px-2 py-2 rounded-md w-full">
-                <div className="flex items-center justify-center size-8 rounded-full bg-muted shrink-0">
-                  <User className="size-4 text-muted-foreground" />
-                </div>
-                <div className="flex flex-col min-w-0">
-                  {isLoading || !user ? (
-                    <div className="h-3 w-24 rounded bg-muted animate-pulse" />
-                  ) : (
-                    <>
-                      <span className="text-sm font-medium text-foreground truncate">
-                        {user.username}
-                      </span>
-                      <span className="text-xs text-muted-foreground truncate">
-                        Guest
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <SidebarMenuButton 
+                      size="lg" 
+                      className="w-full justify-start data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                      render={
+                        <button type="button" className="flex items-center gap-3 w-full">
+                          <div className="flex items-center justify-center size-8 rounded-full bg-muted shrink-0">
+                            <User className="size-4 text-muted-foreground" />
+                          </div>
+                          <div className="flex flex-col min-w-0 flex-1 text-left">
+                            {(!mounted || isLoading || !user) ? (
+                              <div className="h-3 w-24 rounded bg-muted animate-pulse" />
+                            ) : (
+                              <>
+                                <span className="text-sm font-medium text-foreground truncate">
+                                  {user.username}
+                                </span>
+                                <span className="text-xs text-muted-foreground truncate">
+                                  Guest
+                                </span>
+                              </>
+                            )}
+                          </div>
+                          <ChevronUp className="size-4 shrink-0 text-muted-foreground ml-auto" />
+                        </button>
+                      }
+                    />
+                  }
+                />
+                <DropdownMenuContent 
+                  side="top" 
+                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                  sideOffset={4}
+                >
+                  <DropdownMenuItem render={<Link href="/profile" className="cursor-pointer">Profile</Link>} />
+                  <DropdownMenuItem className="cursor-pointer">Login</DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer">Create Account</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
