@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 export const queryKeys = {
   me: ["me"] as const,
   challenges: ["challenges"] as const,
-  challenge: (id: number) => ["challenge", id] as const,
+  challenge: (slug: string) => ["challenge", slug] as const,
   ranks: ["ranks"] as const,
   rank: (id: number) => ["rank", id] as const,
   leaderboard: (challengeId: number) => ["leaderboard", challengeId] as const,
@@ -75,11 +75,11 @@ export function useChallenges() {
   });
 }
 
-export function useChallenge(id: number) {
+export function useChallenge(slug: string) {
   return useQuery({
-    queryKey: queryKeys.challenge(id),
-    queryFn: () => api.getChallenge(id),
-    enabled: !!id,
+    queryKey: queryKeys.challenge(slug),
+    queryFn: () => api.getChallenge(slug),
+    enabled: !!slug,
     staleTime: 5 * 60 * 1000,
   });
 }

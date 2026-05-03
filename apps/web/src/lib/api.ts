@@ -34,12 +34,48 @@ export interface Rank {
   division: number | null;
 }
 
+export interface ChallengeConfig {
+  numBalls?: number;
+  health?: number;
+  movement?: string;
+  size?: number | number[];
+  timeLimit?: number;
+  boundary?: number;
+  colors?: string[];
+  reticleType?: string;
+  reticleColor?: string;
+  holdSliderEnabled?: boolean;
+  holdSliderSeconds?: number;
+  isStriped?: boolean;
+  stripedAngle?: number | string;
+  stripeTolerance?: number;
+  bulletsEnabled?: boolean;
+  bulletAmmo?: number;
+  bulletCooldownSeconds?: number;
+  bulletReloadSeconds?: number;
+  autoBulletReload?: boolean;
+  killEffect?: string;
+  onHoverEffect?: string;
+  pointsPerKill?: number;
+  pointsPerHit?: number;
+  pointsPerMiss?: number;
+  [key: string]: unknown;
+}
+
 export interface Challenge {
   id: number;
-  name: string;
-  difficulty: string;
-  config: string;
+  slug: string;
+  title: string;
+  description: string;
+  tags: string[];
+  thumbnail: string;
+  icon: string;
+  duration_ms: number;
+  difficulty: number;
   active: boolean;
+  config: ChallengeConfig;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Score {
@@ -78,8 +114,8 @@ export const api = {
   // Challenges
   getChallenges: () => apiFetch<Challenge[]>("/api/v1/challenges"),
 
-  getChallenge: (id: number) =>
-    apiFetch<Challenge>(`/api/v1/challenge?id=${id}`),
+  getChallenge: (slug: string) =>
+    apiFetch<Challenge>(`/api/v1/challenge?slug=${slug}`),
 
   // Ranks
   getRanks: () => apiFetch<Rank[]>("/api/v1/ranks"),

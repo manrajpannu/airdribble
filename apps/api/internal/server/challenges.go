@@ -2,20 +2,19 @@ package server
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/manrajpannu/airdribble/apps/api/internal/database"
 )
 
-// getChallenges retrieves all challenges from the database
+// getChallenges retrieves all active challenges from the database
 //
 // @Summary List all challenges
-// @Description Returns a list of all available Airdribble training challenges. Each challenge includes its configuration (targets, duration, seed type), difficulty rating, and active status. Use this to populate the challenge selection screen.
+// @Description Returns a list of all active challenges ordered by difficulty. Each challenge includes its slug, title, tags, thumbnail, icon, and parsed config object.
 // @Tags challenges
 // @Produce json
 // @Success 200 {array} database.Challenge "List of challenges"
-// @Failure 500 {object} map[string]string "Internal server error — database query failed"
+// @Failure 500 {object} map[string]string "Internal server error"
 // @Router /api/v1/challenges [get]
 func (app *Application) getChallenges(c *gin.Context) {
 	challenges, err := app.models.Challenge.GetAll()
@@ -27,34 +26,32 @@ func (app *Application) getChallenges(c *gin.Context) {
 	c.JSON(http.StatusOK, challenges)
 }
 
-// getChallenge retrieves a specific challenge by ID
+// getChallenge retrieves a specific challenge by slug
 //
-// @Summary Get a challenge by ID
-// @Description Returns a single challenge by its unique numeric ID. Includes the full challenge configuration JSON (target layout, timing, etc.), difficulty, seed type, and active status. Returns 404 if the ID does not exist.
+// @Summary Get a challenge by slug
+// @Description Returns a single challenge by its unique slug (e.g. "ball-tracking"). Includes the full parsed config object, tags, thumbnail, and icon.
 // @Tags challenges
 // @Produce json
-// @Param id query int true "Unique challenge ID" example(1)
+// @Param slug query string true "Challenge slug" example("ball-tracking")
 // @Success 200 {object} database.Challenge "Challenge found"
-// @Failure 400 {object} map[string]string "Invalid or non-numeric challenge ID provided"
-// @Failure 404 {object} map[string]string "No challenge found with the given ID"
-// @Failure 500 {object} map[string]string "Internal server error — database query failed"
+// @Failure 400 {object} map[string]string "Missing slug parameter"
+// @Failure 404 {object} map[string]string "Challenge not found"
+// @Failure 500 {object} map[string]string "Internal server error"
 // @Router /api/v1/challenge [get]
 func (app *Application) getChallenge(c *gin.Context) {
-	id, err := strconv.Atoi(c.Query("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid challenge ID"})
+	slug := c.Query("slug")
+	if slug == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing slug parameter"})
 		return
 	}
 
-	challenge, err := app.models.Challenge.Get(id)
-
-	if challenge == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge not found"})
-		return
-	}
-
+	challenge, err := app.models.Challenge.Get(slug)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch challenge"})
+		return
+	}
+	if challenge == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge not found"})
 		return
 	}
 
