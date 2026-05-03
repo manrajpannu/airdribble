@@ -12,9 +12,9 @@ type GuestUserModel struct {
 
 type GuestUser struct {
 	ID        int    `json:"id"`
-	Username  string `json:"username" binding:"required"`
+	Username  string `json:"username"`
 	Token     string `json:"token"`
-	RankID    int    `json:"rank_id"`
+	RankID    *int   `json:"rank_id"`
 	Location  string `json:"location"`
 	IPAddress string `json:"ip_address"`
 	CreatedAt string `json:"created_at"`

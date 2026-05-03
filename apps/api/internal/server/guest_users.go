@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -14,24 +15,20 @@ import (
 // @Summary Create a guest user and returns a token
 // @Description creates a guest user account in the database and returns a token
 // @Tags users
-// @Accept json
-// @Produce json
-// @Param guest_user body database.GuestUser true "Guest user info"
 // @Success 201 {object} map[string]string
 // @Router /api/v1/users/guest [post]
 func (app *Application) createGuestUser(c *gin.Context) {
 	var guest_user database.GuestUser
 
-	if err := c.ShouldBindJSON(&guest_user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	// No request body is required or allowed for guest creation
 
 	token, err := auth.GenerateToken()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
 	}
+
+	guest_user.Username = fmt.Sprintf("Guest-%s", token[:6])
 
 	guest_user.IPAddress = c.ClientIP()
 	guest_user.Token = token
