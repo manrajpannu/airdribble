@@ -5,10 +5,10 @@ import (
 	"log"
 	"time"
 
-	_ "github.com/manrajpannu/rl-dart-api/docs"
+	_ "github.com/manrajpannu/airdribble/apps/api/docs"
 
-	"github.com/manrajpannu/rl-dart-api/internal/database"
-	"github.com/manrajpannu/rl-dart-api/internal/env"
+	"github.com/manrajpannu/airdribble/apps/api/internal/database"
+	"github.com/manrajpannu/airdribble/apps/api/internal/env"
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
 	_ "modernc.org/sqlite"
 )

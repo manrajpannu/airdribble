@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/manrajpannu/rl-dart-api/internal/server"
+	"github.com/manrajpannu/airdribble/apps/api/internal/server"
 )
 
 func main() {

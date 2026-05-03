@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/manrajpannu/rl-dart-api/internal/auth"
-	"github.com/manrajpannu/rl-dart-api/internal/database"
+	"github.com/manrajpannu/airdribble/apps/api/internal/auth"
+	"github.com/manrajpannu/airdribble/apps/api/internal/database"
 )
 
 // createChallengeSession starts a new challenge attempt for the authenticated user

@@ -2,8 +2,10 @@ package server
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/manrajpannu/airdribble/apps/api/internal/middleware"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -11,7 +13,9 @@ import (
 func (app *Application) Routes() http.Handler {
 	g := gin.Default()
 
-	v1 := g.Group("/api/v1")
+	// Global soft rate limiter: 60 requests/min per IP — stops bots, invisible to real users
+	globalLimiter := middleware.NewRateLimiter(60, 1*time.Minute)
+	v1 := g.Group("/api/v1", globalLimiter.Middleware())
 
 	// ranks routes
 	{
@@ -25,9 +29,10 @@ func (app *Application) Routes() http.Handler {
 		v1.GET("/challenge", app.getChallenge)
 	}
 
-	// users
+	// users — guest creation has an additional strict limiter (3 per hour)
+	guestLimiter := middleware.NewRateLimiter(3, 1*time.Hour)
 	{
-		v1.POST("/users/guest", app.createGuestUser)
+		v1.POST("/users/guest", guestLimiter.Middleware(), app.createGuestUser)
 		v1.PATCH("/users/me", app.updateGuestUser)
 	}
 

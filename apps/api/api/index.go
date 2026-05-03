@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/manrajpannu/rl-dart-api/internal/server"
+	"github.com/manrajpannu/airdribble/apps/api/internal/server"
 )
 
 var app *server.Application

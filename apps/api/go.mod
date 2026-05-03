@@ -1,4 +1,4 @@
-module github.com/manrajpannu/rl-dart-api
+module github.com/manrajpannu/airdribble/apps/api
 
 go 1.25.1
 
