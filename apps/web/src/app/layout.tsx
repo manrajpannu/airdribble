@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import AppShell from "@/components/app-shell";
+import { QueryProvider } from "@/components/query-provider";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -44,7 +45,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`h-full antialiased ${poppins.variable}`}>
       <body className="min-h-full bg-background text-foreground font-poppins">
-        <AppShell>{children}</AppShell>
+        <QueryProvider>
+          <AppShell>{children}</AppShell>
+        </QueryProvider>
         <Analytics />
       </body>
     </html>

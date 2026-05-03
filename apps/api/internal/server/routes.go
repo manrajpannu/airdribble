@@ -2,9 +2,12 @@ package server
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/manrajpannu/airdribble/apps/api/internal/env"
 	"github.com/manrajpannu/airdribble/apps/api/internal/middleware"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -13,7 +16,17 @@ import (
 func (app *Application) Routes() http.Handler {
 	g := gin.Default()
 
-	// Global soft rate limiter: 60 requests/min per IP — stops bots, invisible to real users
+	// CORS — read allowed origins from env, default to localhost for dev
+	allowedOriginsEnv := env.GetEnvString("ALLOWED_ORIGINS", "http://localhost:3000")
+	allowedOrigins := strings.Split(allowedOriginsEnv, ",")
+
+	g.Use(cors.New(cors.Config{
+		AllowOrigins:     allowedOrigins,
+		AllowMethods:     []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowCredentials: true, // Required for cookies (user_token, session_token)
+		MaxAge:           12 * time.Hour,
+	}))
 	globalLimiter := middleware.NewRateLimiter(60, 1*time.Minute)
 	v1 := g.Group("/api/v1", globalLimiter.Middleware())
 
