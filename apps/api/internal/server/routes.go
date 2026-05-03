@@ -28,6 +28,7 @@ func (app *Application) Routes() http.Handler {
 	// users
 	{
 		v1.POST("/users/guest", app.createGuestUser)
+		v1.PATCH("/users/me", app.updateGuestUser)
 	}
 
 	// challenge session

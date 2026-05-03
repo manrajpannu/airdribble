@@ -33,3 +33,17 @@ func (m *GuestUserModel) Insert(guest_user *GuestUser) error {
 
 	return nil
 }
+
+func (m *GuestUserModel) Update(guest_user *GuestUser) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `UPDATE guest_users SET username = ?, rank_id = ? WHERE token = ?`
+
+	_, err := m.DB.ExecContext(ctx, query, guest_user.Username, guest_user.RankID, guest_user.Token)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

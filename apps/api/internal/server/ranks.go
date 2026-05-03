@@ -9,12 +9,12 @@ import (
 
 // getRanks retrieves all ranks from the database
 //
-// @Summary Get all ranks
-// @Description Retrieve a list of all ranks
+// @Summary List all Rocket League ranks
+// @Description Returns the full list of all Rocket League ranks seeded in the database, ordered from Bronze I to Supersonic Legend. Use this to populate the rank selection dropdown on the user profile page. Each rank has a tier name (e.g. "Diamond"), a tier number (1–3), and a division (1–4).
 // @Tags ranks
-// @Accept json
 // @Produce json
-// @Success 200 {array} []database.Rank
+// @Success 200 {array} database.Rank "Full list of Rocket League ranks"
+// @Failure 500 {object} map[string]string "Internal server error — database query failed"
 // @Router /api/v1/ranks [get]
 func (app *Application) getRanks(c *gin.Context) {
 	ranks, err := app.models.Rank.GetAll()
@@ -29,11 +29,14 @@ func (app *Application) getRanks(c *gin.Context) {
 // getRank retrieves a specific rank by ID
 //
 // @Summary Get a rank by ID
-// @Description Retrieve a specific rank using its ID
+// @Description Returns a single Rocket League rank by its unique numeric ID. Returns 404 if the rank does not exist. Rank IDs are stable — they are seeded in order from Bronze I (id=1) to Supersonic Legend (id=87).
 // @Tags ranks
-// @Accept json
 // @Produce json
-// @Param id query int true "Rank ID"
+// @Param id query int true "Unique rank ID" example(51)
+// @Success 200 {object} database.Rank "Rank found"
+// @Failure 400 {object} map[string]string "Invalid or non-numeric rank ID provided"
+// @Failure 404 {object} map[string]string "No rank found with the given ID"
+// @Failure 500 {object} map[string]string "Internal server error — database query failed"
 // @Router /api/v1/rank [get]
 func (app *Application) getRank(c *gin.Context) {
 	id, err := strconv.Atoi(c.Query("id"))

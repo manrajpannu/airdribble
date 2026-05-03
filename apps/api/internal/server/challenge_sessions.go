@@ -9,15 +9,16 @@ import (
 	"github.com/manrajpannu/rl-dart-api/internal/database"
 )
 
-// @Summary Start a new challenge session
-// @Description Starts a new session for a challenge and returns the session token
+// createChallengeSession starts a new challenge attempt for the authenticated user
+//
+// @Summary Start a challenge session
+// @Description Creates a new challenge session for the currently authenticated guest user. This must be called before the user starts a challenge attempt. On success, a short-lived `session_token` cookie is set (default 1 hour) which is required to submit a score when the session ends. Requires an active `user_token` cookie. The challenge must exist and be active.
 // @Tags challenge_sessions
-// @Accept json
 // @Produce json
-// @Param challenge_id path int true "ID of the challenge to start a session for"
-// @Success 201 {object} gin.H "Session successfully created"
-// @Failure 400 {object} gin.H "Invalid challenge ID, Challenge ID does not exist, or Missing user_token cookie"
-// @Failure 500 {object} gin.H "Database error or Failed to generate token/create challenge session"
+// @Param challenge_id path int true "ID of the challenge to begin a session for" example(1)
+// @Success 201 {object} map[string]string "Session created successfully — session_token cookie is set"
+// @Failure 400 {object} map[string]string "Invalid challenge ID, challenge does not exist, or missing user_token cookie"
+// @Failure 500 {object} map[string]string "Internal server error — failed to generate session token or write to database"
 // @Router /api/v1/challenges/{challenge_id}/session [post]
 func (app *Application) createChallengeSession(c *gin.Context) {
 
@@ -78,12 +79,17 @@ func (app *Application) createChallengeSession(c *gin.Context) {
 
 }
 
-// @Summary End a challenge session
-// @Description Marks a challenge session as completed
+// endChallengeSession ends an active session and submits the player's score
+//
+// @Summary End a challenge session and submit score
+// @Description Marks an active challenge session as complete and saves the player's final score. This endpoint validates both the `user_token` and `session_token` cookies to prevent score manipulation. After saving the score, it automatically updates the leaderboard if the new score is the user's personal best. The `session_token` cookie is cleared on success. Requires both `user_token` and `session_token` cookies to be present.
 // @Tags challenge_sessions
 // @Accept json
 // @Produce json
-// @Param score body database.Score true "Score information"
+// @Param score body database.Score true "The player's final score for the challenge attempt"
+// @Success 200 {object} map[string]string "Session ended and score saved successfully"
+// @Failure 400 {object} map[string]string "Missing user_token or session_token cookie, or invalid score payload"
+// @Failure 500 {object} map[string]string "Internal server error — failed to end session, save score, or update leaderboard"
 // @Router /api/v1/challenges/session/end [patch]
 func (app *Application) endChallengeSession(c *gin.Context) {
 

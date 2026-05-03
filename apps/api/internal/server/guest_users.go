@@ -10,12 +10,14 @@ import (
 	"github.com/manrajpannu/rl-dart-api/internal/database"
 )
 
-// createGuestUser creates a guest user account in the database and returns a token
+// createGuestUser creates a zero-friction anonymous account on first site visit
 //
-// @Summary Create a guest user and returns a token
-// @Description creates a guest user account in the database and returns a token
+// @Summary Create a guest user account
+// @Description Instantly creates an anonymous guest account with no sign-up required. No request body needed. A random username (e.g. "Guest-a3f9c2") and a secure 64-character hex identity token are generated automatically. The token is set as an HttpOnly `user_token` cookie valid for 7 days. All challenge scores are tied to this identity — calling this endpoint again creates a fresh guest account.
 // @Tags users
-// @Success 201 {object} map[string]string
+// @Produce json
+// @Success 201 {object} map[string]string "Guest account created — user_token cookie is set"
+// @Failure 500 {object} map[string]string "Internal server error — failed to generate token or write to database"
 // @Router /api/v1/users/guest [post]
 func (app *Application) createGuestUser(c *gin.Context) {
 	var guest_user database.GuestUser
@@ -53,15 +55,16 @@ func (app *Application) createGuestUser(c *gin.Context) {
 	})
 }
 
-// getUserScores returns all scores for the authenticated user for a challenge
+// getUserScores returns all historical scores for the authenticated user on a challenge
 //
-// @Summary Get scores for current user
-// @Description Retrieve all scores for the authenticated user for a given challenge
+// @Summary Get all scores for the current user
+// @Description Returns every recorded score for the authenticated user on a specific challenge, ordered by most recent first. Use this to display a score history graph or replay timeline. Authentication is via the `user_token` HttpOnly cookie. Requires a valid `challenge_id` query parameter.
 // @Tags scores
-// @Accept json
 // @Produce json
-// @Param challenge_id query int true "Challenge ID"
-// @Success 200 {array} []database.Score
+// @Param challenge_id query int true "ID of the challenge to retrieve scores for" example(1)
+// @Success 200 {array} database.Score "All recorded scores for this user on the given challenge"
+// @Failure 400 {object} map[string]string "Missing user_token cookie or invalid challenge_id"
+// @Failure 500 {object} map[string]string "Internal server error — database query failed"
 // @Router /api/v1/me/scores [get]
 func (app *Application) getUserScores(c *gin.Context) {
 	userToken, err := c.Cookie("user_token")
@@ -84,15 +87,16 @@ func (app *Application) getUserScores(c *gin.Context) {
 	c.JSON(http.StatusOK, scores)
 }
 
-// getUserBestScore returns the best score for the authenticated user for a challenge
+// getUserBestScore returns the user's all-time best score for a challenge
 //
-// @Summary Get best score for current user
-// @Description Retrieve the best score for the authenticated user for a given challenge
+// @Summary Get current user's personal best score
+// @Description Returns the single highest score achieved by the authenticated user for the given challenge. This is the score used for the leaderboard. Returns null/empty if the user has not yet completed the challenge. Authentication is via the `user_token` HttpOnly cookie.
 // @Tags scores
-// @Accept json
 // @Produce json
-// @Param challenge_id query int true "Challenge ID"
-// @Success 200 {object} database.Score
+// @Param challenge_id query int true "ID of the challenge to retrieve the best score for" example(1)
+// @Success 200 {object} database.Score "The user's personal best score entry for this challenge"
+// @Failure 400 {object} map[string]string "Missing user_token cookie or invalid challenge_id"
+// @Failure 500 {object} map[string]string "Internal server error — database query failed"
 // @Router /api/v1/me/best-score [get]
 func (app *Application) getUserBestScore(c *gin.Context) {
 	userToken, err := c.Cookie("user_token")
@@ -115,15 +119,16 @@ func (app *Application) getUserBestScore(c *gin.Context) {
 	c.JSON(http.StatusOK, score)
 }
 
-// calculateUserPercentile returns the percentile rank for the authenticated user for a challenge
+// calculateUserPercentile returns where the user ranks relative to all other players
 //
-// @Summary Get percentile rank for current user
-// @Description Retrieve the percentile rank for the authenticated user for a given challenge
+// @Summary Get current user's percentile ranking
+// @Description Calculates and returns the user's percentile position (0–100) on the global leaderboard for a specific challenge. A score of 95.0 means the user is in the top 5% of all players. A score of 50.0 means they are exactly at the median. Returns 0.0 if the user has not yet completed the challenge. Authentication is via the `user_token` HttpOnly cookie.
 // @Tags scores
-// @Accept json
 // @Produce json
-// @Param challenge_id query int true "Challenge ID"
-// @Success 200 {object} map[string]float64
+// @Param challenge_id query int true "ID of the challenge to calculate percentile for" example(1)
+// @Success 200 {object} map[string]float64 "The user's percentile ranking — e.g. {\"percentile\": 87.5}"
+// @Failure 400 {object} map[string]string "Missing user_token cookie or invalid challenge_id"
+// @Failure 500 {object} map[string]string "Internal server error — database query failed"
 // @Router /api/v1/me/percentile [get]
 func (app *Application) calculateUserPercentile(c *gin.Context) {
 	userToken, err := c.Cookie("user_token")
@@ -144,4 +149,50 @@ func (app *Application) calculateUserPercentile(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"percentile": percentile})
+}
+
+// updateGuestUser updates a guest user's public display name and Rocket League rank
+//
+// @Summary Update guest user profile
+// @Description Allows a guest user to personalise their profile by setting a custom display name and their Rocket League rank. This converts a "basic guest" into an "improved guest" with a real identity on the leaderboard. Both fields are optional — send only the ones you want to update. Authentication is via the `user_token` HttpOnly cookie. The rank_id must correspond to a valid rank from GET /api/v1/ranks.
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param profile body object true "Profile fields to update" example({"username":"RocketKing","rank_id":51})
+// @Success 200 {object} map[string]string "Profile updated successfully"
+// @Failure 400 {object} map[string]string "Missing user_token cookie or invalid JSON body"
+// @Failure 500 {object} map[string]string "Internal server error — database update failed"
+// @Router /api/v1/users/me [patch]
+func (app *Application) updateGuestUser(c *gin.Context) {
+	userToken, err := c.Cookie("user_token")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing user_token cookie"})
+		return
+	}
+
+	var input struct {
+		Username string `json:"username"`
+		RankID   *int   `json:"rank_id"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	guest_user := database.GuestUser{
+		Token:    userToken,
+		Username: input.Username,
+		RankID:   input.RankID,
+	}
+
+	err = app.models.GuestUser.Update(&guest_user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update guest user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "guest user updated",
+	})
 }

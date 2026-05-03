@@ -1,18 +1,12 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is the API documentation for the RL-Dart application.",
-        "title": "RL-Dart API",
-        "contact": {},
-        "version": "1.0"
+        "contact": {}
     },
     "paths": {
         "/api/v1/challenge": {
             "get": {
-                "description": "Retrieve a specific challenge using its ID",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Returns a single challenge by its unique numeric ID. Includes the full challenge configuration JSON (target layout, timing, etc.), difficulty, seed type, and active status. Returns 404 if the ID does not exist.",
                 "produces": [
                     "application/json"
                 ],
@@ -23,38 +17,76 @@
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Challenge ID",
+                        "example": 1,
+                        "description": "Unique challenge ID",
                         "name": "id",
                         "in": "query",
                         "required": true
                     }
                 ],
-                "responses": {}
+                "responses": {
+                    "200": {
+                        "description": "Challenge found",
+                        "schema": {
+                            "$ref": "#/definitions/database.Challenge"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid or non-numeric challenge ID provided",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No challenge found with the given ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error — database query failed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
             }
         },
         "/api/v1/challenges": {
             "get": {
-                "description": "Retrieve a list of all challenges",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Returns a list of all available Airdribble training challenges. Each challenge includes its configuration (targets, duration, seed type), difficulty rating, and active status. Use this to populate the challenge selection screen.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "challenges"
                 ],
-                "summary": "Get all challenges",
+                "summary": "List all challenges",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "List of challenges",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "array",
-                                "items": {
-                                    "$ref": "#/definitions/database.Challenge"
-                                }
+                                "$ref": "#/definitions/database.Challenge"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error — database query failed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     }
@@ -63,7 +95,7 @@
         },
         "/api/v1/challenges/session/end": {
             "patch": {
-                "description": "Marks a challenge session as completed",
+                "description": "Marks an active challenge session as complete and saves the player's final score. This endpoint validates both the `user_token` and `session_token` cookies to prevent score manipulation. After saving the score, it automatically updates the leaderboard if the new score is the user's personal best. The `session_token` cookie is cleared on success. Requires both `user_token` and `session_token` cookies to be present.",
                 "consumes": [
                     "application/json"
                 ],
@@ -73,10 +105,10 @@
                 "tags": [
                     "challenge_sessions"
                 ],
-                "summary": "End a challenge session",
+                "summary": "End a challenge session and submit score",
                 "parameters": [
                     {
-                        "description": "Score information",
+                        "description": "The player's final score for the challenge attempt",
                         "name": "score",
                         "in": "body",
                         "required": true,
@@ -85,26 +117,52 @@
                         }
                     }
                 ],
-                "responses": {}
+                "responses": {
+                    "200": {
+                        "description": "Session ended and score saved successfully",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Missing user_token or session_token cookie, or invalid score payload",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error — failed to end session, save score, or update leaderboard",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
             }
         },
         "/api/v1/challenges/{challenge_id}/session": {
             "post": {
-                "description": "Starts a new session for a challenge and returns the session token",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Creates a new challenge session for the currently authenticated guest user. This must be called before the user starts a challenge attempt. On success, a short-lived `session_token` cookie is set (default 1 hour) which is required to submit a score when the session ends. Requires an active `user_token` cookie. The challenge must exist and be active.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "challenge_sessions"
                 ],
-                "summary": "Start a new challenge session",
+                "summary": "Start a challenge session",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID of the challenge to start a session for",
+                        "example": 1,
+                        "description": "ID of the challenge to begin a session for",
                         "name": "challenge_id",
                         "in": "path",
                         "required": true
@@ -112,21 +170,30 @@
                 ],
                 "responses": {
                     "201": {
-                        "description": "Session successfully created",
+                        "description": "Session created successfully — session_token cookie is set",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "400": {
-                        "description": "Invalid challenge ID, Challenge ID does not exist, or Missing user_token cookie",
+                        "description": "Invalid challenge ID, challenge does not exist, or missing user_token cookie",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "500": {
-                        "description": "Database error or Failed to generate token/create challenge session",
+                        "description": "Internal server error — failed to generate session token or write to database",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -134,21 +201,19 @@
         },
         "/api/v1/leaderboard": {
             "get": {
-                "description": "Retrieve the global leaderboard for a specific challenge",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Returns a ranked list of the top players for a specific challenge, ordered by best score descending. Each entry contains the player's username, their best score, and their Rocket League rank. Use this to display the challenge leaderboard and show where the current user stands relative to others.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "leaderboards"
                 ],
-                "summary": "Get challenge leaderboard",
+                "summary": "Get the leaderboard for a challenge",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Challenge ID",
+                        "example": 1,
+                        "description": "Unique challenge ID to fetch the leaderboard for",
                         "name": "challenge_id",
                         "in": "query",
                         "required": true
@@ -156,15 +221,30 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Ranked leaderboard entries for the given challenge",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "additionalProperties": true
-                                }
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid or non-numeric challenge_id provided",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error — database query failed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     }
@@ -173,21 +253,19 @@
         },
         "/api/v1/me/best-score": {
             "get": {
-                "description": "Retrieve the best score for the authenticated user for a given challenge",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Returns the single highest score achieved by the authenticated user for the given challenge. This is the score used for the leaderboard. Returns null/empty if the user has not yet completed the challenge. Authentication is via the `user_token` HttpOnly cookie.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "scores"
                 ],
-                "summary": "Get best score for current user",
+                "summary": "Get current user's personal best score",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Challenge ID",
+                        "example": 1,
+                        "description": "ID of the challenge to retrieve the best score for",
                         "name": "challenge_id",
                         "in": "query",
                         "required": true
@@ -195,9 +273,27 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "The user's personal best score entry for this challenge",
                         "schema": {
                             "$ref": "#/definitions/database.Score"
+                        }
+                    },
+                    "400": {
+                        "description": "Missing user_token cookie or invalid challenge_id",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error — database query failed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -205,21 +301,19 @@
         },
         "/api/v1/me/percentile": {
             "get": {
-                "description": "Retrieve the percentile rank for the authenticated user for a given challenge",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Calculates and returns the user's percentile position (0–100) on the global leaderboard for a specific challenge. A score of 95.0 means the user is in the top 5% of all players. A score of 50.0 means they are exactly at the median. Returns 0.0 if the user has not yet completed the challenge. Authentication is via the `user_token` HttpOnly cookie.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "scores"
                 ],
-                "summary": "Get percentile rank for current user",
+                "summary": "Get current user's percentile ranking",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Challenge ID",
+                        "example": 1,
+                        "description": "ID of the challenge to calculate percentile for",
                         "name": "challenge_id",
                         "in": "query",
                         "required": true
@@ -227,12 +321,30 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "The user's percentile ranking — e.g. {\\\"percentile\\\": 87.5}",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
                                 "type": "number",
                                 "format": "float64"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Missing user_token cookie or invalid challenge_id",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error — database query failed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     }
@@ -241,21 +353,19 @@
         },
         "/api/v1/me/scores": {
             "get": {
-                "description": "Retrieve all scores for the authenticated user for a given challenge",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Returns every recorded score for the authenticated user on a specific challenge, ordered by most recent first. Use this to display a score history graph or replay timeline. Authentication is via the `user_token` HttpOnly cookie. Requires a valid `challenge_id` query parameter.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "scores"
                 ],
-                "summary": "Get scores for current user",
+                "summary": "Get all scores for the current user",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Challenge ID",
+                        "example": 1,
+                        "description": "ID of the challenge to retrieve scores for",
                         "name": "challenge_id",
                         "in": "query",
                         "required": true
@@ -263,14 +373,29 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "All recorded scores for this user on the given challenge",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "array",
-                                "items": {
-                                    "$ref": "#/definitions/database.Score"
-                                }
+                                "$ref": "#/definitions/database.Score"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Missing user_token cookie or invalid challenge_id",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error — database query failed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     }
@@ -279,10 +404,7 @@
         },
         "/api/v1/rank": {
             "get": {
-                "description": "Retrieve a specific rank using its ID",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Returns a single Rocket League rank by its unique numeric ID. Returns 404 if the rank does not exist. Rank IDs are stable — they are seeded in order from Bronze I (id=1) to Supersonic Legend (id=87).",
                 "produces": [
                     "application/json"
                 ],
@@ -293,38 +415,76 @@
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Rank ID",
+                        "example": 51,
+                        "description": "Unique rank ID",
                         "name": "id",
                         "in": "query",
                         "required": true
                     }
                 ],
-                "responses": {}
+                "responses": {
+                    "200": {
+                        "description": "Rank found",
+                        "schema": {
+                            "$ref": "#/definitions/database.Rank"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid or non-numeric rank ID provided",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No rank found with the given ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error — database query failed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
             }
         },
         "/api/v1/ranks": {
             "get": {
-                "description": "Retrieve a list of all ranks",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Returns the full list of all Rocket League ranks seeded in the database, ordered from Bronze I to Supersonic Legend. Use this to populate the rank selection dropdown on the user profile page. Each rank has a tier name (e.g. \"Diamond\"), a tier number (1–3), and a division (1–4).",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "ranks"
                 ],
-                "summary": "Get all ranks",
+                "summary": "List all Rocket League ranks",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Full list of Rocket League ranks",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "array",
-                                "items": {
-                                    "$ref": "#/definitions/database.Rank"
-                                }
+                                "$ref": "#/definitions/database.Rank"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error — database query failed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     }
@@ -333,7 +493,39 @@
         },
         "/api/v1/users/guest": {
             "post": {
-                "description": "creates a guest user account in the database and returns a token",
+                "description": "Instantly creates an anonymous guest account with no sign-up required. No request body needed. A random username (e.g. \"Guest-a3f9c2\") and a secure 64-character hex identity token are generated automatically. The token is set as an HttpOnly `user_token` cookie valid for 7 days. All challenge scores are tied to this identity — calling this endpoint again creates a fresh guest account.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Create a guest user account",
+                "responses": {
+                    "201": {
+                        "description": "Guest account created — user_token cookie is set",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error — failed to generate token or write to database",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me": {
+            "patch": {
+                "description": "Allows a guest user to personalise their profile by setting a custom display name and their Rocket League rank. This converts a \"basic guest\" into an \"improved guest\" with a real identity on the leaderboard. Both fields are optional — send only the ones you want to update. Authentication is via the `user_token` HttpOnly cookie. The rank_id must correspond to a valid rank from GET /api/v1/ranks.",
                 "consumes": [
                     "application/json"
                 ],
@@ -343,21 +535,39 @@
                 "tags": [
                     "users"
                 ],
-                "summary": "Create a guest user and returns a token",
+                "summary": "Update guest user profile",
                 "parameters": [
                     {
-                        "description": "Guest user info",
-                        "name": "guest_user",
+                        "description": "Profile fields to update",
+                        "name": "profile",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/database.GuestUser"
+                            "type": "object"
                         }
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "Profile updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Missing user_token cookie or invalid JSON body",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error — database update failed",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -412,35 +622,6 @@
                 }
             }
         },
-        "database.GuestUser": {
-            "type": "object",
-            "required": [
-                "username"
-            ],
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "ip_address": {
-                    "type": "string"
-                },
-                "location": {
-                    "type": "string"
-                },
-                "rank_id": {
-                    "type": "integer"
-                },
-                "token": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
         "database.Rank": {
             "type": "object",
             "required": [
@@ -478,18 +659,8 @@
                 },
                 "score": {
                     "type": "integer"
-                },
-                "session_token": {
-                    "type": "string"
-                },
-                "user_token": {
-                    "type": "string"
                 }
             }
-        },
-        "gin.H": {
-            "type": "object",
-            "additionalProperties": {}
         },
         "sql.NullInt64": {
             "type": "object",
