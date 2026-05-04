@@ -385,8 +385,8 @@ export default function ChallengeResultsDialog({
             <p className="text-sm font-medium text-muted-foreground">Results</p>
             <h2 className="text-2xl font-bold tracking-tight text-foreground">{challengeName}</h2>
           </div>
-          <Badge variant={isSessionBest ? "default" : "secondary"}>
-            {isSessionBest ? "Session Best!" : "Challenge Complete"}
+          <Badge variant="secondary">
+            Challenge Complete
           </Badge>
         </div>
 
