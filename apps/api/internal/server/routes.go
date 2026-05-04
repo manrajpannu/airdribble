@@ -59,6 +59,7 @@ func (app *Application) Routes() http.Handler {
 	// user scores
 	{
 		v1.GET("/me/activity", app.getUserActivity)
+		v1.GET("/me/activity/feed", app.getUserActivityFeed)
 		v1.GET("/me/scores", app.getUserScores)
 		v1.GET("/me/best-score", app.getUserBestScore)
 		v1.GET("/me/percentile", app.calculateUserPercentile)

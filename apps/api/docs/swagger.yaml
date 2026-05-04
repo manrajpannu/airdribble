@@ -121,6 +121,19 @@ definitions:
     required:
     - score
     type: object
+  github_com_manrajpannu_airdribble_apps_api_internal_database.UserActivity:
+    properties:
+      challenge_id:
+        type: integer
+      challenge_name:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      score:
+        type: integer
+    type: object
   sql.NullInt64:
     properties:
       int64:
@@ -379,6 +392,43 @@ paths:
               type: string
             type: object
       summary: Get user activity heatmap data
+      tags:
+      - users
+  /api/v1/me/activity/feed:
+    get:
+      description: Returns a paginated list of high-score milestones (first scores
+        or personal bests) achieved by the user.
+      parameters:
+      - description: Number of items to return (default 5)
+        in: query
+        name: limit
+        type: integer
+      - description: Number of items to skip (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of user activities
+          schema:
+            items:
+              $ref: '#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.UserActivity'
+            type: array
+        "400":
+          description: Invalid query parameters
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get user activity feed
       tags:
       - users
   /api/v1/me/best-score:

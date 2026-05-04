@@ -160,11 +160,24 @@ func (app *Application) endChallengeSession(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create leaderboard entry"})
 			return
 		}
+
+		// Insert activity for first score
+		err = app.models.UserActivity.Insert(userToken, score.ChallengeID, score.Score)
+		if err != nil {
+			fmt.Printf("Error inserting high score activity: %v\n", err)
+		}
 	} else if score.Score > leaderboard_score.Score {
 		err = app.models.Leaderboard.Update(&score)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update leaderboard entry"})
 			return
+		}
+
+		// Insert activity for high score
+		err = app.models.UserActivity.Insert(userToken, score.ChallengeID, score.Score)
+		if err != nil {
+			// Log error but don't fail the request
+			fmt.Printf("Error inserting high score activity: %v\n", err)
 		}
 	}
 	// Respond success

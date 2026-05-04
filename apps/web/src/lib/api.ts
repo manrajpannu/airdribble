@@ -111,6 +111,14 @@ export interface Rank {
   division: number | null;
 }
 
+export interface UserActivity {
+  id: number;
+  challenge_id: number;
+  challenge_name: string;
+  score: number;
+  created_at: string;
+}
+
 export interface ActivityRecord {
   date: string;
   count: number;
@@ -247,6 +255,10 @@ export const api = {
     ),
 
   getUserActivity: () => apiFetch<ActivityRecord[]>("/api/v1/me/activity"),
+  getUserActivityFeed: (limit: number, offset: number) =>
+    apiFetch<UserActivity[]>(
+      `/api/v1/me/activity/feed?limit=${limit}&offset=${offset}`
+    ),
 
   // Challenge Sessions
   startSession: (challengeId: number) =>

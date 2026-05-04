@@ -340,6 +340,61 @@
                 }
             }
         },
+        "/api/v1/me/activity/feed": {
+            "get": {
+                "description": "Returns a paginated list of high-score milestones (first scores or personal bests) achieved by the user.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get user activity feed",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Number of items to return (default 5)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items to skip (default 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of user activities",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.UserActivity"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid query parameters",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/me/best-score": {
             "get": {
                 "description": "Returns the single highest score achieved by the authenticated user for the given challenge. This is the score used for the leaderboard. Returns null/empty if the user has not yet completed the challenge. Authentication is via the `user_token` HttpOnly cookie.",
@@ -896,6 +951,26 @@
                     "type": "integer"
                 },
                 "shots": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_manrajpannu_airdribble_apps_api_internal_database.UserActivity": {
+            "type": "object",
+            "properties": {
+                "challenge_id": {
+                    "type": "integer"
+                },
+                "challenge_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "score": {
                     "type": "integer"
                 }
             }

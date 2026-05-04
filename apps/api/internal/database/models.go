@@ -10,6 +10,7 @@ type Models struct {
 	ChallengeSession ChallengeSessionModel
 	Score            ScoreModel
 	Leaderboard      LeaderboardModel
+	UserActivity     UserActivityModel
 }
 
 func NewModels(db *sql.DB) Models {
@@ -20,5 +21,6 @@ func NewModels(db *sql.DB) Models {
 		ChallengeSession: ChallengeSessionModel{DB: db},
 		Score:            ScoreModel{DB: db},
 		Leaderboard:      LeaderboardModel{DB: db},
+		UserActivity:     UserActivityModel{DB: db},
 	}
 }

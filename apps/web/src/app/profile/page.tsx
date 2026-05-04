@@ -5,6 +5,7 @@ import { User, Calendar, MapPin, Trophy, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import ActivityHeatmap from "@/components/activity-heatmap";
+import ActivityFeed from "@/components/activity-feed";
 
 export default function ProfilePage() {
   const { data: user, isLoading: isUserLoading, isError: isUserError, refetch: refetchUser } = useMe();
@@ -135,7 +136,14 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        <ActivityHeatmap />
+        <div className="flex flex-col lg:flex-row gap-8">
+          <div className="lg:w-2/3">
+            <ActivityHeatmap />
+          </div>
+          <div className="lg:w-1/3">
+            <ActivityFeed />
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { api, ApiError } from "@/lib/api";
 
 // ─── Query Keys ────────────────────────────────────────────────────────────────
@@ -18,6 +18,8 @@ export const queryKeys = {
   leaderboardContext: (challengeId: number) =>
     ["leaderboardContext", challengeId] as const,
   activity: ["activity"] as const,
+  activityFeed: (limit: number, offset: number) =>
+    ["activityFeed", limit, offset] as const,
 };
 
 // ─── User Hooks ───────────────────────────────────────────────────────────────
@@ -150,6 +152,25 @@ export function useUserActivity() {
   return useQuery({
     queryKey: queryKeys.activity,
     queryFn: () => api.getUserActivity(),
+  });
+}
+
+export function useUserActivityFeed(limit: number, offset: number) {
+  return useQuery({
+    queryKey: queryKeys.activityFeed(limit, offset),
+    queryFn: () => api.getUserActivityFeed(limit, offset),
+  });
+}
+
+export function useUserActivityFeedInfinite(limit: number) {
+  return useInfiniteQuery({
+    queryKey: ["activityFeed", "infinite"],
+    queryFn: ({ pageParam = 0 }) => api.getUserActivityFeed(limit, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      if (lastPage.length < limit) return undefined;
+      return allPages.length * limit;
+    },
   });
 }
 
