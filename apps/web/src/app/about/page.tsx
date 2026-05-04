@@ -73,7 +73,7 @@ export default function AboutPage() {
             engineered for performance, and designed to help you dominate the field.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Button size="lg" className="bg-fuchsia-500 hover:bg-fuchsia-400 text-white font-bold tracking-tight">
+            <Button size="lg" className="bg-accent hover:bg-accent/90 text-white font-bold tracking-tight">
               LAUNCH TRAINING
             </Button>
             <Button size="lg" variant="outline" className="border-zinc-800 bg-zinc-900/50 text-white hover:bg-zinc-800">
@@ -192,12 +192,12 @@ export default function AboutPage() {
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden border-fuchsia-500/50 bg-fuchsia-500/5">
+          <Card className="relative overflow-hidden border-accent/50 bg-accent/5">
             <div className="absolute top-0 right-0 p-3 opacity-20">
-              <span className="text-4xl font-black italic text-fuchsia-500">V2</span>
+              <span className="text-4xl font-black italic text-accent">V2</span>
             </div>
             <CardHeader>
-              <Badge className="w-fit mb-2 bg-fuchsia-500">Modernized</Badge>
+              <Badge className="w-fit mb-2 bg-accent text-white">Modernized</Badge>
               <CardTitle>airdribble</CardTitle>
               <CardDescription>The High-Performance Evolution</CardDescription>
             </CardHeader>

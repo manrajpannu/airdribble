@@ -178,8 +178,8 @@ export function AppSidebar() {
                   sideOffset={4}
                 >
                   <DropdownMenuItem render={<Link href="/profile" className="cursor-pointer">Profile</Link>} />
-                  <DropdownMenuItem className="cursor-pointer">Login</DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">Create Account</DropdownMenuItem>
+                  {/* <DropdownMenuItem className="cursor-pointer">Login</DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer">Create Account</DropdownMenuItem> */}
                 </DropdownMenuContent>
               </DropdownMenu>
             </SidebarMenuItem>
