@@ -314,7 +314,7 @@ export default function GamePage() {
       )}
 
       {scenarioId === "tutorial" && !showTutorialComplete && (
-        <div className="absolute bottom-12 right-12 z-[20000]">
+        <div className="absolute bottom-12 right-12 z-20000">
           <button
             className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold uppercase tracking-wider rounded-xl backdrop-blur-md transition-all active:scale-95"
             onClick={() => router.push("/")}
@@ -325,7 +325,7 @@ export default function GamePage() {
       )}
 
       {showTutorialComplete && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-[30000] backdrop-blur-sm animate-in fade-in duration-500">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-30000 backdrop-blur-sm animate-in fade-in duration-500">
           <h1 className="text-4xl md:text-6xl font-black text-white uppercase tracking-widest animate-in zoom-in-150 duration-700 ease-out fill-mode-forwards">
             Tutorial Complete
           </h1>
@@ -348,7 +348,7 @@ export default function GamePage() {
 
       {/* Full-page error overlay if challenge data failed to load */}
       {isChallenge && isChallengeError && (
-        <div className="absolute inset-0 z-[50000] flex items-center justify-center bg-background/95 backdrop-blur-md">
+        <div className="absolute inset-0 z-50000 flex items-center justify-center bg-background/95 backdrop-blur-md">
           <div className="text-center space-y-4 max-w-md p-8">
             <h2 className="text-2xl font-bold text-destructive">Failed to Load Challenge</h2>
             <p className="text-sm text-muted-foreground">
@@ -373,7 +373,7 @@ export default function GamePage() {
       )}
       {/* Submitting Overlay */}
       {isSubmitting && (
-        <div className="absolute inset-0 z-[60000] flex items-center justify-center bg-background/80 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="absolute inset-0 z-60000 flex items-center justify-center bg-background/80 backdrop-blur-md animate-in fade-in duration-300">
           <div className="text-center space-y-4">
             <div className="relative w-16 h-16 mx-auto">
               <div className="absolute inset-0 rounded-full border-4 border-primary/20" />

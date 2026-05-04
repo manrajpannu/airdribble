@@ -49,7 +49,7 @@ func (app *Application) getUserActivityFeed(c *gin.Context) {
 	}
 
 	if feed == nil {
-		feed = make([]*interface{}, 0) // Return empty array instead of null
+		feed = make([]*database.UserActivity, 0) // Return empty array instead of null
 	}
 
 	c.JSON(http.StatusOK, feed)

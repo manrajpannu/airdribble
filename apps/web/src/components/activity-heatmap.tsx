@@ -74,7 +74,7 @@ export default function ActivityHeatmap() {
         <CardDescription>Your training frequency over the last 90 days.</CardDescription>
       </CardHeader>
       <CardContent>
-        <TooltipProvider delayDuration={0}>
+        <TooltipProvider delay={0}>
           <div className="flex flex-col gap-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {monthData.map((month, mIdx) => (

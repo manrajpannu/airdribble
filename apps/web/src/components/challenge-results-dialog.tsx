@@ -378,7 +378,7 @@ export default function ChallengeResultsDialog({
   ] as const
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 pointer-events-none">
+    <div className="fixed inset-0 z-120 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 pointer-events-none">
       <div className="pointer-events-auto w-full max-w-6xl rounded-xl border bg-card shadow-lg overflow-hidden flex flex-col max-h-[90vh]">
         <div className="border-b bg-muted/30 px-6 py-4 flex items-center justify-between">
           <div>
@@ -561,9 +561,9 @@ export default function ChallengeResultsDialog({
                             <TableRow className="bg-muted/10 h-8 hover:bg-muted/10 border-none pointer-events-none">
                               <TableCell colSpan={3} className="text-center py-1">
                                 <div className="flex items-center justify-center gap-3 text-[9px] text-muted-foreground/30 font-black tracking-[0.2em] uppercase">
-                                  <div className="h-[1px] flex-1 bg-muted-foreground/10" />
+                                  <div className="h-px flex-1 bg-muted-foreground/10" />
                                   <span>Your Position</span>
-                                  <div className="h-[1px] flex-1 bg-muted-foreground/10" />
+                                  <div className="h-px flex-1 bg-muted-foreground/10" />
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -599,7 +599,7 @@ export default function ChallengeResultsDialog({
                           { label: "KDR", value: metrics.kdr.toFixed(2), desc: "kills per hit ratio" }
                         ].map(item => (
                           <li key={item.label} className="flex gap-3 text-sm">
-                            <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                            <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                             <p className="text-muted-foreground">
                               <span className="font-bold text-foreground">{item.label} is {item.value}</span>, reflecting your {item.desc}.
                             </p>

@@ -43,7 +43,7 @@ export default function GameOverlay({
 
   if (countdownValue !== null) {
     return (
-      <div className="pointer-events-none absolute inset-0 z-[13000] flex items-center justify-center">
+      <div className="pointer-events-none absolute inset-0 z-13000 flex items-center justify-center">
         <div
           key={countdownValue}
           className="text-[18rem] font-black text-white leading-none animate-in zoom-in-150 fade-out duration-800 ease-out fill-mode-forwards tracking-tighter"
@@ -96,21 +96,21 @@ export default function GameOverlay({
             <Button
               variant="outline"
               onClick={onRestart}
-              className="w-full h-16 rounded-[12px] bg-white/[0.06] border border-white/[0.12] backdrop-blur-3xl text-white font-bold uppercase tracking-[0.2em] hover:bg-white/[0.12] hover:border-white/[0.2] hover:scale-[1.02] active:scale-[0.98] transition-all duration-500"
+              className="w-full h-16 rounded-[12px] bg-white/6 border border-white/12 backdrop-blur-3xl text-white font-bold uppercase tracking-[0.2em] hover:bg-white/12 hover:border-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-500"
             >
               Restart
             </Button>
             <Button
               variant="outline"
               onClick={onOpenSettings}
-              className="w-full h-16 rounded-[12px] bg-white/[0.06] border border-white/[0.12] backdrop-blur-3xl text-white font-bold uppercase tracking-[0.2em] hover:bg-white/[0.12] hover:border-white/[0.2] hover:scale-[1.02] active:scale-[0.98] transition-all duration-500"
+              className="w-full h-16 rounded-[12px] bg-white/6 border border-white/12 backdrop-blur-3xl text-white font-bold uppercase tracking-[0.2em] hover:bg-white/12 hover:border-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-500"
             >
               Settings
             </Button>
             <Button
               variant="outline"
               onClick={onExit}
-              className="w-full h-16 rounded-[12px] bg-white/[0.06] border border-white/[0.12] backdrop-blur-3xl text-white font-bold uppercase tracking-[0.2em] hover:text-white hover:bg-red-500/10 hover:border-red-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-500"
+              className="w-full h-16 rounded-[12px] bg-white/6 border border-white/12 backdrop-blur-3xl text-white font-bold uppercase tracking-[0.2em] hover:text-white hover:bg-red-500/10 hover:border-red-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-500"
             >
               Exit Training
             </Button>

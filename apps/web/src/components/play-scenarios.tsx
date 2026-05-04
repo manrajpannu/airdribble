@@ -170,7 +170,7 @@ export default function PlayScenarios() {
                   onClick={() => startScenario(scenario)}
                 >
                   <div
-                    className={`absolute inset-0 bg-gradient-to-br ${scenario.thumbnail} opacity-50 transition duration-300 group-hover:opacity-100`}
+                    className={`absolute inset-0 bg-linear-to-br ${scenario.thumbnail} opacity-50 transition duration-300 group-hover:opacity-100`}
                   />
                   <CardHeader className="relative z-10">
                     <div className="flex items-center justify-between mb-2">

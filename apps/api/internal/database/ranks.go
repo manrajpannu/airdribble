@@ -17,13 +17,13 @@ type Rank struct {
 	Division   sql.NullInt64 `json:"division"`
 }
 
-func (m *RankModel) Insert(rank Rank) error {
+func (m *RankModel) Insert(rank *Rank) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `INSERT INTO ranks (name, tier_number, division) VALUES (?, ?, ?)`
+	query := `INSERT INTO ranks (tier, tier_number, division) VALUES (?, ?, ?)`
 
-	result, err := m.DB.ExecContext(ctx, query, rank.Name, rank.Division)
+	result, err := m.DB.ExecContext(ctx, query, rank.Name, rank.TierNumber, rank.Division)
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func (m *RankModel) GetAll() ([]*Rank, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `SELECT * from ranks`
+	query := `SELECT id, tier, tier_number, division FROM ranks`
 
 	rows, err := m.DB.QueryContext(ctx, query)
 	if err != nil {
@@ -68,7 +68,7 @@ func (m *RankModel) Get(id int) (*Rank, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `SELECT * FROM ranks WHERE id = ?`
+	query := `SELECT id, tier, tier_number, division FROM ranks WHERE id = ?`
 
 	var rank Rank
 

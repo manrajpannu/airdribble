@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Trophy, Clock, Loader2, ChevronDown } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from "./ui/scroll-area";
 
 export default function ActivityFeed() {
   const {
@@ -23,7 +23,7 @@ export default function ActivityFeed() {
       <Card className="h-full">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Trophy className="size-5 text-accent" />
+            <Trophy className="size-5 " />
             Milestones
           </CardTitle>
           <CardDescription>Your latest personal bests and records.</CardDescription>

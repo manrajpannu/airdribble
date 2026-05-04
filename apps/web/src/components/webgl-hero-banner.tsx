@@ -658,7 +658,7 @@ export function WebGLHeroBanner() {
           </div>
 
           {/* Adaptive Divider */}
-          <div className="h-px w-24 bg-gradient-to-r from-transparent via-black/10 dark:via-white/20 to-transparent mx-auto mb-2 mt-[-1rem]" />
+          <div className="h-px w-24 bg-linear-to-r from-transparent via-black/10 dark:via-white/20 to-transparent mx-auto mb-2 -mt-4" />
 
           <p className="max-w-xl mx-auto text-sm md:text-base text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed mb-8">
             The next generation of high-fidelity target practice.
