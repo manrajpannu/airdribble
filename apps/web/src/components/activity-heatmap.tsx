@@ -91,18 +91,20 @@ export default function ActivityHeatmap() {
                     {/* Actual activity squares */}
                     {month.days.map((day, i) => (
                       <Tooltip key={i}>
-                        <TooltipTrigger asChild>
-                          <div
-                            className={cn(
-                              "size-[12px] rounded-[2px] transition-all cursor-pointer hover:scale-125 hover:z-10",
-                              day.level === 0 && "bg-muted/80 hover:bg-muted",
-                              day.level === 1 && "bg-accent/20 hover:bg-accent/30",
-                              day.level === 2 && "bg-accent/40 hover:bg-accent/50",
-                              day.level === 3 && "bg-accent/70 hover:bg-accent/80",
-                              day.level === 4 && "bg-accent hover:bg-accent/90"
-                            )}
-                          />
-                        </TooltipTrigger>
+                        <TooltipTrigger
+                          render={
+                            <div
+                              className={cn(
+                                "size-[12px] rounded-[2px] transition-all cursor-pointer hover:scale-125 hover:z-10",
+                                day.level === 0 && "bg-muted/80 hover:bg-muted",
+                                day.level === 1 && "bg-accent/20 hover:bg-accent/30",
+                                day.level === 2 && "bg-accent/40 hover:bg-accent/50",
+                                day.level === 3 && "bg-accent/70 hover:bg-accent/80",
+                                day.level === 4 && "bg-accent hover:bg-accent/90"
+                              )}
+                            />
+                          }
+                        />
                         <TooltipContent side="top" className="text-[10px] py-1 px-2">
                           <span className="font-bold">{day.count} sessions</span> on {format(day.date, "MMM do, yyyy")}
                         </TooltipContent>
@@ -115,7 +117,7 @@ export default function ActivityHeatmap() {
 
             <div className="flex items-center justify-end gap-1.5 text-[10px] text-muted-foreground mt-2 border-t pt-4">
               <span>Less</span>
-              <div className="size-[10px] rounded-[1px] bg-muted/40" />
+              <div className="size-[10px] rounded-[1px] bg-muted/80" />
               <div className="size-[10px] rounded-[1px] bg-accent/20" />
               <div className="size-[10px] rounded-[1px] bg-accent/40" />
               <div className="size-[10px] rounded-[1px] bg-accent/70" />

@@ -177,7 +177,10 @@ export function AppSidebar() {
                   className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
                   sideOffset={4}
                 >
-                  <DropdownMenuItem render={<Link href="/profile" className="cursor-pointer">Profile</Link>} />
+                  <DropdownMenuItem
+                    className="focus:bg-muted focus:text-foreground"
+                    render={<Link href="/profile" className="cursor-pointer">Profile</Link>}
+                  />
                   {/* <DropdownMenuItem className="cursor-pointer">Login</DropdownMenuItem>
                   <DropdownMenuItem className="cursor-pointer">Create Account</DropdownMenuItem> */}
                 </DropdownMenuContent>
