@@ -4,6 +4,7 @@ import { useMe, useRanks } from "@/hooks/use-api";
 import { User, Calendar, MapPin, Trophy, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import ActivityHeatmap from "@/components/activity-heatmap";
 
 export default function ProfilePage() {
   const { data: user, isLoading: isUserLoading, isError: isUserError, refetch: refetchUser } = useMe();
@@ -133,6 +134,8 @@ export default function ProfilePage() {
             )}
           </CardContent>
         </Card>
+
+        <ActivityHeatmap />
       </div>
     </div>
   );

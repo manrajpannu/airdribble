@@ -1,4 +1,13 @@
 definitions:
+  github_com_manrajpannu_airdribble_apps_api_internal_database.ActivityRecord:
+    properties:
+      count:
+        type: integer
+      date:
+        type: string
+      level:
+        type: integer
+    type: object
   github_com_manrajpannu_airdribble_apps_api_internal_database.Challenge:
     properties:
       active:
@@ -343,6 +352,35 @@ paths:
       summary: Get the leaderboard for a challenge with user context
       tags:
       - leaderboards
+  /api/v1/me/activity:
+    get:
+      description: Returns a list of daily session counts for the last 90 days, including
+        a mapped intensity level (0-4) for heatmap visualization. Authentication is
+        via the `user_token` HttpOnly cookie.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of daily activity records
+          schema:
+            items:
+              $ref: '#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.ActivityRecord'
+            type: array
+        "400":
+          description: Missing user_token cookie
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error — database query failed
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get user activity heatmap data
+      tags:
+      - users
   /api/v1/me/best-score:
     get:
       description: Returns the single highest score achieved by the authenticated

@@ -17,6 +17,7 @@ export const queryKeys = {
     ["userPercentile", challengeId] as const,
   leaderboardContext: (challengeId: number) =>
     ["leaderboardContext", challengeId] as const,
+  activity: ["activity"] as const,
 };
 
 // ─── User Hooks ───────────────────────────────────────────────────────────────
@@ -142,6 +143,13 @@ export function useLeaderboardContext(challengeId: number) {
     queryKey: queryKeys.leaderboardContext(challengeId),
     queryFn: () => api.getLeaderboardContext(challengeId),
     enabled: !!challengeId,
+  });
+}
+
+export function useUserActivity() {
+  return useQuery({
+    queryKey: queryKeys.activity,
+    queryFn: () => api.getUserActivity(),
   });
 }
 

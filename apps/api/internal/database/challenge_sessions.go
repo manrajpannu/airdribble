@@ -92,3 +92,53 @@ func (m *ChallengeSessionModel) GetChallengeID(user_token *string, session_token
 	return challengeID, nil
 
 }
+type ActivityRecord struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+	Level int    `json:"level"`
+}
+
+func (m *ChallengeSessionModel) GetActivity(userToken string, days int) ([]*ActivityRecord, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `
+		SELECT 
+			DATE(started_at) as date, 
+			COUNT(*) as count 
+		FROM challenge_sessions 
+		WHERE user_token = ? 
+		AND started_at >= DATE('now', '-' || ? || ' days') 
+		GROUP BY date
+		ORDER BY date ASC
+	`
+
+	rows, err := m.DB.QueryContext(ctx, query, userToken, days)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	activity := []*ActivityRecord{}
+	for rows.Next() {
+		var r ActivityRecord
+		if err := rows.Scan(&r.Date, &r.Count); err != nil {
+			return nil, err
+		}
+
+		// Map count to level (1-4) for heatmap intensity
+		if r.Count >= 8 {
+			r.Level = 4
+		} else if r.Count >= 5 {
+			r.Level = 3
+		} else if r.Count >= 3 {
+			r.Level = 2
+		} else {
+			r.Level = 1
+		}
+
+		activity = append(activity, &r)
+	}
+
+	return activity, nil
+}

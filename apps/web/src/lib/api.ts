@@ -111,6 +111,12 @@ export interface Rank {
   division: number | null;
 }
 
+export interface ActivityRecord {
+  date: string;
+  count: number;
+  level: number;
+}
+
 export interface ChallengeConfig {
   numBalls?: number;
   health?: number;
@@ -239,6 +245,8 @@ export const api = {
     apiFetch<LeaderboardContext>(
       `/api/v1/leaderboard/context?challenge_id=${challengeId}`
     ),
+
+  getUserActivity: () => apiFetch<ActivityRecord[]>("/api/v1/me/activity"),
 
   // Challenge Sessions
   startSession: (challengeId: number) =>

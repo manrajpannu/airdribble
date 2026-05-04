@@ -167,7 +167,6 @@ func (app *Application) endChallengeSession(c *gin.Context) {
 			return
 		}
 	}
-
 	// Respond success
 	c.JSON(http.StatusOK, gin.H{
 		"message":       "Session ended and Score saved",
@@ -176,4 +175,30 @@ func (app *Application) endChallengeSession(c *gin.Context) {
 		"shots":         score.Shots,
 		"kills":         score.Kills,
 	})
+}
+
+// getUserActivity returns the last 90 days of session activity for the user
+//
+// @Summary Get user activity heatmap data
+// @Description Returns a list of daily session counts for the last 90 days, including a mapped intensity level (0-4) for heatmap visualization. Authentication is via the `user_token` HttpOnly cookie.
+// @Tags users
+// @Produce json
+// @Success 200 {array} database.ActivityRecord "List of daily activity records"
+// @Failure 400 {object} map[string]string "Missing user_token cookie"
+// @Failure 500 {object} map[string]string "Internal server error — database query failed"
+// @Router /api/v1/me/activity [get]
+func (app *Application) getUserActivity(c *gin.Context) {
+	userToken, err := c.Cookie("user_token")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing user_token cookie"})
+		return
+	}
+
+	activity, err := app.models.ChallengeSession.GetActivity(userToken, 90)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user activity"})
+		return
+	}
+
+	c.JSON(http.StatusOK, activity)
 }

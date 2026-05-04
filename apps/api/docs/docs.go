@@ -310,6 +310,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/me/activity": {
+            "get": {
+                "description": "Returns a list of daily session counts for the last 90 days, including a mapped intensity level (0-4) for heatmap visualization. Authentication is via the ` + "`" + `user_token` + "`" + ` HttpOnly cookie.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get user activity heatmap data",
+                "responses": {
+                    "200": {
+                        "description": "List of daily activity records",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.ActivityRecord"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Missing user_token cookie",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error — database query failed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/me/best-score": {
             "get": {
                 "description": "Returns the single highest score achieved by the authenticated user for the given challenge. This is the score used for the leaderboard. Returns null/empty if the user has not yet completed the challenge. Authentication is via the ` + "`" + `user_token` + "`" + ` HttpOnly cookie.",
@@ -684,6 +725,20 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "github_com_manrajpannu_airdribble_apps_api_internal_database.ActivityRecord": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "level": {
+                    "type": "integer"
+                }
+            }
+        },
         "github_com_manrajpannu_airdribble_apps_api_internal_database.Challenge": {
             "type": "object",
             "properties": {
