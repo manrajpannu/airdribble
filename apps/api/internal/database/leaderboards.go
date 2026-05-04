@@ -30,6 +30,7 @@ type LeaderboardEntry struct {
 	Score    int    `json:"score"`
 	Rank     int    `json:"rank"`
 	IsUser   bool   `json:"is_user"`
+	RankID   *int   `json:"rank_id"`
 }
 
 type LeaderboardContext struct {
@@ -195,12 +196,13 @@ func (m *LeaderboardModel) CalculatePercentile(userToken string, challengeID int
 
 func (m *LeaderboardModel) GetLeaderboardContext(userToken string, challengeID int) (*LeaderboardContext, error) {
 	ctx := &LeaderboardContext{
-		Top10: []*LeaderboardEntry{},
+		Top10:     []*LeaderboardEntry{},
+		UserEntry: &LeaderboardEntry{},
 	}
 
 	// 1. Get Top 10
 	rows, err := m.DB.Query(`
-		SELECT u.username, l.score, l.user_token
+		SELECT u.username, l.score, l.user_token, u.rank_id
 		FROM leaderboards l
 		JOIN guest_users u ON u.token = l.user_token
 		WHERE l.challenge_id = ?
@@ -215,7 +217,7 @@ func (m *LeaderboardModel) GetLeaderboardContext(userToken string, challengeID i
 	for rows.Next() {
 		var entry LeaderboardEntry
 		var token string
-		if err := rows.Scan(&entry.Username, &entry.Score, &token); err != nil {
+		if err := rows.Scan(&entry.Username, &entry.Score, &token, &entry.RankID); err != nil {
 			return nil, err
 		}
 		entry.IsUser = (token == userToken)
@@ -234,11 +236,11 @@ func (m *LeaderboardModel) GetLeaderboardContext(userToken string, challengeID i
 	var userScore int
 	var username string
 	err = m.DB.QueryRow(`
-		SELECT l.score, u.username
+		SELECT l.score, u.username, u.rank_id
 		FROM leaderboards l
 		JOIN guest_users u ON u.token = l.user_token
 		WHERE l.user_token = ? AND l.challenge_id = ?
-	`, userToken, challengeID).Scan(&userScore, &username)
+	`, userToken, challengeID).Scan(&userScore, &username, &ctx.UserEntry.RankID)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -252,23 +254,21 @@ func (m *LeaderboardModel) GetLeaderboardContext(userToken string, challengeID i
 		return nil, err
 	}
 
-	ctx.UserEntry = &LeaderboardEntry{
-		Username: username,
-		Score:    userScore,
-		Rank:     userRank,
-		IsUser:   true,
-	}
+	ctx.UserEntry.Username = username
+	ctx.UserEntry.Score = userScore
+	ctx.UserEntry.Rank = userRank
+	ctx.UserEntry.IsUser = true
 
 	// 3. Get Player Above (Limit 1)
 	var above LeaderboardEntry
 	err = m.DB.QueryRow(`
-		SELECT u.username, l.score
+		SELECT u.username, l.score, u.rank_id
 		FROM leaderboards l
 		JOIN guest_users u ON u.token = l.user_token
 		WHERE l.challenge_id = ? AND l.score > ?
 		ORDER BY l.score ASC
 		LIMIT 1
-	`, challengeID, userScore).Scan(&above.Username, &above.Score)
+	`, challengeID, userScore).Scan(&above.Username, &above.Score, &above.RankID)
 
 	if err == nil {
 		aboveRank, _ := m.GetRankForScore(challengeID, above.Score)
@@ -279,13 +279,13 @@ func (m *LeaderboardModel) GetLeaderboardContext(userToken string, challengeID i
 	// 4. Get Player Below (Limit 1)
 	var below LeaderboardEntry
 	err = m.DB.QueryRow(`
-		SELECT u.username, l.score
+		SELECT u.username, l.score, u.rank_id
 		FROM leaderboards l
 		JOIN guest_users u ON u.token = l.user_token
 		WHERE l.challenge_id = ? AND l.score < ?
 		ORDER BY l.score DESC
 		LIMIT 1
-	`, challengeID, userScore).Scan(&below.Username, &below.Score)
+	`, challengeID, userScore).Scan(&below.Username, &below.Score, &below.RankID)
 
 	if err == nil {
 		belowRank, _ := m.GetRankForScore(challengeID, below.Score)

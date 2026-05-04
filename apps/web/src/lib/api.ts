@@ -193,6 +193,7 @@ export interface LeaderboardContextEntry {
   score: number;
   rank: number;
   is_user: boolean;
+  rank_id: number | null;
 }
 
 export interface LeaderboardContext {

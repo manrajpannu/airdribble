@@ -80,7 +80,7 @@ export default function ProfilePage() {
               <User className="size-10 text-primary" />
             </div>
             <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center">
                 <CardTitle className="text-3xl font-black tracking-tight">{user.username}</CardTitle>
                 <RankBadge currentRankId={user.rank_id} />
               </div>

@@ -23,9 +23,16 @@ import { cn } from "@/lib/utils";
 interface RankBadgeProps {
   currentRankId: number | null;
   onUpdate?: () => void;
+  mode?: "normal" | "condensed";
+  interactive?: boolean;
 }
 
-export function RankBadge({ currentRankId, onUpdate }: RankBadgeProps) {
+export function RankBadge({ 
+  currentRankId, 
+  onUpdate, 
+  mode = "normal", 
+  interactive = true 
+}: RankBadgeProps) {
   const { data: ranks, isLoading: isRanksLoading } = useRanks();
   const updateMe = useUpdateMe();
   const [search, setSearch] = useState("");
@@ -49,6 +56,7 @@ export function RankBadge({ currentRankId, onUpdate }: RankBadgeProps) {
   }, [ranks, search]);
 
   const handleUpdate = async (rankId: number) => {
+    if (!interactive) return;
     try {
       await updateMe.mutateAsync({ rank_id: rankId });
       onUpdate?.();
@@ -57,8 +65,24 @@ export function RankBadge({ currentRankId, onUpdate }: RankBadgeProps) {
     }
   };
 
+  const getCondensedName = (name: string, tier: number | null) => {
+    const n = name.toLowerCase();
+    let prefix = "";
+    if (n.includes("bronze")) prefix = "B";
+    else if (n.includes("silver")) prefix = "S";
+    else if (n.includes("gold")) prefix = "G";
+    else if (n.includes("platinum")) prefix = "P";
+    else if (n.includes("diamond")) prefix = "D";
+    else if (n.includes("champion")) prefix = "C";
+    else if (n.includes("grand champion")) prefix = "GC";
+    else if (n.includes("super-sonic legend") || n.includes("ssl")) return "SSL";
+    else return name;
+
+    return `${prefix}${tier ?? ""}`;
+  };
+
   if (isRanksLoading) {
-    return <Badge variant="secondary" className="animate-pulse">Loading Rank...</Badge>;
+    return <Badge variant="secondary" className="animate-pulse">...</Badge>;
   }
 
   const getRankStyles = (name: string) => {
@@ -74,6 +98,26 @@ export function RankBadge({ currentRankId, onUpdate }: RankBadgeProps) {
     return "bg-muted text-muted-foreground";
   };
 
+  const badgeContent = (
+    <Badge 
+      variant="outline" 
+      className={cn(
+        "transition-all px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest leading-none",
+        interactive && "cursor-pointer hover:scale-105",
+        currentRank ? getRankStyles(currentRank.name) : "bg-muted text-muted-foreground"
+      )}
+    >
+      <Trophy className={cn("size-2.5 mr-1.5 opacity-70", mode === "condensed" && "hidden")} />
+      {currentRank 
+        ? (mode === "condensed" ? getCondensedName(currentRank.name, currentRank.tier_number) : `${currentRank.name} ${currentRank.tier_number ?? ""}`) 
+        : "Unranked"}
+    </Badge>
+  );
+
+  if (!interactive) {
+    return badgeContent;
+  }
+
   return (
     <DropdownMenu>
       <TooltipProvider delay={200}>
@@ -83,16 +127,7 @@ export function RankBadge({ currentRankId, onUpdate }: RankBadgeProps) {
               <DropdownMenuTrigger
                 render={
                   <button type="button" className="outline-none">
-                    <Badge 
-                      variant="outline" 
-                      className={cn(
-                        "cursor-pointer transition-all hover:scale-105 px-3 py-1 text-[10px] font-black uppercase tracking-widest",
-                        currentRank ? getRankStyles(currentRank.name) : "bg-muted text-muted-foreground"
-                      )}
-                    >
-                      <Trophy className="size-3 mr-1.5 opacity-70" />
-                      {currentRank ? `${currentRank.name} ${currentRank.tier_number ?? ""}` : "Unranked"}
-                    </Badge>
+                    {badgeContent}
                   </button>
                 }
               />

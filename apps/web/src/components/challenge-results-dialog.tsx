@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useLeaderboardContext } from "@/hooks/use-api";
 import type { LeaderboardContextEntry } from "@/lib/api";
+import { RankBadge } from "@/components/rank-badge";
 
 export type ChallengeScorePoint = {
   elapsed: number;
@@ -355,15 +356,22 @@ export default function ChallengeResultsDialog({
         "transition-colors",
         isMe ? "bg-primary/10 hover:bg-primary/15" : "hover:bg-muted/40"
       )}>
-        <TableCell className="font-bold text-muted-foreground/60">#{row.rank}</TableCell>
-        <TableCell className={cn(
-          "flex items-center gap-2",
-          isMe ? "font-black text-primary" : "font-semibold"
-        )}>
-          {row.username}
-          {isMe && <Badge className="h-4 px-1 text-[8px] bg-primary">YOU</Badge>}
+        <TableCell className="font-bold text-muted-foreground/60 text-xs ">#{row.rank}</TableCell>
+        <TableCell>
+          <div className="flex justify-start">
+            <span className={cn(
+              "truncate max-w-[100px] text-xs",
+              isMe ? "font-black text-primary" : "font-semibold"
+            )}>
+              {row.username}
+            </span>
+            {isMe && <Badge className="px-4 text-sm  bg-primary">YOU</Badge>}
+          </div>
         </TableCell>
-        <TableCell className="text-right font-bold tracking-tight">{formatNumber(row.score)}</TableCell>
+        <TableCell className="px-1">
+          <RankBadge currentRankId={row.rank_id} mode="condensed" interactive={false} />
+        </TableCell>
+        <TableCell className="text-right font-bold tracking-tight text-xs">{formatNumber(row.score)}</TableCell>
       </TableRow>
     );
   }
@@ -548,8 +556,9 @@ export default function ChallengeResultsDialog({
                     <Table>
                       <TableHeader className="bg-muted/50 sticky top-0 z-10">
                         <TableRow className="hover:bg-transparent">
-                          <TableHead className="w-16 font-bold text-[10px] uppercase">Rank</TableHead>
+                          <TableHead className="w-14 font-bold text-[10px] uppercase">Rank</TableHead>
                           <TableHead className="font-bold text-[10px] uppercase">Player</TableHead>
+                          <TableHead className="w-12 px-1"></TableHead>
                           <TableHead className="text-right font-bold text-[10px] uppercase">Score</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -559,7 +568,7 @@ export default function ChallengeResultsDialog({
                         {neighbors.length > 0 && (
                           <>
                             <TableRow className="bg-muted/10 h-8 hover:bg-muted/10 border-none pointer-events-none">
-                              <TableCell colSpan={3} className="text-center py-1">
+                              <TableCell colSpan={4} className="text-center py-1">
                                 <div className="flex items-center justify-center gap-3 text-[9px] text-muted-foreground/30 font-black tracking-[0.2em] uppercase">
                                   <div className="h-px flex-1 bg-muted-foreground/10" />
                                   <span>Your Position</span>
