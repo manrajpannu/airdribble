@@ -34,3 +34,32 @@ func (app *Application) getLeaderboard(c *gin.Context) {
 
 	c.JSON(http.StatusOK, leaderboard)
 }
+
+// getLeaderboardContext returns the leaderboard for a challenge with user context
+//
+// @Summary Get the leaderboard for a challenge with user context
+// @Description Returns the top 10 players, the current user's rank/score, and the players immediately above and below them on the leaderboard. Each entry contains the player's username, their best score, and their rank. Use this to display a focused leaderboard view that shows where the current user stands relative to the top 10 and their immediate neighbors.
+// @Tags leaderboards
+// @Produce json
+// @Param challenge_id query int true "Unique challenge ID to fetch the leaderboard for" example(1)
+// @Success 200 {object} database.LeaderboardContext "Leaderboard context for the given challenge and user"
+// @Failure 400 {object} map[string]string "Invalid or non-numeric challenge_id provided"
+// @Failure 500 {object} map[string]string "Internal server error — database query failed"
+// @Router /api/v1/leaderboard/context [get]
+func (app *Application) getLeaderboardContext(c *gin.Context) {
+	challengeID, err := strconv.Atoi(c.Query("challenge_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid challenge ID"})
+		return
+	}
+
+	userToken, _ := c.Cookie("user_token")
+
+	context, err := app.models.Leaderboard.GetLeaderboardContext(userToken, challengeID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch leaderboard context"})
+		return
+	}
+
+	c.JSON(http.StatusOK, context)
+}

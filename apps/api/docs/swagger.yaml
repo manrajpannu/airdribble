@@ -1,10 +1,11 @@
 definitions:
-  database.Challenge:
+  github_com_manrajpannu_airdribble_apps_api_internal_database.Challenge:
     properties:
       active:
         type: boolean
-      config_json:
-        type: string
+      config:
+        additionalProperties: true
+        type: object
       created_at:
         type: string
       description:
@@ -13,22 +14,24 @@ definitions:
         type: integer
       duration_ms:
         type: integer
+      icon:
+        type: string
       id:
         type: integer
-      name:
+      slug:
         type: string
-      seed_type:
+      tags:
+        items:
+          type: string
+        type: array
+      thumbnail:
+        type: string
+      title:
         type: string
       updated_at:
         type: string
-    required:
-    - config_json
-    - difficulty
-    - duration_ms
-    - name
-    - seed_type
     type: object
-  database.GuestUser:
+  github_com_manrajpannu_airdribble_apps_api_internal_database.GuestUser:
     properties:
       created_at:
         type: string
@@ -45,7 +48,35 @@ definitions:
       username:
         type: string
     type: object
-  database.Rank:
+  github_com_manrajpannu_airdribble_apps_api_internal_database.LeaderboardContext:
+    properties:
+      above_entry:
+        $ref: '#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.LeaderboardEntry'
+      below_entry:
+        $ref: '#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.LeaderboardEntry'
+      median_score:
+        type: integer
+      top_10:
+        items:
+          $ref: '#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.LeaderboardEntry'
+        type: array
+      total_entries:
+        type: integer
+      user_entry:
+        $ref: '#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.LeaderboardEntry'
+    type: object
+  github_com_manrajpannu_airdribble_apps_api_internal_database.LeaderboardEntry:
+    properties:
+      is_user:
+        type: boolean
+      rank:
+        type: integer
+      score:
+        type: integer
+      username:
+        type: string
+    type: object
+  github_com_manrajpannu_airdribble_apps_api_internal_database.Rank:
     properties:
       division:
         $ref: '#/definitions/sql.NullInt64'
@@ -58,7 +89,7 @@ definitions:
     required:
     - name
     type: object
-  database.Score:
+  github_com_manrajpannu_airdribble_apps_api_internal_database.Score:
     properties:
       challenge_id:
         type: integer
@@ -85,50 +116,48 @@ info:
 paths:
   /api/v1/challenge:
     get:
-      description: Returns a single challenge by its unique numeric ID. Includes the
-        full challenge configuration JSON (target layout, timing, etc.), difficulty,
-        seed type, and active status. Returns 404 if the ID does not exist.
+      description: Returns a single challenge by its unique slug (e.g. "ball-tracking").
+        Includes the full parsed config object, tags, thumbnail, and icon.
       parameters:
-      - description: Unique challenge ID
-        example: 1
+      - description: Challenge slug
+        example: '"ball-tracking"'
         in: query
-        name: id
+        name: slug
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: Challenge found
           schema:
-            $ref: '#/definitions/database.Challenge'
+            $ref: '#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.Challenge'
         "400":
-          description: Invalid or non-numeric challenge ID provided
+          description: Missing slug parameter
           schema:
             additionalProperties:
               type: string
             type: object
         "404":
-          description: No challenge found with the given ID
+          description: Challenge not found
           schema:
             additionalProperties:
               type: string
             type: object
         "500":
-          description: Internal server error — database query failed
+          description: Internal server error
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: Get a challenge by ID
+      summary: Get a challenge by slug
       tags:
       - challenges
   /api/v1/challenges:
     get:
-      description: Returns a list of all available Airdribble training challenges.
-        Each challenge includes its configuration (targets, duration, seed type),
-        difficulty rating, and active status. Use this to populate the challenge selection
-        screen.
+      description: Returns a list of all active challenges ordered by difficulty.
+        Each challenge includes its slug, title, tags, thumbnail, icon, and parsed
+        config object.
       produces:
       - application/json
       responses:
@@ -136,10 +165,10 @@ paths:
           description: List of challenges
           schema:
             items:
-              $ref: '#/definitions/database.Challenge'
+              $ref: '#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.Challenge'
             type: array
         "500":
-          description: Internal server error — database query failed
+          description: Internal server error
           schema:
             additionalProperties:
               type: string
@@ -203,7 +232,7 @@ paths:
         name: score
         required: true
         schema:
-          $ref: '#/definitions/database.Score'
+          $ref: '#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.Score'
       produces:
       - application/json
       responses:
@@ -268,6 +297,42 @@ paths:
       summary: Get the leaderboard for a challenge
       tags:
       - leaderboards
+  /api/v1/leaderboard/context:
+    get:
+      description: Returns the top 10 players, the current user's rank/score, and
+        the players immediately above and below them on the leaderboard. Each entry
+        contains the player's username, their best score, and their rank. Use this
+        to display a focused leaderboard view that shows where the current user stands
+        relative to the top 10 and their immediate neighbors.
+      parameters:
+      - description: Unique challenge ID to fetch the leaderboard for
+        example: 1
+        in: query
+        name: challenge_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Leaderboard context for the given challenge and user
+          schema:
+            $ref: '#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.LeaderboardContext'
+        "400":
+          description: Invalid or non-numeric challenge_id provided
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error — database query failed
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get the leaderboard for a challenge with user context
+      tags:
+      - leaderboards
   /api/v1/me/best-score:
     get:
       description: Returns the single highest score achieved by the authenticated
@@ -287,7 +352,7 @@ paths:
         "200":
           description: The user's personal best score entry for this challenge
           schema:
-            $ref: '#/definitions/database.Score'
+            $ref: '#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.Score'
         "400":
           description: Missing user_token cookie or invalid challenge_id
           schema:
@@ -362,7 +427,7 @@ paths:
           description: All recorded scores for this user on the given challenge
           schema:
             items:
-              $ref: '#/definitions/database.Score'
+              $ref: '#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.Score'
             type: array
         "400":
           description: Missing user_token cookie or invalid challenge_id
@@ -397,7 +462,7 @@ paths:
         "200":
           description: Rank found
           schema:
-            $ref: '#/definitions/database.Rank'
+            $ref: '#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.Rank'
         "400":
           description: Invalid or non-numeric rank ID provided
           schema:
@@ -432,7 +497,7 @@ paths:
           description: Full list of Rocket League ranks
           schema:
             items:
-              $ref: '#/definitions/database.Rank'
+              $ref: '#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.Rank'
             type: array
         "500":
           description: Internal server error — database query failed
@@ -481,7 +546,7 @@ paths:
         "200":
           description: User profile found
           schema:
-            $ref: '#/definitions/database.GuestUser'
+            $ref: '#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.GuestUser'
         "400":
           description: Missing user_token cookie
           schema:

@@ -66,6 +66,7 @@ func (app *Application) Routes() http.Handler {
 	// leaderboard
 	{
 		v1.GET("/leaderboard", app.getLeaderboard)
+		v1.GET("/leaderboard/context", app.getLeaderboardContext)
 	}
 	g.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

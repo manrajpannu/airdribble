@@ -160,6 +160,22 @@ export interface LeaderboardEntry {
   rank_id: number | null;
 }
 
+export interface LeaderboardContextEntry {
+  username: string;
+  score: number;
+  rank: number;
+  is_user: boolean;
+}
+
+export interface LeaderboardContext {
+  top_10: LeaderboardContextEntry[];
+  user_entry?: LeaderboardContextEntry;
+  above_entry?: LeaderboardContextEntry;
+  below_entry?: LeaderboardContextEntry;
+  median_score: number;
+  total_entries: number;
+}
+
 // ─── API Functions ─────────────────────────────────────────────────────────────
 
 export const api = {
@@ -204,6 +220,11 @@ export const api = {
   getLeaderboard: (challengeId: number) =>
     apiFetch<LeaderboardEntry[]>(
       `/api/v1/leaderboard?challenge_id=${challengeId}`
+    ),
+
+  getLeaderboardContext: (challengeId: number) =>
+    apiFetch<LeaderboardContext>(
+      `/api/v1/leaderboard/context?challenge_id=${challengeId}`
     ),
 
   // Challenge Sessions

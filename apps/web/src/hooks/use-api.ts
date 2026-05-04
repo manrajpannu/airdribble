@@ -15,6 +15,8 @@ export const queryKeys = {
     ["userBestScore", challengeId] as const,
   userPercentile: (challengeId: number) =>
     ["userPercentile", challengeId] as const,
+  leaderboardContext: (challengeId: number) =>
+    ["leaderboardContext", challengeId] as const,
 };
 
 // ─── User Hooks ───────────────────────────────────────────────────────────────
@@ -135,6 +137,14 @@ export function useLeaderboard(challengeId: number) {
   });
 }
 
+export function useLeaderboardContext(challengeId: number) {
+  return useQuery({
+    queryKey: queryKeys.leaderboardContext(challengeId),
+    queryFn: () => api.getLeaderboardContext(challengeId),
+    enabled: !!challengeId,
+  });
+}
+
 // ─── Session Hooks ────────────────────────────────────────────────────────────
 
 export function useStartSession() {
@@ -153,6 +163,7 @@ export function useEndSession() {
       queryClient.invalidateQueries({ queryKey: ["userBestScore"] });
       queryClient.invalidateQueries({ queryKey: ["userPercentile"] });
       queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
+      queryClient.invalidateQueries({ queryKey: ["leaderboardContext"] });
     },
   });
 }

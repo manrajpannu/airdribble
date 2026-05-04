@@ -10,6 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { useLeaderboardContext } from "@/hooks/use-api";
+import type { LeaderboardContextEntry } from "@/lib/api";
 
 export type ChallengeScorePoint = {
   elapsed: number;
@@ -41,6 +43,7 @@ type LeaderboardRow = {
 
 type ChallengeResultsDialogProps = {
   open: boolean;
+  challengeId: number;
   challengeName: string;
   modeState: ChallengeModeState | null;
   /** The user's all-time best score from the API (GET /me/best-score) */
@@ -288,6 +291,7 @@ function ScoreChart({
 
 export default function ChallengeResultsDialog({
   open,
+  challengeId,
   challengeName,
   modeState,
   highScore,
@@ -295,27 +299,74 @@ export default function ChallengeResultsDialog({
   onDone,
   onReplay,
   onOpenStats,
-  isLoading,
-  isError,
+  isLoading: isDataLoading,
+  isError: isDataError,
 }: ChallengeResultsDialogProps) {
   const [activeTab, setActiveTab] = useState("leaderboard")
   const [selectedStat, setSelectedStat] = useState<"Damage" | "Hits" | "Kills" | "Total">("Total")
   const [friendsOnly, setFriendsOnly] = useState(false)
   const [historyRange, setHistoryRange] = useState(25)
 
+  const { data: leaderboardData, isLoading: isLeaderboardLoading, isError: isLeaderboardError } = useLeaderboardContext(challengeId);
+
   const metrics = useScoreMetrics(modeState)
   const finalScore = metrics.score
-  const leaderboard = useMemo(() => buildLeaderboard(finalScore), [finalScore])
-  const filteredLeaderboard = friendsOnly ? leaderboard.filter((row) => row.friend) : leaderboard
-  const visibleLeaderboard = useMemo(() => buildLeaderboardWindow(filteredLeaderboard), [filteredLeaderboard])
-  const entriesCount = leaderboard.length
-  const scores = leaderboard.map((row) => row.score)
-  const medianScore = scores.slice().sort((a, b) => a - b)[Math.floor(scores.length / 2)] ?? finalScore
-  const betterThan = leaderboard.filter((row) => finalScore >= row.score).length
-  const percentile = Math.round((betterThan / leaderboard.length) * 100)
+  
+  // Use leaderboard context data if available
+  const userEntry = leaderboardData?.user_entry;
+  const top10 = leaderboardData?.top_10 ?? [];
+  const medianScore = leaderboardData?.median_score ?? 0;
+  const entriesCount = leaderboardData?.total_entries ?? 0;
+  
+  // Percentile logic: 100 * (better than / total)
+  // Our backend percentile was (score < user) / total * 100.
+  // We can just use the user rank to estimate: 100 - (rank/total * 100)
+  const userRank = userEntry?.rank ?? 0;
+  const percentile = (userRank > 0 && entriesCount > 0) 
+    ? Math.max(1, Math.min(99, Math.round(100 - (userRank / entriesCount) * 100))) 
+    : 0;
+  
   const isSessionBest = finalScore >= highScore
 
   const displayHistory = useMemo(() => scoreHistory.slice(-historyRange), [scoreHistory, historyRange])
+
+  const isLoading = isDataLoading || isLeaderboardLoading;
+  const isError = isDataError || isLeaderboardError;
+
+  const neighbors = useMemo(() => {
+    if (!leaderboardData || !userEntry || userRank <= 10) return [];
+    
+    const items: LeaderboardContextEntry[] = [];
+    // Only show above if they aren't already in Top 10
+    if (leaderboardData.above_entry && leaderboardData.above_entry.rank > 10) {
+      items.push(leaderboardData.above_entry);
+    }
+    items.push(userEntry);
+    if (leaderboardData.below_entry) {
+      items.push(leaderboardData.below_entry);
+    }
+    return items;
+  }, [leaderboardData, userEntry, userRank]);
+
+  const renderLeaderboardRow = (row: LeaderboardContextEntry) => {
+    const isMe = row.is_user;
+    return (
+      <TableRow key={`${row.username}-${row.rank}`} className={cn(
+        "transition-colors",
+        isMe ? "bg-primary/10 hover:bg-primary/15" : "hover:bg-muted/40"
+      )}>
+        <TableCell className="font-bold text-muted-foreground/60">#{row.rank}</TableCell>
+        <TableCell className={cn(
+          "flex items-center gap-2",
+          isMe ? "font-black text-primary" : "font-semibold"
+        )}>
+          {row.username}
+          {isMe && <Badge className="h-4 px-1 text-[8px] bg-primary">YOU</Badge>}
+        </TableCell>
+        <TableCell className="text-right font-bold tracking-tight">{formatNumber(row.score)}</TableCell>
+      </TableRow>
+    );
+  }
 
   if (!open) return null
 
@@ -503,26 +554,22 @@ export default function ChallengeResultsDialog({
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {visibleLeaderboard.map((row) => {
-                          const rank = leaderboard.findIndex((candidate) => candidate.player === row.player) + 1;
-                          const isMe = row.player === "You";
-                          return (
-                            <TableRow key={row.player} className={cn(
-                              "transition-colors",
-                              isMe ? "bg-primary/10 hover:bg-primary/15" : "hover:bg-muted/40"
-                            )}>
-                              <TableCell className="font-bold text-muted-foreground/60">#{rank}</TableCell>
-                              <TableCell className={cn(
-                                "flex items-center gap-2",
-                                isMe ? "font-black text-primary" : "font-semibold"
-                              )}>
-                                {row.player}
-                                {row.friend && !isMe && <Badge className="h-4 px-1 text-[8px] bg-sky-500">FRIEND</Badge>}
+                        {top10.map(renderLeaderboardRow)}
+                        
+                        {neighbors.length > 0 && (
+                          <>
+                            <TableRow className="bg-muted/10 h-8 hover:bg-muted/10 border-none pointer-events-none">
+                              <TableCell colSpan={3} className="text-center py-1">
+                                <div className="flex items-center justify-center gap-3 text-[9px] text-muted-foreground/30 font-black tracking-[0.2em] uppercase">
+                                  <div className="h-[1px] flex-1 bg-muted-foreground/10" />
+                                  <span>Your Position</span>
+                                  <div className="h-[1px] flex-1 bg-muted-foreground/10" />
+                                </div>
                               </TableCell>
-                              <TableCell className="text-right font-bold tracking-tight">{formatNumber(row.score)}</TableCell>
                             </TableRow>
-                          );
-                        })}
+                            {neighbors.map(renderLeaderboardRow)}
+                          </>
+                        )}
                       </TableBody>
                     </Table>
                   </TabsContent>

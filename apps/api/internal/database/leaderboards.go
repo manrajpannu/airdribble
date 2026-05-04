@@ -25,6 +25,22 @@ type Leaderboard struct {
 	UpdatedAt    string `json:"updated_at"`
 }
 
+type LeaderboardEntry struct {
+	Username string `json:"username"`
+	Score    int    `json:"score"`
+	Rank     int    `json:"rank"`
+	IsUser   bool   `json:"is_user"`
+}
+
+type LeaderboardContext struct {
+	Top10        []*LeaderboardEntry `json:"top_10"`
+	UserEntry    *LeaderboardEntry   `json:"user_entry,omitempty"`
+	AboveEntry   *LeaderboardEntry   `json:"above_entry,omitempty"`
+	BelowEntry   *LeaderboardEntry   `json:"below_entry,omitempty"`
+	MedianScore  int                 `json:"median_score"`
+	TotalEntries int                 `json:"total_entries"`
+}
+
 func (m *LeaderboardModel) Get(challengeID int) ([]*Leaderboard, error) {
 	rows, err := m.DB.Query(`
 		SELECT
@@ -175,4 +191,132 @@ func (m *LeaderboardModel) CalculatePercentile(userToken string, challengeID int
 		return 0, err
 	}
 	return percentile, nil
+}
+
+func (m *LeaderboardModel) GetLeaderboardContext(userToken string, challengeID int) (*LeaderboardContext, error) {
+	ctx := &LeaderboardContext{
+		Top10: []*LeaderboardEntry{},
+	}
+
+	// 1. Get Top 10
+	rows, err := m.DB.Query(`
+		SELECT u.username, l.score, l.user_token
+		FROM leaderboards l
+		JOIN guest_users u ON u.token = l.user_token
+		WHERE l.challenge_id = ?
+		ORDER BY l.score DESC
+		LIMIT 10
+	`, challengeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var entry LeaderboardEntry
+		var token string
+		if err := rows.Scan(&entry.Username, &entry.Score, &token); err != nil {
+			return nil, err
+		}
+		entry.IsUser = (token == userToken)
+		
+		// Get rank for this entry (scaleable via index on challenge_id, score)
+		rank, err := m.GetRankForScore(challengeID, entry.Score)
+		if err != nil {
+			return nil, err
+		}
+		entry.Rank = rank
+		
+		ctx.Top10 = append(ctx.Top10, &entry)
+	}
+
+	// 2. Get User's Score and Rank
+	var userScore int
+	var username string
+	err = m.DB.QueryRow(`
+		SELECT l.score, u.username
+		FROM leaderboards l
+		JOIN guest_users u ON u.token = l.user_token
+		WHERE l.user_token = ? AND l.challenge_id = ?
+	`, userToken, challengeID).Scan(&userScore, &username)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return ctx, nil // User has no score, Top 10 is enough
+		}
+		return nil, err
+	}
+
+	userRank, err := m.GetRankForScore(challengeID, userScore)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.UserEntry = &LeaderboardEntry{
+		Username: username,
+		Score:    userScore,
+		Rank:     userRank,
+		IsUser:   true,
+	}
+
+	// 3. Get Player Above (Limit 1)
+	var above LeaderboardEntry
+	err = m.DB.QueryRow(`
+		SELECT u.username, l.score
+		FROM leaderboards l
+		JOIN guest_users u ON u.token = l.user_token
+		WHERE l.challenge_id = ? AND l.score > ?
+		ORDER BY l.score ASC
+		LIMIT 1
+	`, challengeID, userScore).Scan(&above.Username, &above.Score)
+
+	if err == nil {
+		aboveRank, _ := m.GetRankForScore(challengeID, above.Score)
+		above.Rank = aboveRank
+		ctx.AboveEntry = &above
+	}
+
+	// 4. Get Player Below (Limit 1)
+	var below LeaderboardEntry
+	err = m.DB.QueryRow(`
+		SELECT u.username, l.score
+		FROM leaderboards l
+		JOIN guest_users u ON u.token = l.user_token
+		WHERE l.challenge_id = ? AND l.score < ?
+		ORDER BY l.score DESC
+		LIMIT 1
+	`, challengeID, userScore).Scan(&below.Username, &below.Score)
+
+	if err == nil {
+		belowRank, _ := m.GetRankForScore(challengeID, below.Score)
+		below.Rank = belowRank
+		ctx.BelowEntry = &below
+	}
+
+	// 5. Get Median Score and Total Entries
+	err = m.DB.QueryRow("SELECT COUNT(*) FROM leaderboards WHERE challenge_id = ?", challengeID).Scan(&ctx.TotalEntries)
+	if err != nil {
+		return nil, err
+	}
+
+	if ctx.TotalEntries > 0 {
+		err = m.DB.QueryRow(`
+			SELECT score 
+			FROM leaderboards 
+			WHERE challenge_id = ? 
+			ORDER BY score ASC 
+			LIMIT 1 OFFSET ?
+		`, challengeID, ctx.TotalEntries/2).Scan(&ctx.MedianScore)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return ctx, nil
+}
+
+func (m *LeaderboardModel) GetRankForScore(challengeID, score int) (int, error) {
+	var rank int
+	err := m.DB.QueryRow("SELECT COUNT(*) + 1 FROM leaderboards WHERE challenge_id = ? AND score > ?", challengeID, score).Scan(&rank)
+	return rank, err
 }

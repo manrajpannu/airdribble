@@ -277,6 +277,7 @@ export default function PlayScenarios() {
       {resultsOpen && pendingResult && (
         <ChallengeResultsDialog
           open={resultsOpen}
+          challengeId={pendingResult.challengeId}
           challengeName={pendingResult.title}
           modeState={pendingResult.modeState}
           highScore={bestScore}
