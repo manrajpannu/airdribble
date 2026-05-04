@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -109,7 +108,7 @@ func (app *Application) endChallengeSession(c *gin.Context) {
 	}
 
 	// Get challenge ID from session
-	challengeID, err := app.models.ChallengeSession.GetChallengeID(&userToken, &sessionToken)
+	challengeID, err := app.models.ChallengeSession.GetChallengeID(userToken, sessionToken)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch challenge session"})
 		return
@@ -163,9 +162,9 @@ func (app *Application) endChallengeSession(c *gin.Context) {
 		}
 
 		// Insert activity for first score
-		err = app.models.UserActivity.Insert(userToken, score.ChallengeID, score.Score)
+		err = app.models.UserActivity.Insert(userToken, "first_score", score.ChallengeID, score.Score)
 		if err != nil {
-			fmt.Printf("Error inserting high score activity: %v\n", err)
+			log.Printf("Error inserting first high score activity: %v", err)
 		}
 	} else if score.Score > leaderboard_score.Score {
 		err = app.models.Leaderboard.Update(&score)
@@ -175,10 +174,9 @@ func (app *Application) endChallengeSession(c *gin.Context) {
 		}
 
 		// Insert activity for high score
-		err = app.models.UserActivity.Insert(userToken, score.ChallengeID, score.Score)
+		err = app.models.UserActivity.Insert(userToken, "high_score", score.ChallengeID, score.Score)
 		if err != nil {
-			// Log error but don't fail the request
-			fmt.Printf("Error inserting high score activity: %v\n", err)
+			log.Printf("Error inserting improved high score activity: %v", err)
 		}
 	}
 	// Respond success

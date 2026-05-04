@@ -73,7 +73,7 @@ func (m *ChallengeSessionModel) End(userToken string, sessionToken string, chall
 	return nil
 }
 
-func (m *ChallengeSessionModel) GetChallengeID(user_token *string, session_token *string) (int, error) {
+func (m *ChallengeSessionModel) GetChallengeID(userToken string, sessionToken string) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -83,7 +83,7 @@ func (m *ChallengeSessionModel) GetChallengeID(user_token *string, session_token
 		WHERE session_token = ?
 		AND user_token = ?
 	`
-	row := m.DB.QueryRowContext(ctx, query, session_token, user_token)
+	row := m.DB.QueryRowContext(ctx, query, sessionToken, userToken)
 	var challengeID int
 	err := row.Scan(&challengeID)
 	if err != nil {

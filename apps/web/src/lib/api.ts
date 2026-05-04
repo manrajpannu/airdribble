@@ -113,6 +113,7 @@ export interface Rank {
 
 export interface UserActivity {
   id: number;
+  type: string;
   challenge_id: number;
   challenge_name: string;
   score: number;

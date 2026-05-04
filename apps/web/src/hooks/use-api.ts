@@ -193,6 +193,7 @@ export function useEndSession() {
       queryClient.invalidateQueries({ queryKey: ["userPercentile"] });
       queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
       queryClient.invalidateQueries({ queryKey: ["leaderboardContext"] });
+      queryClient.invalidateQueries({ queryKey: ["activityFeed"] });
     },
   });
 }
