@@ -16,6 +16,8 @@ type Score struct {
 	SessionToken string `json:"-"`
 	ChallengeID  int    `json:"challenge_id"`
 	Score        int    `json:"score" binding:"required"`
+	Shots        int    `json:"shots"`
+	Kills        int    `json:"kills"`
 	CreatedAt    string `json:"created_at"`
 }
 
@@ -24,9 +26,9 @@ func (m *ScoreModel) Insert(score *Score) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `INSERT INTO scores (user_token, session_token, challenge_id, score) VALUES (?, ?, ?, ?)`
+	query := `INSERT INTO scores (user_token, session_token, challenge_id, score, shots, kills) VALUES (?, ?, ?, ?, ?, ?)`
 
-	_, err := m.DB.ExecContext(ctx, query, score.UserToken, score.SessionToken, score.ChallengeID, score.Score)
+	_, err := m.DB.ExecContext(ctx, query, score.UserToken, score.SessionToken, score.ChallengeID, score.Score, score.Shots, score.Kills)
 	if err != nil {
 		return err
 	}
@@ -38,7 +40,7 @@ func (m *ScoreModel) GetAll(userToken string, challengeID int) ([]*Score, error)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `SELECT id, user_token, session_token, challenge_id, score, created_at FROM scores WHERE user_token = ? AND challenge_id = ?`
+	query := `SELECT id, user_token, session_token, challenge_id, score, shots, kills, created_at FROM scores WHERE user_token = ? AND challenge_id = ?`
 
 	rows, err := m.DB.QueryContext(ctx, query, userToken, challengeID)
 	if err != nil {
@@ -49,7 +51,7 @@ func (m *ScoreModel) GetAll(userToken string, challengeID int) ([]*Score, error)
 	scores := []*Score{}
 	for rows.Next() {
 		var s Score
-		err := rows.Scan(&s.ID, &s.UserToken, &s.SessionToken, &s.ChallengeID, &s.Score, &s.CreatedAt)
+		err := rows.Scan(&s.ID, &s.UserToken, &s.SessionToken, &s.ChallengeID, &s.Score, &s.Shots, &s.Kills, &s.CreatedAt)
 		if err != nil {
 			return nil, err
 		}

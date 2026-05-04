@@ -16,8 +16,11 @@ type GuestUser struct {
 	Token     string  `json:"token"`
 	RankID    *int    `json:"rank_id"`
 	Location  *string `json:"location"`
-	IPAddress *string `json:"ip_address"`
-	CreatedAt *string `json:"created_at"`
+	IPAddress   *string `json:"ip_address"`
+	GamesPlayed int     `json:"games_played"`
+	Shots       int     `json:"shots"`
+	Kills       int     `json:"kills"`
+	CreatedAt   *string `json:"created_at"`
 }
 
 func (m *GuestUserModel) Insert(guest_user *GuestUser) error {
@@ -52,7 +55,7 @@ func (m *GuestUserModel) GetByToken(token string) (*GuestUser, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `SELECT id, username, token, rank_id, location, ip_address, created_at FROM guest_users WHERE token = ?`
+	query := `SELECT id, username, token, rank_id, location, ip_address, games_played, shots, kills, created_at FROM guest_users WHERE token = ?`
 
 	var guest_user GuestUser
 	err := m.DB.QueryRowContext(ctx, query, token).Scan(
@@ -62,6 +65,9 @@ func (m *GuestUserModel) GetByToken(token string) (*GuestUser, error) {
 		&guest_user.RankID,
 		&guest_user.Location,
 		&guest_user.IPAddress,
+		&guest_user.GamesPlayed,
+		&guest_user.Shots,
+		&guest_user.Kills,
 		&guest_user.CreatedAt,
 	)
 
@@ -73,4 +79,20 @@ func (m *GuestUserModel) GetByToken(token string) (*GuestUser, error) {
 	}
 
 	return &guest_user, nil
+}
+
+func (m *GuestUserModel) IncrementStats(token string, shots, kills int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `
+		UPDATE guest_users 
+		SET games_played = games_played + 1,
+		    shots = shots + ?,
+		    kills = kills + ?
+		WHERE token = ?
+	`
+
+	_, err := m.DB.ExecContext(ctx, query, shots, kills, token)
+	return err
 }

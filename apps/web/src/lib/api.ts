@@ -98,6 +98,9 @@ export interface GuestUser {
   rank_id: number | null;
   location: string | null;
   ip_address: string | null;
+  games_played: number;
+  shots: number;
+  kills: number;
   created_at: string | null;
 }
 
@@ -158,6 +161,8 @@ export interface Score {
   session_token: string;
   challenge_id: number;
   score: number;
+  shots: number;
+  kills: number;
   created_at: string;
 }
 
@@ -242,9 +247,9 @@ export const api = {
       { method: "POST" }
     ),
 
-  endSession: (score: number) =>
+  endSession: (data: { score: number; shots: number; kills: number }) =>
     apiFetch<{ message: string; session_token: string; score: number }>(
       "/api/v1/challenges/session/end",
-      { method: "PATCH", body: JSON.stringify({ score }) }
+      { method: "PATCH", body: JSON.stringify(data) }
     ),
 };

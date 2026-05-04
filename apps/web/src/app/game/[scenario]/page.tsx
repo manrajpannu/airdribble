@@ -133,7 +133,11 @@ export default function GamePage() {
       setIsSubmitting(true);
       sessionEndedRef.current = true;
 
-      endSessionMutation.mutate(finalScore, {
+      endSessionMutation.mutate({ 
+        score: finalScore, 
+        shots: modeState?.shots ?? 0, 
+        kills: modeState?.kills ?? 0 
+      }, {
         onSuccess: () => {
           if (challengeDbId) {
             sessionStorage.setItem("pendingChallengeResult", JSON.stringify({

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 
@@ -139,6 +140,13 @@ func (app *Application) endChallengeSession(c *gin.Context) {
 		return
 	}
 
+	// Update cumulative user stats
+	err = app.models.GuestUser.IncrementStats(userToken, score.Shots, score.Kills)
+	if err != nil {
+		// Log error but don't fail the request since score is already saved
+		log.Printf("Failed to update user cumulative stats: %v", err)
+	}
+
 	leaderboard_score, err := app.models.Leaderboard.GetBestScore(userToken, challengeID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch leaderboard"})
@@ -165,5 +173,7 @@ func (app *Application) endChallengeSession(c *gin.Context) {
 		"message":       "Session ended and Score saved",
 		"session_token": sessionToken,
 		"score":         score.Score,
+		"shots":         score.Shots,
+		"kills":         score.Kills,
 	})
 }

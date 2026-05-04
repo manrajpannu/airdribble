@@ -1,0 +1,6 @@
+-- SQLite does not support dropping columns easily, but we can provide the reverse migration
+-- In a real scenario, this would involve recreating the table. 
+-- For now, we'll leave it as a placeholder or comment it out if not strictly needed for the task.
+-- ALTER TABLE guest_users DROP COLUMN games_played;
+-- ALTER TABLE guest_users DROP COLUMN shots;
+-- ALTER TABLE guest_users DROP COLUMN kills;

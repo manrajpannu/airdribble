@@ -738,16 +738,25 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "games_played": {
+                    "type": "integer"
+                },
                 "id": {
                     "type": "integer"
                 },
                 "ip_address": {
                     "type": "string"
                 },
+                "kills": {
+                    "type": "integer"
+                },
                 "location": {
                     "type": "string"
                 },
                 "rank_id": {
+                    "type": "integer"
+                },
+                "shots": {
                     "type": "integer"
                 },
                 "token": {
@@ -836,7 +845,13 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "kills": {
+                    "type": "integer"
+                },
                 "score": {
+                    "type": "integer"
+                },
+                "shots": {
                     "type": "integer"
                 }
             }

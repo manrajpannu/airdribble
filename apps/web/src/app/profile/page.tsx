@@ -104,6 +104,35 @@ export default function ProfilePage() {
             </div>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Lifetime Stats</CardTitle>
+            <CardDescription>Your cumulative performance across all challenges.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {user.games_played === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <p className="text-muted-foreground">No games played yet.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div className="flex flex-col items-center p-6 rounded-2xl bg-primary/5 border border-primary/10 transition-all hover:bg-primary/10 group">
+                  <span className="text-sm font-bold text-primary uppercase tracking-widest mb-1">Games Played</span>
+                  <span className="text-4xl font-black group-hover:scale-110 transition-transform">{user.games_played}</span>
+                </div>
+                <div className="flex flex-col items-center p-6 rounded-2xl bg-primary/5 border border-primary/10 transition-all hover:bg-primary/10 group">
+                  <span className="text-sm font-bold text-primary uppercase tracking-widest mb-1">Total Shots</span>
+                  <span className="text-4xl font-black group-hover:scale-110 transition-transform">{user.shots}</span>
+                </div>
+                <div className="flex flex-col items-center p-6 rounded-2xl bg-primary/5 border border-primary/10 transition-all hover:bg-primary/10 group">
+                  <span className="text-sm font-bold text-primary uppercase tracking-widest mb-1">Total Kills</span>
+                  <span className="text-4xl font-black group-hover:scale-110 transition-transform">{user.kills}</span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
