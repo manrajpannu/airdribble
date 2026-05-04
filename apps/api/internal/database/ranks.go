@@ -11,10 +11,10 @@ type RankModel struct {
 }
 
 type Rank struct {
-	ID         int           `json:"id"`
-	Name       string        `json:"name" binding:"required"`
-	TierNumber sql.NullInt64 `json:"tier_number"`
-	Division   sql.NullInt64 `json:"division"`
+	ID         int    `json:"id"`
+	Name       string `json:"name" binding:"required"`
+	TierNumber *int   `json:"tier_number"`
+	Division   *int   `json:"division"`
 }
 
 func (m *RankModel) Insert(rank *Rank) error {

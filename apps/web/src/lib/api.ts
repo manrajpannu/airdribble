@@ -106,7 +106,7 @@ export interface GuestUser {
 
 export interface Rank {
   id: number;
-  tier: string;
+  name: string;
   tier_number: number | null;
   division: number | null;
 }

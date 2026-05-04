@@ -130,8 +130,8 @@ export default function UserActivity() {
             <div className="flex items-center justify-start gap-1.5 text-[9px] font-bold text-muted-foreground/30 uppercase tracking-tighter">
               <span>Less</span>
               {[0, 1, 2, 3, 4].map(level => (
-                <div 
-                  key={level} 
+                <div
+                  key={level}
                   className={cn(
                     "size-[10px] rounded-[1px]",
                     level === 0 && "bg-muted/60",
@@ -139,7 +139,7 @@ export default function UserActivity() {
                     level === 2 && "bg-primary/40",
                     level === 3 && "bg-primary/70",
                     level === 4 && "bg-primary"
-                  )} 
+                  )}
                 />
               ))}
               <span>More</span>
@@ -161,8 +161,8 @@ export default function UserActivity() {
             </div>
           ) : (
             milestones.map((activity) => (
-              <div 
-                key={activity.id} 
+              <div
+                key={activity.id}
                 className="group relative flex items-center gap-4 p-4 rounded-2xl border bg-card/40 hover:bg-muted/50 transition-all duration-200"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted/50 border text-muted-foreground group-hover:text-primary group-hover:border-primary/20 transition-all shadow-sm overflow-hidden">

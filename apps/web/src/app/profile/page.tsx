@@ -4,6 +4,7 @@ import { useMe, useRanks } from "@/hooks/use-api";
 import { User, Calendar, MapPin, Trophy, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { RankBadge } from "@/components/rank-badge";
 import UserActivity from "@/components/user-activity";
 
 export default function ProfilePage() {
@@ -58,8 +59,6 @@ export default function ProfilePage() {
   }
 
   const createdAt = user.created_at ? new Date(user.created_at).toLocaleDateString() : "Unknown";
-  const userRank = ranks?.find(r => r.id === user.rank_id);
-  const rankDisplay = userRank ? `${userRank.tier} ${userRank.division ? `Div ${userRank.division}` : ''}` : "Unranked";
 
   return (
     <div className="flex-1 p-6 lg:p-12 max-w-4xl mx-auto w-full">
@@ -75,41 +74,34 @@ export default function ProfilePage() {
           </Button>
         </div>
 
-        <Card className="rounded-[2rem] border bg-card/40 shadow-sm overflow-hidden">
-          <CardContent className="p-8 lg:p-10">
-            <div className="flex flex-col md:flex-row md:items-center gap-8 lg:gap-12">
-              <div className="flex items-center gap-6">
-                <div className="flex items-center justify-center size-20 rounded-full bg-primary/10 border-4 border-background shadow-md shrink-0">
-                  <User className="size-10 text-primary" />
-                </div>
-                <div className="flex flex-col">
-                  <CardTitle className="text-3xl font-black tracking-tight">{user.username}</CardTitle>
-                  <CardDescription className="font-semibold text-muted-foreground/60">Guest Account • Joined {createdAt}</CardDescription>
-                </div>
+        <Card className="border-none shadow-none bg-transparent p-6">
+          <CardHeader className="flex flex-row items-center gap-6 px-0 pb-2">
+            <div className="flex items-center justify-center size-20 rounded-full bg-primary/10 border-4 border-background shadow-sm">
+              <User className="size-10 text-primary" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-3">
+                <CardTitle className="text-3xl font-black tracking-tight">{user.username}</CardTitle>
+                <RankBadge currentRankId={user.rank_id} />
               </div>
-
-              <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="flex flex-col gap-0.5 p-4 rounded-2xl bg-muted/20 border border-muted/50 hover:bg-muted/30 transition-colors">
-                  <div className="flex items-center gap-1.5 text-muted-foreground/60 mb-1">
-                    <Trophy className="size-3" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Rank</span>
-                  </div>
-                  <span className="text-sm font-bold truncate leading-none" title={rankDisplay}>{rankDisplay}</span>
+              <CardDescription className="font-medium">Guest Account • Joined {createdAt}</CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent className="px-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+              <div className="flex flex-col gap-1 p-5 rounded-2xl bg-muted/30 border hover:bg-muted/50 transition-colors">
+                <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                  <MapPin className="size-4" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Region</span>
                 </div>
-                <div className="flex flex-col gap-0.5 p-4 rounded-2xl bg-muted/20 border border-muted/50 hover:bg-muted/30 transition-colors">
-                  <div className="flex items-center gap-1.5 text-muted-foreground/60 mb-1">
-                    <MapPin className="size-3" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Region</span>
-                  </div>
-                  <span className="text-sm font-bold truncate leading-none" title={user.location || "Global"}>{user.location || "Global"}</span>
+                <span className="text-lg font-bold truncate" title={user.location || "Global"}>{user.location || "Global"}</span>
+              </div>
+              <div className="flex flex-col gap-1 p-5 rounded-2xl bg-muted/30 border hover:bg-muted/50 transition-colors">
+                <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                  <Calendar className="size-4" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Status</span>
                 </div>
-                <div className="flex flex-col gap-0.5 p-4 rounded-2xl bg-muted/20 border border-muted/50 hover:bg-muted/30 transition-colors">
-                  <div className="flex items-center gap-1.5 text-muted-foreground/60 mb-1">
-                    <Calendar className="size-3" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Status</span>
-                  </div>
-                  <span className="text-sm font-bold text-emerald-500 leading-none">Active Now</span>
-                </div>
+                <span className="text-lg font-bold text-emerald-500">Active Now</span>
               </div>
             </div>
           </CardContent>
