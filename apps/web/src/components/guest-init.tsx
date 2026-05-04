@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useMe, useCreateGuestUser } from "@/hooks/use-api";
+import { ApiError } from "@/lib/api";
 
 const MAX_CREATE_RETRIES = 3;
 const RETRY_DELAY_MS = 2000;
@@ -12,7 +13,7 @@ const RETRY_DELAY_MS = 2000;
  */
 export function GuestInit() {
   const { data: user, isLoading, isError: isMeError } = useMe();
-  const { mutate: createGuest, isPending, isError: isCreateError, reset } = useCreateGuestUser();
+  const { mutate: createGuest, isPending, isError: isCreateError, error: createError, reset } = useCreateGuestUser();
   const retryCountRef = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -30,6 +31,13 @@ export function GuestInit() {
   useEffect(() => {
     if (!isCreateError) {
       retryCountRef.current = 0;
+      return;
+    }
+
+    // If we're rate limited (429), the API client is already respecting Retry-After
+    // or we should just stop trying to avoid further blocking.
+    if (createError instanceof ApiError && createError.status === 429) {
+      console.warn(`Rate limited. Retry after ${createError.retryAfter}s. Stopping automatic retries.`);
       return;
     }
 

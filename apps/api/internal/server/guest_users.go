@@ -1,9 +1,9 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/manrajpannu/airdribble/apps/api/internal/auth"
@@ -13,7 +13,7 @@ import (
 // createGuestUser creates a zero-friction anonymous account on first site visit
 //
 // @Summary Create a guest user account
-// @Description Instantly creates an anonymous guest account with no sign-up required. No request body needed. A random username (e.g. "Guest-a3f9c2") and a secure 64-character hex identity token are generated automatically. The token is set as an HttpOnly `user_token` cookie valid for 7 days. All challenge scores are tied to this identity — calling this endpoint again creates a fresh guest account.
+// @Description Instantly creates an anonymous guest account with no sign-up required. No request body needed. A believable, gamer-style random username (e.g. "SlyPigeon99" or "NeonShadow") and a secure 64-character hex identity token are generated automatically. The token is set as an HttpOnly `user_token` cookie valid for 7 days. All challenge scores are tied to this identity — calling this endpoint again creates a fresh guest account.
 // @Tags users
 // @Produce json
 // @Success 201 {object} map[string]string "Guest account created — user_token cookie is set"
@@ -30,15 +30,33 @@ func (app *Application) createGuestUser(c *gin.Context) {
 		return
 	}
 
-	guest_user.Username = fmt.Sprintf("Guest-%s", token[:6])
-
 	ip := c.ClientIP()
 	guest_user.IPAddress = &ip
 	guest_user.Token = token
 
-	err = app.models.GuestUser.Insert(&guest_user)
-	if err != nil {
+	// Attempt to find a unique username (max 5 retries)
+	success := false
+	for i := 0; i < 5; i++ {
+		guest_user.Username = auth.GenerateRandomName()
+
+		err = app.models.GuestUser.Insert(&guest_user)
+		if err == nil {
+			success = true
+			break
+		}
+
+		// If it's a unique constraint violation on username, retry
+		if strings.Contains(err.Error(), "UNIQUE constraint failed: guest_users.username") {
+			continue
+		}
+
+		// Other DB errors should fail immediately
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create guest user"})
+		return
+	}
+
+	if !success {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate unique username"})
 		return
 	}
 

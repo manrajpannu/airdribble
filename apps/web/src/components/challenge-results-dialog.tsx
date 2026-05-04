@@ -156,7 +156,7 @@ function ScoreChart({
   const chartPoints = points.length > 0 ? points : [{ elapsed: 0, score: 0 }, { elapsed: 1, score: finalScore }];
   const maxScore = Math.max(100, finalScore, highScore, ...chartPoints.map((point) => point.score)) * 1.1;
   const minScore = 0;
-  
+
   const values = chartPoints.map((point, i) => {
     const xProgress = chartPoints.length > 1 ? i / (chartPoints.length - 1) : 1;
     return {
@@ -197,7 +197,7 @@ function ScoreChart({
           ))}
         </div>
       </div>
-      
+
       <div className="relative group">
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto max-h-[300px] text-primary overflow-visible">
           <defs>
@@ -217,13 +217,13 @@ function ScoreChart({
             const scoreLabel = Math.round(minScore + p * (maxScore - minScore));
             return (
               <g key={p}>
-                <line 
-                  x1={paddedX} y1={y} x2={width - paddedX} y2={y} 
-                  stroke="currentColor" strokeOpacity="0.05" strokeWidth="1" 
+                <line
+                  x1={paddedX} y1={y} x2={width - paddedX} y2={y}
+                  stroke="currentColor" strokeOpacity="0.05" strokeWidth="1"
                 />
-                <text 
-                  x={paddedX - 8} y={y + 4} 
-                  textAnchor="end" 
+                <text
+                  x={paddedX - 8} y={y + 4}
+                  textAnchor="end"
                   className="fill-muted-foreground text-[10px] font-medium"
                 >
                   {scoreLabel}
@@ -234,15 +234,15 @@ function ScoreChart({
 
           {/* Area Fill */}
           <path d={area} fill="url(#scoreFill)" className="transition-all duration-500 ease-in-out" />
-          
+
           {/* Trend Line */}
-          <polyline 
-            points={line} 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="3" 
-            strokeLinejoin="round" 
-            strokeLinecap="round" 
+          <polyline
+            points={line}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinejoin="round"
+            strokeLinecap="round"
             className="transition-all duration-500 ease-in-out"
             filter="url(#glow)"
           />
@@ -250,9 +250,9 @@ function ScoreChart({
           {/* Points */}
           {values.map((point, index) => (
             <g key={`${point.x}-${index}`} className="group/point">
-              <circle 
-                cx={point.x} cy={point.y} r={index === values.length - 1 ? 5 : 3} 
-                fill={index === values.length - 1 ? "currentColor" : "var(--background)"} 
+              <circle
+                cx={point.x} cy={point.y} r={index === values.length - 1 ? 5 : 3}
+                fill={index === values.length - 1 ? "currentColor" : "var(--background)"}
                 stroke="currentColor"
                 strokeWidth="2"
                 className="transition-all duration-300 group-hover/point:r-5 cursor-crosshair"
@@ -264,19 +264,19 @@ function ScoreChart({
           {/* High Score Reference */}
           {highScore > 0 && highScore < maxScore && (
             <g>
-              <line 
-                x1={paddedX} 
-                y1={height - paddedY - ((highScore - minScore) / (maxScore - minScore)) * (height - paddedY * 2)} 
-                x2={width - paddedX} 
-                y2={height - paddedY - ((highScore - minScore) / (maxScore - minScore)) * (height - paddedY * 2)} 
-                stroke="currentColor" 
-                strokeDasharray="4 4" 
-                strokeOpacity="0.3" 
-                strokeWidth="1.5" 
+              <line
+                x1={paddedX}
+                y1={height - paddedY - ((highScore - minScore) / (maxScore - minScore)) * (height - paddedY * 2)}
+                x2={width - paddedX}
+                y2={height - paddedY - ((highScore - minScore) / (maxScore - minScore)) * (height - paddedY * 2)}
+                stroke="currentColor"
+                strokeDasharray="4 4"
+                strokeOpacity="0.3"
+                strokeWidth="1.5"
               />
-              <text 
-                x={width - paddedX + 8} 
-                y={height - paddedY - ((highScore - minScore) / (maxScore - minScore)) * (height - paddedY * 2) + 4} 
+              <text
+                x={width - paddedX + 8}
+                y={height - paddedY - ((highScore - minScore) / (maxScore - minScore)) * (height - paddedY * 2) + 4}
                 className="fill-primary/60 text-[10px] font-bold"
               >
                 BEST
@@ -311,21 +311,21 @@ export default function ChallengeResultsDialog({
 
   const metrics = useScoreMetrics(modeState)
   const finalScore = metrics.score
-  
+
   // Use leaderboard context data if available
   const userEntry = leaderboardData?.user_entry;
   const top10 = leaderboardData?.top_10 ?? [];
   const medianScore = leaderboardData?.median_score ?? 0;
   const entriesCount = leaderboardData?.total_entries ?? 0;
-  
+
   // Percentile logic: 100 * (better than / total)
   // Our backend percentile was (score < user) / total * 100.
   // We can just use the user rank to estimate: 100 - (rank/total * 100)
   const userRank = userEntry?.rank ?? 0;
-  const percentile = (userRank > 0 && entriesCount > 0) 
-    ? Math.max(1, Math.min(99, Math.round(100 - (userRank / entriesCount) * 100))) 
+  const percentile = (userRank > 0 && entriesCount > 0)
+    ? Math.max(1, Math.min(99, Math.round(100 - (userRank / entriesCount) * 100)))
     : 0;
-  
+
   const isSessionBest = finalScore >= highScore
 
   const displayHistory = useMemo(() => scoreHistory.slice(-historyRange), [scoreHistory, historyRange])
@@ -335,7 +335,7 @@ export default function ChallengeResultsDialog({
 
   const neighbors = useMemo(() => {
     if (!leaderboardData || !userEntry || userRank <= 10) return [];
-    
+
     const items: LeaderboardContextEntry[] = [];
     // Only show above if they aren't already in Top 10
     if (leaderboardData.above_entry && leaderboardData.above_entry.rank > 10) {
@@ -392,13 +392,13 @@ export default function ChallengeResultsDialog({
 
         {isLoading ? (
           <div className="flex-1 flex flex-col items-center justify-center p-12 min-h-[400px]">
-             <div className="relative w-16 h-16 flex items-center justify-center mb-6">
-                <div className="absolute inset-0 rounded-full border-2 border-primary/20" />
-                <div className="absolute inset-0 rounded-full border-t-2 border-primary animate-spin" />
-                <div className="absolute inset-2 rounded-full border-b border-primary/40 animate-spin" style={{ animationDuration: "0.8s" }} />
-                <div className="absolute inset-[1.4rem] rounded-full bg-primary/20 animate-pulse" />
-              </div>
-              <p className="text-muted-foreground animate-pulse font-medium">Calculating results and fetching leaderboard...</p>
+            <div className="relative w-16 h-16 flex items-center justify-center mb-6">
+              <div className="absolute inset-0 rounded-full border-2 border-primary/20" />
+              <div className="absolute inset-0 rounded-full border-t-2 border-primary animate-spin" />
+              <div className="absolute inset-2 rounded-full border-b border-primary/40 animate-spin" style={{ animationDuration: "0.8s" }} />
+              <div className="absolute inset-[1.4rem] rounded-full bg-primary/20 animate-pulse" />
+            </div>
+            <p className="text-muted-foreground animate-pulse font-medium">Calculating results and fetching leaderboard...</p>
           </div>
         ) : isError ? (
           <div className="flex-1 flex flex-col items-center justify-center p-12 min-h-[300px]">
@@ -429,24 +429,24 @@ export default function ChallengeResultsDialog({
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     <div className="lg:col-span-3">
-                      <ScoreChart 
-                        points={displayHistory} 
-                        finalScore={finalScore} 
-                        highScore={highScore} 
+                      <ScoreChart
+                        points={displayHistory}
+                        finalScore={finalScore}
+                        highScore={highScore}
                         range={historyRange}
                         onRangeChange={setHistoryRange}
                       />
                     </div>
-                    
+
                     <div className="flex flex-col justify-between gap-4">
                       <div className="p-5 rounded-xl border bg-card/50 space-y-1">
                         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Final Score</p>
                         <p className="text-5xl font-black text-primary leading-none">{formatNumber(finalScore)}</p>
                       </div>
-                      
+
                       <div className="p-5 rounded-xl border bg-card/50 space-y-1">
                         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Personal Best</p>
                         <p className="text-3xl font-bold text-foreground leading-none">{formatNumber(highScore)}</p>
@@ -467,7 +467,7 @@ export default function ChallengeResultsDialog({
                     <h3 className="font-bold text-xl tracking-tight">Score Calculation</h3>
                     <p className="text-sm text-muted-foreground mt-1">Detailed breakdown of your session performance.</p>
                   </div>
-                  
+
                   <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
                     {scoreRows.map((row) => {
                       const active = selectedStat === row.label
@@ -555,7 +555,7 @@ export default function ChallengeResultsDialog({
                       </TableHeader>
                       <TableBody>
                         {top10.map(renderLeaderboardRow)}
-                        
+
                         {neighbors.length > 0 && (
                           <>
                             <TableRow className="bg-muted/10 h-8 hover:bg-muted/10 border-none pointer-events-none">
@@ -584,12 +584,12 @@ export default function ChallengeResultsDialog({
                         </div>
                       </div>
                       <p className="text-sm text-muted-foreground leading-relaxed">
-                        Your performance in <span className="font-bold text-foreground">{selectedStat}</span> is currently 
-                        at <span className="font-bold text-foreground">{metrics[selectedStat.toLowerCase() as keyof typeof metrics]}</span>. 
+                        Your performance in <span className="font-bold text-foreground">{selectedStat}</span> is currently
+                        at <span className="font-bold text-foreground">{metrics[selectedStat.toLowerCase() as keyof typeof metrics]}</span>.
                         Select other cards in the center panel to compare.
                       </p>
                     </div>
-                    
+
                     <div className="rounded-xl border bg-card p-5 shadow-sm">
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Quick Summary</p>
                       <ul className="space-y-3">
@@ -612,26 +612,26 @@ export default function ChallengeResultsDialog({
               </div>
             </div>
 
-        <div className="border-t bg-muted/10 p-4 flex items-center justify-between">
-          <div className="flex gap-2">
-            <Button variant="ghost" size="icon"><Heart className="h-4 w-4" /></Button>
-            <Button variant="ghost" size="icon"><ThumbsUp className="h-4 w-4" /></Button>
-            <Button variant="ghost" size="icon"><ThumbsDown className="h-4 w-4" /></Button>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => { setActiveTab("analysis"); onOpenStats(); }}>
-              <ChartColumn className="mr-2 h-4 w-4" /> Stats
-            </Button>
-            <Button variant="outline" onClick={onDone}>Done</Button>
-            <Button
-              onClick={onReplay}
-              className="group border-border transition-colors hover:border-black hover:bg-white active:bg-white focus-visible:bg-white hover:text-black"
-            >
-              <RotateCcw className="mr-2 h-4 w-4 transition-transform duration-300 group-hover:-rotate-90 " />
-              <span>Replay</span>
-            </Button>
-          </div>
-        </div>
+            <div className="border-t bg-muted/10 p-4 flex items-center justify-between">
+              <div className="flex gap-2">
+                {/* <Button variant="ghost" size="icon"><Heart className="h-4 w-4" /></Button> */}
+                <Button variant="ghost" size="icon"><ThumbsUp className="h-4 w-4" /></Button>
+                <Button variant="ghost" size="icon"><ThumbsDown className="h-4 w-4" /></Button>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => { setActiveTab("analysis"); onOpenStats(); }}>
+                  <ChartColumn className="mr-2 h-4 w-4" /> Stats
+                </Button>
+                <Button variant="outline" onClick={onDone}>Done</Button>
+                <Button
+                  onClick={onReplay}
+                  className="group border-border transition-colors hover:border-black hover:bg-white active:bg-white focus-visible:bg-white hover:text-black"
+                >
+                  <RotateCcw className="mr-2 h-4 w-4 transition-transform duration-300 group-hover:-rotate-90 " />
+                  <span>Replay</span>
+                </Button>
+              </div>
+            </div>
           </>
         )}
       </div>

@@ -552,7 +552,7 @@ const docTemplate = `{
         },
         "/api/v1/users/guest": {
             "post": {
-                "description": "Instantly creates an anonymous guest account with no sign-up required. No request body needed. A random username (e.g. \"Guest-a3f9c2\") and a secure 64-character hex identity token are generated automatically. The token is set as an HttpOnly ` + "`" + `user_token` + "`" + ` cookie valid for 7 days. All challenge scores are tied to this identity — calling this endpoint again creates a fresh guest account.",
+                "description": "Instantly creates an anonymous guest account with no sign-up required. No request body needed. A believable, gamer-style random username (e.g. \"SlyPigeon99\" or \"NeonShadow\") and a secure 64-character hex identity token are generated automatically. The token is set as an HttpOnly ` + "`" + `user_token` + "`" + ` cookie valid for 7 days. All challenge scores are tied to this identity — calling this endpoint again creates a fresh guest account.",
                 "produces": [
                     "application/json"
                 ],

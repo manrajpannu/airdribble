@@ -27,9 +27,11 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
+        const retryAfter = res.headers.get("Retry-After");
         const error = new ApiError(
           body.error ?? `Request failed: ${res.status}`,
-          res.status
+          res.status,
+          retryAfter ? parseInt(retryAfter, 10) : undefined
         );
 
         // Don't retry client errors (4xx except 429)
@@ -41,7 +43,12 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 
         // If we have retries left, back off and try again
         if (attempt < MAX_RETRIES) {
-          await sleep(BASE_DELAY_MS * Math.pow(3, attempt));
+          // If 429, respect Retry-After if provided, otherwise use exponential backoff
+          const delay = (res.status === 429 && error.retryAfter) 
+            ? error.retryAfter * 1000 
+            : BASE_DELAY_MS * Math.pow(3, attempt);
+          
+          await sleep(delay);
           continue;
         }
 
@@ -70,11 +77,12 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   throw lastError ?? new Error("Request failed after retries");
 }
 
-/** Custom error class that carries the HTTP status code */
+/** Custom error class that carries the HTTP status code and optional retry hint */
 export class ApiError extends Error {
   constructor(
     message: string,
-    public readonly status: number
+    public readonly status: number,
+    public readonly retryAfter?: number // seconds
   ) {
     super(message);
     this.name = "ApiError";
