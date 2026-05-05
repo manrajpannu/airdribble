@@ -457,7 +457,7 @@ export default function ChallengeResultsDialog({
                     <div className="flex flex-col justify-between gap-4">
                       <div className="p-5 rounded-xl border bg-card/50 space-y-1">
                         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Final Score</p>
-                        <p className="text-5xl font-black text-primary leading-none">{formatNumber(finalScore)}</p>
+                        <p className="text-4xl font-black text-primary leading-none">{formatNumber(finalScore)}</p>
                       </div>
 
                       <div className="p-5 rounded-xl border bg-card/50 space-y-1">
