@@ -1,9 +1,0 @@
-CREATE TABLE IF NOT EXISTS guest_users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username VARCHAR(50) NOT NULL,
-    token VARCHAR(64) UNIQUE NOT NULL, 
-    rank_id INTEGER REFERENCES ranks(id),
-    location VARCHAR(100),
-    ip_address VARCHAR(45),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);

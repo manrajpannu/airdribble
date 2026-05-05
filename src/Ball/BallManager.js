@@ -161,19 +161,32 @@ export class BallManager extends THREE.Group {
      * @param {Object} healthObj
      * @param {Object} reticleObj
      */
-    createBall(position, size, movementClass, healthObj = undefined, reticleObj = undefined, appearanceObj = undefined, boundary = null) {
+    createBall(position, size, movementOption, healthObj = undefined, reticleObj = undefined, appearanceObj = undefined, boundary = null) {
         const actualBoundary = boundary !== null ? boundary : this.boundary;
-        // Resolve movement class if it's a string name
-        let actualMovementClass = movementClass;
-        if (typeof movementClass === 'string') {
-            // Support both "FlowMovement" and "flow" styles
-            const normalized = movementClass.toLowerCase().endsWith('movement') 
-                ? movementClass.charAt(0).toUpperCase() + movementClass.slice(1)
-                : movementClass.charAt(0).toUpperCase() + movementClass.slice(1) + 'Movement';
-            actualMovementClass = MovementRegistry[normalized] || MovementRegistry[movementClass] || null;
+        
+        let movementName = '';
+        let movementParams = { bounds: actualBoundary };
+
+        if (typeof movementOption === 'string') {
+            movementName = movementOption;
+        } else if (movementOption && typeof movementOption === 'object') {
+            movementName = movementOption.name || '';
+            movementParams = { ...movementParams, ...movementOption };
+            // Ensure bounds is included if not explicitly overridden by object
+            if (movementParams.bounds === undefined) movementParams.bounds = actualBoundary;
         }
 
-        const movementInstance = actualMovementClass ? new actualMovementClass({ bounds: actualBoundary }) : null;
+        // Resolve movement class if it's a string name
+        let actualMovementClass = null;
+        if (movementName) {
+            // Support both "FlowMovement" and "flow" styles
+            const normalized = movementName.toLowerCase().endsWith('movement') 
+                ? movementName.charAt(0).toUpperCase() + movementName.slice(1)
+                : movementName.charAt(0).toUpperCase() + movementName.slice(1) + 'Movement';
+            actualMovementClass = MovementRegistry[normalized] || MovementRegistry[movementName] || null;
+        }
+
+        const movementInstance = actualMovementClass ? new actualMovementClass(movementParams) : null;
         const BallType = appearanceObj?.isStriped ? StripedBall : Ball;
         const ball = new BallType(position, size, movementInstance, healthObj, reticleObj, appearanceObj);
         this.balls.push(ball);

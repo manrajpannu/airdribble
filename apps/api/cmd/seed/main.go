@@ -66,8 +66,15 @@ var challenges = []ChallengeRow{
 			"health": 100,
 			"holdSliderEnabled": true,
 			"holdSliderSeconds": 5.0,
-			"movement": "flow",
-			"size": [2.0],
+			"movement": {
+				"name": "flow",
+				"minSpeed": 5,
+				"maxSpeed": 20,
+				"turnRate": 3,
+				"minSeparation": 2.2,
+				"separationStrength": 16
+			},
+			"size": [4.0],
 			"timeLimit": 60,
 			"boundary": 40,
 			"colors": ["#04f460"],

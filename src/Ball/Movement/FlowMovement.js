@@ -5,9 +5,9 @@ export class FlowMovement {
 
     constructor({
         bounds = 9,
-        minSpeed = 1,
-        maxSpeed = 10,
-        turnRate = 2,
+        minSpeed = 5,
+        maxSpeed = 20,
+        turnRate = 3,
         minSeparation = 2.2,
         separationStrength = 16,
     } = {}) {
