@@ -23,6 +23,7 @@ export const queryKeys = {
   publicProfile: (username: string) => ["publicProfile", username] as const,
   publicActivity: (username: string) => ["publicActivity", username] as const,
   publicActivityFeed: (username: string) => ["publicActivityFeed", username] as const,
+  userRating: (challengeId: number) => ["userRating", challengeId] as const,
 };
 
 // ─── User Hooks ───────────────────────────────────────────────────────────────
@@ -127,6 +128,27 @@ export function useChallenge(slug: string) {
     queryKey: queryKeys.challenge(slug),
     queryFn: () => api.getChallenge(slug),
     enabled: !!slug,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useRateChallenge() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, rating }: { id: number; rating: number }) =>
+      api.rateChallenge(id, rating),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.challenges });
+      queryClient.invalidateQueries({ queryKey: queryKeys.userRating(id) });
+    },
+  });
+}
+
+export function useUserRating(challengeId: number) {
+  return useQuery({
+    queryKey: queryKeys.userRating(challengeId),
+    queryFn: () => api.getUserRating(challengeId),
+    enabled: !!challengeId,
     staleTime: 5 * 60 * 1000,
   });
 }

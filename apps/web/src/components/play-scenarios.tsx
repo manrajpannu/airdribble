@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CircleDot, Crosshair, Layers, Zap, MoreVertical } from "lucide-react";
+import { CircleDot, Crosshair, Layers, Zap, MoreVertical, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -243,12 +243,24 @@ export default function PlayScenarios() {
                     </div>
                     <CardTitle>{scenario.title}</CardTitle>
                   </CardHeader>
-                  <CardContent className="relative z-10 flex flex-wrap gap-2">
-                    {scenario.tags.map((tag) => (
-                      <Badge key={tag} variant="outline" className="text-[10px] uppercase">
-                        {tag}
-                      </Badge>
-                    ))}
+                  <CardContent className="relative z-10 flex flex-wrap gap-2 items-center justify-between">
+                    <div className="flex flex-wrap gap-2">
+                      {scenario.tags.map((tag) => (
+                        <Badge key={tag} variant="outline" className="text-[10px] uppercase">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-3 ml-auto">
+                      <div className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground/80">
+                        <ThumbsUp className="h-3 w-3" />
+                        <span>{scenario.likes}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground/80">
+                        <ThumbsDown className="h-3 w-3" />
+                        <span>{scenario.dislikes}</span>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               ))}

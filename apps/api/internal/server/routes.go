@@ -40,6 +40,8 @@ func (app *Application) Routes() http.Handler {
 	{
 		v1.GET("/challenges", app.getChallenges)
 		v1.GET("/challenge", app.getChallenge)
+		v1.POST("/challenges/:challenge_id/rate", app.rateChallenge)
+		v1.GET("/challenges/:challenge_id/rating", app.getUserRating)
 	}
 
 	// users — guest creation has an additional strict limiter (3 per hour)

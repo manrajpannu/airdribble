@@ -178,6 +178,8 @@ export interface Challenge {
   difficulty: number;
   active: boolean;
   config: ChallengeConfig;
+  likes: number;
+  dislikes: number;
   created_at: string;
   updated_at: string;
 }
@@ -239,6 +241,15 @@ export const api = {
 
   getChallenge: (slug: string) =>
     apiFetch<Challenge>(`/api/v1/challenge?slug=${slug}`),
+
+  rateChallenge: (id: number, rating: number) =>
+    apiFetch<{ message: string }>(`/api/v1/challenges/${id}/rate`, {
+      method: "POST",
+      body: JSON.stringify({ rating }),
+    }),
+
+  getUserRating: (id: number) =>
+    apiFetch<{ rating: number }>(`/api/v1/challenges/${id}/rating`),
 
   // Ranks
   getRanks: () => apiFetch<Rank[]>("/api/v1/ranks"),

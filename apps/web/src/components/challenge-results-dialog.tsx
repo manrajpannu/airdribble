@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { ChartColumn, Heart, ThumbsDown, ThumbsUp, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { useLeaderboardContext } from "@/hooks/use-api";
+import { useLeaderboardContext, useRateChallenge, useUserRating } from "@/hooks/use-api";
 import type { LeaderboardContextEntry } from "@/lib/api";
 import { RankBadge } from "@/components/rank-badge";
 import Link from "next/link";
@@ -301,14 +301,34 @@ export default function ChallengeResultsDialog({
   onDone,
   onReplay,
   onOpenStats,
-  isLoading: isDataLoading,
-  isError: isDataError,
+  isLoading,
+  isError,
 }: ChallengeResultsDialogProps) {
+  const { data: leaderboardData, isLoading: isLeaderboardLoading, isError: isLeaderboardError } = useLeaderboardContext(challengeId);
+  const { data: ratingData } = useUserRating(challengeId);
+  const rateMutation = useRateChallenge();
+
   const [selectedStat, setSelectedStat] = useState<"Damage" | "Hits" | "Kills" | "Total">("Total")
   const [friendsOnly, setFriendsOnly] = useState(false)
   const [historyRange, setHistoryRange] = useState(25)
+  const [userRating, setUserRating] = useState<number | null>(null);
 
-  const { data: leaderboardData, isLoading: isLeaderboardLoading, isError: isLeaderboardError } = useLeaderboardContext(challengeId);
+  // Sync with backend rating
+  useEffect(() => {
+    if (ratingData) {
+      setUserRating(ratingData.rating === 0 ? null : ratingData.rating);
+    }
+  }, [ratingData]);
+
+  const handleRate = async (rating: number) => {
+    const nextRating = userRating === rating ? 0 : rating;
+    setUserRating(nextRating === 0 ? null : nextRating);
+    try {
+      await rateMutation.mutateAsync({ id: challengeId, rating: nextRating });
+    } catch (error) {
+      console.error("Failed to rate challenge:", error);
+    }
+  };
 
   const metrics = useScoreMetrics(modeState)
   const finalScore = metrics.score
@@ -331,8 +351,8 @@ export default function ChallengeResultsDialog({
 
   const displayHistory = useMemo(() => scoreHistory.slice(-historyRange), [scoreHistory, historyRange])
 
-  const isLoading = isDataLoading || isLeaderboardLoading;
-  const isError = isDataError || isLeaderboardError;
+  const combinedLoading = isLoading || isLeaderboardLoading;
+  const combinedError = isError || isLeaderboardError;
 
   const neighbors = useMemo(() => {
     if (!leaderboardData || !userEntry || userRank <= 10) return [];
@@ -403,7 +423,7 @@ export default function ChallengeResultsDialog({
           </Badge>
         </div>
 
-        {isLoading ? (
+        {combinedLoading ? (
           <div className="flex-1 flex flex-col items-center justify-center p-12 min-h-[400px]">
             <div className="relative w-16 h-16 flex items-center justify-center mb-6">
               <div className="absolute inset-0 rounded-full border-2 border-primary/20" />
@@ -413,7 +433,7 @@ export default function ChallengeResultsDialog({
             </div>
             <p className="text-muted-foreground animate-pulse font-medium">Calculating results and fetching leaderboard...</p>
           </div>
-        ) : isError ? (
+        ) : combinedError ? (
           <div className="flex-1 flex flex-col items-center justify-center p-12 min-h-[300px]">
             <p className="text-destructive font-semibold mb-2">Failed to load results</p>
             <p className="text-sm text-muted-foreground text-center mb-6 max-w-xs">
@@ -586,9 +606,24 @@ export default function ChallengeResultsDialog({
 
             <div className="border-t bg-muted/10 p-4 flex items-center justify-between">
               <div className="flex gap-2">
-                {/* <Button variant="ghost" size="icon"><Heart className="h-4 w-4" /></Button> */}
-                <Button variant="ghost" size="icon"><ThumbsUp className="h-4 w-4" /></Button>
-                <Button variant="ghost" size="icon"><ThumbsDown className="h-4 w-4" /></Button>
+                <Button
+                  variant={userRating === 1 ? "secondary" : "ghost"}
+                  size="icon"
+                  className={cn(userRating === 1 && "bg-primary/10 text-primary hover:bg-primary/20")}
+                  onClick={() => handleRate(1)}
+                  disabled={rateMutation.isPending}
+                >
+                  <ThumbsUp className={cn("h-4 w-4", userRating === 1 && "fill-current")} />
+                </Button>
+                <Button
+                  variant={userRating === -1 ? "secondary" : "ghost"}
+                  size="icon"
+                  className={cn(userRating === -1 && "bg-destructive/10 text-destructive hover:bg-destructive/20")}
+                  onClick={() => handleRate(-1)}
+                  disabled={rateMutation.isPending}
+                >
+                  <ThumbsDown className={cn("h-4 w-4", userRating === -1 && "fill-current")} />
+                </Button>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={onDone}>Done</Button>
