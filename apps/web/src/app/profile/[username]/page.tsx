@@ -1,11 +1,13 @@
 "use client";
 
 import { use } from "react";
-import { usePublicProfile, usePublicUserActivity, usePublicUserActivityFeed } from "@/hooks/use-api";
-import { User, Calendar, MapPin, Trophy, ArrowLeft } from "lucide-react";
+import { usePublicProfile, usePublicUserActivity, usePublicUserActivityFeed, useUserRanks } from "@/hooks/use-api";
+import { User, Calendar, MapPin, Trophy, ArrowLeft, Target } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { RankBadge } from "@/components/rank-badge";
+import { ScenarioRankBadge } from "@/components/scenario-rank-badge";
+import { calculateAimlabsPercentile } from "@/lib/scenario-ranks";
 import Link from "next/link";
 import { useMemo } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -33,6 +35,7 @@ export default function PublicProfilePage({
   const { data: user, isLoading, isError } = usePublicProfile(decodedUsername);
   const { data: activityData, isLoading: isActivityLoading } = usePublicUserActivity(decodedUsername);
   const { data: feedData, isLoading: isFeedLoading } = usePublicUserActivityFeed(decodedUsername, 10, 0);
+  const { data: userRanks, isLoading: isRanksLoading } = useUserRanks(decodedUsername);
 
   const monthData = useMemo(() => {
     const today = startOfToday();
@@ -146,6 +149,52 @@ export default function PublicProfilePage({
             </div>
           </CardContent>
         </Card>
+
+        {/* Rank Overview */}
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center gap-2 text-muted-foreground mb-1">
+            <Target className="size-4" />
+            <span className="text-xs font-bold uppercase tracking-wider">Scenario Rank Overview</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {isRanksLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i} className="animate-pulse bg-muted/20">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="h-4 w-24 bg-muted rounded" />
+                    <div className="h-6 w-16 bg-muted rounded" />
+                  </CardContent>
+                </Card>
+              ))
+            ) : userRanks && userRanks.length > 0 ? (
+              userRanks.map((rank) => {
+                const percentile = calculateAimlabsPercentile(rank.rank, rank.total_entries);
+                return (
+                  <Link 
+                    key={rank.challenge_id} 
+                    href={`/game/${rank.challenge_slug}`}
+                    className="group"
+                  >
+                    <Card className="hover:border-primary transition-colors bg-muted/10">
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold truncate max-w-[120px]">{rank.challenge_title}</span>
+                          <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">Best: {rank.score}</span>
+                        </div>
+                        <ScenarioRankBadge percentile={percentile} size="sm" showName={true} />
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })
+            ) : (
+              <div className="col-span-full p-8 rounded-2xl border border-dashed flex flex-col items-center justify-center text-center bg-muted/5">
+                <Trophy className="size-8 text-muted-foreground/30 mb-3" />
+                <p className="text-sm text-muted-foreground font-medium">No scenarios completed yet.</p>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Lifetime performance */}
         <section className="space-y-6">

@@ -55,6 +55,7 @@ func (app *Application) Routes() http.Handler {
 		v1.GET("/users/:username", app.getPublicProfile)
 		v1.GET("/users/:username/activity", app.getPublicUserActivity)
 		v1.GET("/users/:username/activity/feed", app.getPublicUserActivityFeed)
+		v1.GET("/users/:username/ranks", app.getUserRanks)
 	}
 
 	// challenge session

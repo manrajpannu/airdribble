@@ -20,7 +20,7 @@ type Leaderboard struct {
 	User         User   `json:"guest_user"`
 	SessionToken string `json:"-"`
 	ChallengeID  int    `json:"challenge_id"`
-	Score        int    `json:"score" binding:"required"`
+	Score        int    `json:"score"`
 	CreatedAt    string `json:"created_at"`
 	UpdatedAt    string `json:"updated_at"`
 }
@@ -107,6 +107,43 @@ func (m *LeaderboardModel) Get(challengeID int) ([]*Leaderboard, error) {
 	}
 
 	return leaderboards, rows.Err()
+}
+
+func (m *LeaderboardModel) GetUserRanks(userToken string) ([]map[string]interface{}, error) {
+	rows, err := m.DB.Query(`
+		SELECT 
+			c.id, 
+			c.title, 
+			c.slug,
+			l.score,
+			(SELECT COUNT(*) + 1 FROM leaderboards WHERE challenge_id = l.challenge_id AND score > l.score) as rank,
+			(SELECT COUNT(*) FROM leaderboards WHERE challenge_id = l.challenge_id) as total_entries
+		FROM leaderboards l
+		JOIN challenges c ON c.id = l.challenge_id
+		WHERE l.user_token = ?
+	`, userToken)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var ranks []map[string]interface{}
+	for rows.Next() {
+		var id, score, rank, total int
+		var title, slug string
+		if err := rows.Scan(&id, &title, &slug, &score, &rank, &total); err != nil {
+			return nil, err
+		}
+		ranks = append(ranks, map[string]interface{}{
+			"challenge_id":   id,
+			"challenge_title": title,
+			"challenge_slug":  slug,
+			"score":          score,
+			"rank":           rank,
+			"total_entries":  total,
+		})
+	}
+	return ranks, nil
 }
 
 func (m *LeaderboardModel) GetBestScore(userToken string, challengeID int) (*Leaderboard, error) {
@@ -319,4 +356,10 @@ func (m *LeaderboardModel) GetRankForScore(challengeID, score int) (int, error) 
 	var rank int
 	err := m.DB.QueryRow("SELECT COUNT(*) + 1 FROM leaderboards WHERE challenge_id = ? AND score > ?", challengeID, score).Scan(&rank)
 	return rank, err
+}
+
+func (m *LeaderboardModel) GetTotalEntries(challengeID int) (int, error) {
+	var count int
+	err := m.DB.QueryRow("SELECT COUNT(*) FROM leaderboards WHERE challenge_id = ?", challengeID).Scan(&count)
+	return count, err
 }

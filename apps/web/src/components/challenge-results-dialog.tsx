@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 import { useLeaderboardContext, useRateChallenge, useUserRating } from "@/hooks/use-api";
 import type { LeaderboardContextEntry } from "@/lib/api";
 import { RankBadge } from "@/components/rank-badge";
+import { ScenarioRankBadge } from "@/components/scenario-rank-badge";
+import { calculateAimlabsPercentile } from "@/lib/scenario-ranks";
 import Link from "next/link";
 
 export type ChallengeScorePoint = {
@@ -339,13 +341,9 @@ export default function ChallengeResultsDialog({
   const medianScore = leaderboardData?.median_score ?? 0;
   const entriesCount = leaderboardData?.total_entries ?? 0;
 
-  // Percentile logic: 100 * (better than / total)
-  // Our backend percentile was (score < user) / total * 100.
-  // We can just use the user rank to estimate: 100 - (rank/total * 100)
+  // Percentile logic: Aimlabs style
   const userRank = userEntry?.rank ?? 0;
-  const percentile = (userRank > 0 && entriesCount > 0)
-    ? Math.max(1, Math.min(99, Math.round(100 - (userRank / entriesCount) * 100)))
-    : 0;
+  const percentile = calculateAimlabsPercentile(userRank, entriesCount);
 
   const isSessionBest = finalScore >= highScore
 
@@ -556,10 +554,14 @@ export default function ChallengeResultsDialog({
                   </label>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-4 gap-2">
                   <div className="rounded-xl border bg-card p-3 text-center shadow-sm">
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter mb-1">Entries</div>
                     <div className="font-bold text-foreground">{formatNumber(entriesCount)}</div>
+                  </div>
+                  <div className="rounded-xl border bg-card p-3 text-center shadow-sm flex flex-col items-center justify-center">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter mb-1">Scenario Rank</div>
+                    <ScenarioRankBadge percentile={percentile} size="sm" showName={true} />
                   </div>
                   <div className="rounded-xl border bg-card p-3 text-center shadow-sm">
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter mb-1">Median</div>
@@ -567,7 +569,7 @@ export default function ChallengeResultsDialog({
                   </div>
                   <div className="rounded-xl border bg-card p-3 text-center shadow-sm">
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter mb-1">Top %</div>
-                    <div className="font-bold text-foreground">{100 - percentile}%</div>
+                    <div className="font-bold text-foreground">{(100 - percentile).toFixed(1)}%</div>
                   </div>
                 </div>
 

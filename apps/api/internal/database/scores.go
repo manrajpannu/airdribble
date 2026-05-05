@@ -15,7 +15,7 @@ type Score struct {
 	UserToken    string `json:"-"`
 	SessionToken string `json:"-"`
 	ChallengeID  int    `json:"challenge_id"`
-	Score        int    `json:"score" binding:"required"`
+	Score        int    `json:"score"`
 	Shots        int    `json:"shots"`
 	Kills        int    `json:"kills"`
 	CreatedAt    string `json:"created_at"`

@@ -166,6 +166,19 @@ func (app *Application) endChallengeSession(c *gin.Context) {
 		if err != nil {
 			log.Printf("Error inserting first high score activity: %v", err)
 		}
+
+		// Rank Achievement for first score
+		totalEntries, err := app.models.Leaderboard.GetTotalEntries(score.ChallengeID)
+		if err == nil && totalEntries > 0 {
+			newRankVal, _ := app.models.Leaderboard.GetRankForScore(score.ChallengeID, score.Score)
+			newPercentile := CalculatePercentile(newRankVal, totalEntries)
+			newRankName := GetScenarioRankName(newPercentile)
+
+			if newRankName != "Unranked" {
+				activityMsg := "user achieved " + newRankName
+				_ = app.models.UserActivity.Insert(userToken, activityMsg, score.ChallengeID, score.Score)
+			}
+		}
 	} else if score.Score > leaderboard_score.Score {
 		err = app.models.Leaderboard.Update(&score)
 		if err != nil {
@@ -177,6 +190,29 @@ func (app *Application) endChallengeSession(c *gin.Context) {
 		err = app.models.UserActivity.Insert(userToken, "high_score", score.ChallengeID, score.Score)
 		if err != nil {
 			log.Printf("Error inserting improved high score activity: %v", err)
+		}
+
+		// Rank Achievement Check
+		totalEntries, err := app.models.Leaderboard.GetTotalEntries(score.ChallengeID)
+		if err == nil && totalEntries > 0 {
+			// Calculate old rank name
+			oldRankVal, _ := app.models.Leaderboard.GetRankForScore(score.ChallengeID, leaderboard_score.Score)
+			oldPercentile := CalculatePercentile(oldRankVal, totalEntries)
+			oldRankName := GetScenarioRankName(oldPercentile)
+
+			// Calculate new rank name
+			newRankVal, _ := app.models.Leaderboard.GetRankForScore(score.ChallengeID, score.Score)
+			newPercentile := CalculatePercentile(newRankVal, totalEntries)
+			newRankName := GetScenarioRankName(newPercentile)
+
+			// If new rank is higher (lower index in our slice)
+			if GetScenarioRankIndex(newRankName) < GetScenarioRankIndex(oldRankName) {
+				activityMsg := "user achieved " + newRankName
+				err = app.models.UserActivity.Insert(userToken, activityMsg, score.ChallengeID, score.Score)
+				if err != nil {
+					log.Printf("Error inserting rank achievement activity: %v", err)
+				}
+			}
 		}
 	}
 	// Respond success

@@ -63,3 +63,26 @@ func (app *Application) getLeaderboardContext(c *gin.Context) {
 
 	c.JSON(http.StatusOK, context)
 }
+
+func (app *Application) getUserRanks(c *gin.Context) {
+	username := c.Param("username")
+	
+	// First get user token from username
+	user, err := app.models.GuestUser.GetByUsername(username)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user"})
+		return
+	}
+	if user == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	ranks, err := app.models.Leaderboard.GetUserRanks(user.Token)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user ranks"})
+		return
+	}
+
+	c.JSON(http.StatusOK, ranks)
+}

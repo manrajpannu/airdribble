@@ -1,19 +1,23 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useMe, useRanks, useUpdateMe } from "@/hooks/use-api";
-import { User, Calendar, MapPin, Trophy, RefreshCw, Loader2 } from "lucide-react";
+import { useMe, useRanks, useUpdateMe, useUserRanks } from "@/hooks/use-api";
+import { User, Calendar, MapPin, Trophy, RefreshCw, Loader2, Target } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { RankBadge } from "@/components/rank-badge";
+import { ScenarioRankBadge } from "@/components/scenario-rank-badge";
+import { calculateAimlabsPercentile } from "@/lib/scenario-ranks";
 import UserActivity from "@/components/user-activity";
 import { ProfileHint } from "@/components/profile-hint";
+import Link from "next/link";
 
 export default function ProfilePage() {
   const { data: user, isLoading: isUserLoading, isError: isUserError, refetch: refetchUser } = useMe();
   const { data: ranks, isLoading: isRanksLoading, isError: isRanksError, refetch: refetchRanks } = useRanks();
+  const { data: userScenarioRanks, isLoading: isScenarioRanksLoading } = useUserRanks(user?.username || "");
   const updateMe = useUpdateMe();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -256,6 +260,52 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
         </section>
+
+        {/* Rank Overview */}
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center gap-2 text-muted-foreground mb-1">
+            <Target className="size-4" />
+            <span className="text-xs font-bold uppercase tracking-wider">Scenario Rank Overview</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {isScenarioRanksLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i} className="animate-pulse bg-muted/20">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="h-4 w-24 bg-muted rounded" />
+                    <div className="h-6 w-16 bg-muted rounded" />
+                  </CardContent>
+                </Card>
+              ))
+            ) : userScenarioRanks && userScenarioRanks.length > 0 ? (
+              userScenarioRanks.map((rank) => {
+                const percentile = calculateAimlabsPercentile(rank.rank, rank.total_entries);
+                return (
+                  <Link 
+                    key={rank.challenge_id} 
+                    href={`/game/${rank.challenge_slug}`}
+                    className="group"
+                  >
+                    <Card className="hover:border-primary transition-colors bg-muted/10">
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold truncate max-w-[120px]">{rank.challenge_title}</span>
+                          <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">Best: {rank.score}</span>
+                        </div>
+                        <ScenarioRankBadge percentile={percentile} size="sm" showName={true} />
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })
+            ) : (
+              <div className="col-span-full p-8 rounded-2xl border border-dashed flex flex-col items-center justify-center text-center bg-muted/5">
+                <Trophy className="size-8 text-muted-foreground/30 mb-3" />
+                <p className="text-sm text-muted-foreground font-medium">No scenarios completed yet.</p>
+              </div>
+            )}
+          </div>
+        </div>
 
         <UserActivity />
       </div>

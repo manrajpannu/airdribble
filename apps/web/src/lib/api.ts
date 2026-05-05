@@ -138,6 +138,15 @@ export interface ActivityRecord {
   level: number;
 }
 
+export interface UserScenarioRank {
+  challenge_id: number;
+  challenge_title: string;
+  challenge_slug: string;
+  score: number;
+  rank: number;
+  total_entries: number;
+}
+
 export interface ChallengeConfig {
   numBalls?: number;
   health?: number;
@@ -296,6 +305,9 @@ export const api = {
     apiFetch<UserActivity[]>(
       `/api/v1/users/${encodeURIComponent(username)}/activity/feed?limit=${limit}&offset=${offset}`
     ),
+
+  getUserRanks: (username: string) =>
+    apiFetch<UserScenarioRank[]>(`/api/v1/users/${encodeURIComponent(username)}/ranks`),
 
   // Challenge Sessions
   startSession: (challengeId: number) =>

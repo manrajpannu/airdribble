@@ -24,6 +24,7 @@ export const queryKeys = {
   publicActivity: (username: string) => ["publicActivity", username] as const,
   publicActivityFeed: (username: string) => ["publicActivityFeed", username] as const,
   userRating: (challengeId: number) => ["userRating", challengeId] as const,
+  userRanks: (username: string) => ["userRanks", username] as const,
 };
 
 // ─── User Hooks ───────────────────────────────────────────────────────────────
@@ -108,6 +109,15 @@ export function usePublicUserActivityFeed(username: string, limit = 10, offset =
   return useQuery({
     queryKey: queryKeys.publicActivityFeed(username),
     queryFn: () => api.getPublicUserActivityFeed(username, limit, offset),
+    enabled: !!username,
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useUserRanks(username: string) {
+  return useQuery({
+    queryKey: queryKeys.userRanks(username),
+    queryFn: () => api.getUserRanks(username),
     enabled: !!username,
     staleTime: 60 * 1000,
   });
@@ -253,6 +263,7 @@ export function useEndSession() {
       queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
       queryClient.invalidateQueries({ queryKey: ["leaderboardContext"] });
       queryClient.invalidateQueries({ queryKey: ["activityFeed"] });
+      queryClient.invalidateQueries({ queryKey: ["userRanks"] });
     },
   });
 }
