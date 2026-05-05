@@ -4,7 +4,7 @@ import { use } from "react";
 import { usePublicProfile, usePublicUserActivity, usePublicUserActivityFeed } from "@/hooks/use-api";
 import { User, Calendar, MapPin, Trophy, ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { RankBadge } from "@/components/rank-badge";
 import Link from "next/link";
 import { useMemo } from "react";
@@ -78,12 +78,10 @@ export default function PublicProfilePage({
           <p className="text-xs text-destructive/70 mb-4">
             No player with the username <span className="font-bold">&ldquo;{decodedUsername}&rdquo;</span> exists.
           </p>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/profile">
-              <ArrowLeft className="size-3.5 mr-2" />
-              Back to my profile
-            </Link>
-          </Button>
+          <Link href="/profile" className={buttonVariants({ variant: "outline", size: "sm" })}>
+            <ArrowLeft className="size-3.5 mr-2" />
+            Back to my profile
+          </Link>
         </div>
       </div>
     );
@@ -98,12 +96,16 @@ export default function PublicProfilePage({
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <Button variant="ghost" size="sm" className="mb-3 -ml-2 text-muted-foreground" asChild>
-              <Link href="/profile">
-                <ArrowLeft className="size-3.5 mr-1.5" />
-                My Profile
-              </Link>
-            </Button>
+            <Link 
+              href="/profile" 
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "sm" }),
+                "mb-3 -ml-2 text-muted-foreground"
+              )}
+            >
+              <ArrowLeft className="size-3.5 mr-1.5" />
+              My Profile
+            </Link>
             <h1 className="text-3xl font-bold tracking-tight mb-2">Player Profile</h1>
             <p className="text-muted-foreground text-sm">Viewing {user.username}&apos;s stats and activity.</p>
           </div>
