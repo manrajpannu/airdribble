@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { RankBadge } from "@/components/rank-badge";
 import UserActivity from "@/components/user-activity";
+import { ProfileHint } from "@/components/profile-hint";
 
 export default function ProfilePage() {
   const { data: user, isLoading: isUserLoading, isError: isUserError, refetch: refetchUser } = useMe();
@@ -20,6 +21,10 @@ export default function ProfilePage() {
   const [editError, setEditError] = useState("");
   const isSavingRef = useRef(false);
 
+  // Hint interaction flags — flipping to true permanently dismisses the hint
+  const [nameTouched, setNameTouched] = useState(false);
+  const [rankTouched, setRankTouched] = useState(false);
+
   useEffect(() => {
     if (user?.username) {
       setEditName(user.username);
@@ -28,11 +33,17 @@ export default function ProfilePage() {
 
   const handleUpdateName = async () => {
     if (isSavingRef.current) return;
-    
+
     setEditError("");
-    if (!editName.trim() || editName === user?.username) {
+
+    if (!editName.trim()) {
+      setEditError("Username cannot be empty");
+      return;
+    }
+
+    if (editName.trim() === user?.username) {
       setIsEditing(false);
-      setEditName(user?.username || "");
+      setEditName(user.username);
       return;
     }
 
@@ -159,15 +170,38 @@ export default function ProfilePage() {
                     {editError && <p className="text-xs text-destructive font-bold">{editError}</p>}
                   </div>
                 ) : (
-                  <CardTitle 
-                    className="text-3xl font-black tracking-tight cursor-text hover:text-primary transition-colors border-b-2 border-transparent hover:border-primary/30"
-                    onDoubleClick={() => setIsEditing(true)}
-                    title="Double-click to edit username"
-                  >
-                    {user.username}
-                  </CardTitle>
+                  <span className="relative inline-block">
+                    <ProfileHint
+                      id="profile-name-edit"
+                      label="Double-click to edit your name"
+                      side="bottom"
+                      dismissed={nameTouched}
+                      delayMs={600}
+                      className="bottom-10 -left-18"
+                    />
+                    <CardTitle
+                      className="text-3xl font-black tracking-tight cursor-text hover:text-primary transition-colors border-b-2 border-transparent hover:border-primary/30"
+                      onDoubleClick={() => { setIsEditing(true); setNameTouched(true); }}
+                      title="Double-click to edit username"
+                    >
+                      {user.username}
+                    </CardTitle>
+                  </span>
                 )}
-                <RankBadge currentRankId={user.rank_id} />
+                <span className="relative inline-flex">
+                  <RankBadge
+                    currentRankId={user.rank_id}
+                    onDropdownOpen={() => setRankTouched(true)}
+                  />
+                  <ProfileHint
+                    id="profile-rank-change"
+                    label="Click to set your ingame RL rank"
+                    side="left"
+                    dismissed={rankTouched}
+                    delayMs={2600}
+                    className="bottom-full left-24 top-2.5 "
+                  />
+                </span>
               </div>
               <CardDescription className="font-medium">Guest Account • Joined {createdAt}</CardDescription>
             </div>

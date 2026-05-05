@@ -245,7 +245,12 @@ func (app *Application) updateGuestUser(c *gin.Context) {
 	}
 
 	if input.Username != nil {
-		taken, err := app.models.GuestUser.IsUsernameTaken(*input.Username, userToken)
+		trimmed := strings.TrimSpace(*input.Username)
+		if trimmed == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Username cannot be empty"})
+			return
+		}
+		taken, err := app.models.GuestUser.IsUsernameTaken(trimmed, userToken)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check username"})
 			return
@@ -254,7 +259,7 @@ func (app *Application) updateGuestUser(c *gin.Context) {
 			c.JSON(http.StatusConflict, gin.H{"error": "Username is already taken"})
 			return
 		}
-		user.Username = *input.Username
+		user.Username = trimmed
 	}
 	if input.RankID != nil {
 		user.RankID = input.RankID

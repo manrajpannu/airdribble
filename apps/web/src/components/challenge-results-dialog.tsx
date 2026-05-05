@@ -364,7 +364,6 @@ export default function ChallengeResultsDialog({
             )}>
               {row.username}
             </span>
-            {isMe && <Badge className="px-4 text-sm  bg-primary">YOU</Badge>}
           </div>
         </TableCell>
         <TableCell className="px-1">

@@ -23,13 +23,15 @@ import { cn } from "@/lib/utils";
 interface RankBadgeProps {
   currentRankId: number | null;
   onUpdate?: () => void;
+  onDropdownOpen?: () => void;
   mode?: "normal" | "condensed";
   interactive?: boolean;
 }
 
 export function RankBadge({ 
   currentRankId, 
-  onUpdate, 
+  onUpdate,
+  onDropdownOpen,
   mode = "normal", 
   interactive = true 
 }: RankBadgeProps) {
@@ -119,7 +121,7 @@ export function RankBadge({
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={(open) => { if (open) onDropdownOpen?.(); }}>
       <TooltipProvider delay={200}>
         <Tooltip>
           <TooltipTrigger
