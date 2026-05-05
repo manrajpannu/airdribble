@@ -21,6 +21,7 @@ export class BallManager extends THREE.Group {
         this.balls = [];
         this.selectedIndex = 0;
         this.listeners = {};
+        this.boundary = 20;
         // Pre-allocated scratch vector to avoid per-frame GC in findClosestBall
         this._scratchVec3 = new THREE.Vector3();
     }
@@ -160,14 +161,19 @@ export class BallManager extends THREE.Group {
      * @param {Object} healthObj
      * @param {Object} reticleObj
      */
-    createBall(position, size, movementClass, healthObj = undefined, reticleObj = undefined, appearanceObj = undefined) {
+    createBall(position, size, movementClass, healthObj = undefined, reticleObj = undefined, appearanceObj = undefined, boundary = null) {
+        const actualBoundary = boundary !== null ? boundary : this.boundary;
         // Resolve movement class if it's a string name
         let actualMovementClass = movementClass;
         if (typeof movementClass === 'string') {
-            actualMovementClass = MovementRegistry[movementClass] || null;
+            // Support both "FlowMovement" and "flow" styles
+            const normalized = movementClass.toLowerCase().endsWith('movement') 
+                ? movementClass.charAt(0).toUpperCase() + movementClass.slice(1)
+                : movementClass.charAt(0).toUpperCase() + movementClass.slice(1) + 'Movement';
+            actualMovementClass = MovementRegistry[normalized] || MovementRegistry[movementClass] || null;
         }
 
-        const movementInstance = actualMovementClass ? new actualMovementClass() : null;
+        const movementInstance = actualMovementClass ? new actualMovementClass({ bounds: actualBoundary }) : null;
         const BallType = appearanceObj?.isStriped ? StripedBall : Ball;
         const ball = new BallType(position, size, movementInstance, healthObj, reticleObj, appearanceObj);
         this.balls.push(ball);
@@ -183,16 +189,17 @@ export class BallManager extends THREE.Group {
         }
     }
 
-    respawnBall(ball, boundary = 20) {
+    respawnBall(ball, boundary = null) {
+        const actualBoundary = boundary !== null ? boundary : this.boundary;
         if (ball.movement && typeof ball.movement.reset === 'function') {
-            ball.movement.reset(ball);
+            ball.movement.reset(ball, actualBoundary);
             ball.respawn();
             return
         }
         const pos = new THREE.Vector3(
-            (Math.random() - 0.5) * 2 * boundary,
+            (Math.random() - 0.5) * 2 * actualBoundary,
             2 + Math.random() * 6,
-            (Math.random() - 0.5) * 2 * boundary
+            (Math.random() - 0.5) * 2 * actualBoundary
         );
         ball.setPosition(pos);
         if (typeof ball.respawn === 'function') ball.respawn();

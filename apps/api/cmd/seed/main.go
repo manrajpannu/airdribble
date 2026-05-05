@@ -21,8 +21,6 @@ type ChallengeRow struct {
 	Tags        []string
 	Thumbnail   string
 	Icon        string
-	DurationMS  int
-	Difficulty  int
 	ConfigJSON  string
 }
 
@@ -34,8 +32,6 @@ var challenges = []ChallengeRow{
 		Tags:        []string{"basics", "tutorial"},
 		Thumbnail:   "from-zinc-500/20 to-zinc-500/5",
 		Icon:        "tracking",
-		DurationMS:  60000,
-		Difficulty:  1,
 		ConfigJSON:  `{}`,
 	},
 	{
@@ -45,8 +41,6 @@ var challenges = []ChallengeRow{
 		Tags:        []string{"accuracy", "easy"},
 		Thumbnail:   "from-blue-500/20 to-blue-500/5",
 		Icon:        "precision",
-		DurationMS:  60000,
-		Difficulty:  2,
 		ConfigJSON: `{
 			"numBalls": 1,
 			"killEffect": "whiteGlitter",
@@ -67,8 +61,6 @@ var challenges = []ChallengeRow{
 		Tags:        []string{"tracking", "control", "intermediate"},
 		Thumbnail:   "from-green-500/20 to-green-500/5",
 		Icon:        "tracking",
-		DurationMS:  60000,
-		Difficulty:  3,
 		ConfigJSON: `{
 			"numBalls": 1,
 			"health": 100,
@@ -91,8 +83,6 @@ var challenges = []ChallengeRow{
 		Tags:        []string{"direction", "control", "intermediate"},
 		Thumbnail:   "from-purple-500/20 to-purple-500/5",
 		Icon:        "precision",
-		DurationMS:  60000,
-		Difficulty:  4,
 		ConfigJSON: `{
 			"numBalls": 3,
 			"health": 3,
@@ -129,50 +119,35 @@ func main() {
 		_, _ = db.Exec(fmt.Sprintf("DELETE FROM %s", table))
 	}
 
-	// Apply schema additions (idempotent — skips if column already exists)
-	migrations := []string{
-		`ALTER TABLE challenges ADD COLUMN slug TEXT`,
-		`ALTER TABLE challenges ADD COLUMN title TEXT`,
-		`ALTER TABLE challenges ADD COLUMN tags TEXT DEFAULT '[]'`,
-		`ALTER TABLE challenges ADD COLUMN thumbnail TEXT DEFAULT ''`,
-		`ALTER TABLE challenges ADD COLUMN icon TEXT DEFAULT 'precision'`,
-	}
-	for _, m := range migrations {
-		if _, err := db.Exec(m); err != nil {
-			fmt.Printf("  (skip) %s\n", err)
-		}
-	}
+
 
 	for _, ch := range challenges {
 		tags, _ := json.Marshal(ch.Tags)
 
 		_, err := db.Exec(`
-			INSERT INTO challenges (slug, title, name, description, tags, thumbnail, icon, duration_ms, seed_type, difficulty, active, config_json)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'fixed', ?, 1, ?)
+			INSERT INTO challenges (slug, title, description, tags, thumbnail, icon, active, config_json)
+			VALUES (?, ?, ?, ?, ?, ?, 1, ?)
 			ON CONFLICT(slug) DO UPDATE SET
 				title       = excluded.title,
-				name        = excluded.name,
 				description = excluded.description,
 				tags        = excluded.tags,
 				thumbnail   = excluded.thumbnail,
 				icon        = excluded.icon,
-				duration_ms = excluded.duration_ms,
-				difficulty  = excluded.difficulty,
 				config_json = excluded.config_json,
 				updated_at  = CURRENT_TIMESTAMP
-		`, ch.Slug, ch.Title, ch.Title, ch.Description, string(tags), ch.Thumbnail, ch.Icon, ch.DurationMS, ch.Difficulty, ch.ConfigJSON)
+		`, ch.Slug, ch.Title, ch.Description, string(tags), ch.Thumbnail, ch.Icon, ch.ConfigJSON)
 		if err != nil {
 			// ON CONFLICT requires a UNIQUE constraint on slug — fallback to manual upsert
 			log.Printf("Upsert failed for %s: %v\n", ch.Slug, err)
 			var id int
 			row := db.QueryRow(`SELECT id FROM challenges WHERE slug = ?`, ch.Slug)
 			if row.Scan(&id) == nil {
-				db.Exec(`UPDATE challenges SET title=?, name=?, description=?, tags=?, thumbnail=?, icon=?, duration_ms=?, difficulty=?, config_json=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`,
-					ch.Title, ch.Title, ch.Description, string(tags), ch.Thumbnail, ch.Icon, ch.DurationMS, ch.Difficulty, ch.ConfigJSON, id)
+				db.Exec(`UPDATE challenges SET title=?, description=?, tags=?, thumbnail=?, icon=?, config_json=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`,
+					ch.Title, ch.Description, string(tags), ch.Thumbnail, ch.Icon, ch.ConfigJSON, id)
 				fmt.Printf("  updated: %s (id=%d)\n", ch.Slug, id)
 			} else {
-				db.Exec(`INSERT INTO challenges (slug, title, name, description, tags, thumbnail, icon, duration_ms, seed_type, difficulty, active, config_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'fixed', ?, 1, ?)`,
-					ch.Slug, ch.Title, ch.Title, ch.Description, string(tags), ch.Thumbnail, ch.Icon, ch.DurationMS, ch.Difficulty, ch.ConfigJSON)
+				db.Exec(`INSERT INTO challenges (slug, title, description, tags, thumbnail, icon, active, config_json) VALUES (?, ?, ?, ?, ?, ?, 1, ?)`,
+					ch.Slug, ch.Title, ch.Description, string(tags), ch.Thumbnail, ch.Icon, ch.ConfigJSON)
 				fmt.Printf("  inserted: %s\n", ch.Slug)
 			}
 			continue

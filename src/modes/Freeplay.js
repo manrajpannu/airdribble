@@ -346,7 +346,7 @@ class FreeplayMode {
                 stripeTolerance: ballStripeTolerance,
                 onHoverEffect: ballHoverEffect,
             };
-            const ball = BallManager.createBall(pos, ballSize, ballMovement, healthObj, reticleObj, appearanceObj);
+            const ball = BallManager.createBall(pos, ballSize, ballMovement, healthObj, reticleObj, appearanceObj, this.boundary);
             ball.userData = ball.userData || {};
             ball.userData.freeplayFixedColor = hasFixedColor ? cfg.color : undefined;
             ball.userData.freeplayColorList = Array.isArray(colorList) ? colorList.slice() : [];

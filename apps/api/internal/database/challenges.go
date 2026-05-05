@@ -19,8 +19,6 @@ type Challenge struct {
 	Tags        []string               `json:"tags"`
 	Thumbnail   string                 `json:"thumbnail"`
 	Icon        string                 `json:"icon"`
-	DurationMS  int                    `json:"duration_ms"`
-	Difficulty  int                    `json:"difficulty"`
 	Active      bool                   `json:"active"`
 	Config      map[string]interface{} `json:"config"`
 	Likes       int                    `json:"likes"`
@@ -43,8 +41,6 @@ func scanChallenge(scan func(dest ...interface{}) error) (*Challenge, error) {
 		&tagsJSON,
 		&thumbnail,
 		&icon,
-		&c.DurationMS,
-		&c.Difficulty,
 		&c.Active,
 		&configJSON,
 		&c.Likes,
@@ -80,11 +76,11 @@ func scanChallenge(scan func(dest ...interface{}) error) (*Challenge, error) {
 	return &c, nil
 }
 
-const selectCols = `SELECT id, slug, title, description, tags, thumbnail, icon, duration_ms, difficulty, active, config_json, likes, dislikes, created_at, updated_at`
+const selectCols = `SELECT id, slug, title, description, tags, thumbnail, icon, active, config_json, likes, dislikes, created_at, updated_at`
 
 // GetAll retrieves all active challenges from the database with partial config data.
 func (m *ChallengeModel) GetAll() ([]*Challenge, error) {
-	rows, err := m.DB.Query(selectCols + ` FROM challenges WHERE active = 1 ORDER BY difficulty ASC`)
+	rows, err := m.DB.Query(selectCols + ` FROM challenges WHERE active = 1 ORDER BY id ASC`)
 	if err != nil {
 		return nil, err
 	}

@@ -286,6 +286,10 @@ export class Engine extends THREE.Group {
       this.currentMode = new ChallengeMode(challengeConfig);
     }
 
+    if ('boundary' in (this.currentMode as any)) {
+      (this.BallManager as any).boundary = (this.currentMode as any).boundary;
+    }
+
     this.currentMode.start(this.BallManager, { car: this.car });
 
     this._onHit = (ball?: Ball) => {
@@ -408,6 +412,10 @@ export class Engine extends THREE.Group {
 
     this.BallManager.on('hit', this._onHit);
     this.BallManager.on('killed', this._onKill);
+
+    if ('boundary' in (this.currentMode as any)) {
+      (this.BallManager as any).boundary = (this.currentMode as any).boundary;
+    }
 
     this.currentMode.start(this.BallManager, { car: this.car });
     this.currentClosestBall = null;
