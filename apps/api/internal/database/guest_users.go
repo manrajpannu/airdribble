@@ -96,3 +96,16 @@ func (m *GuestUserModel) IncrementStats(token string, shots, kills int) error {
 	_, err := m.DB.ExecContext(ctx, query, shots, kills, token)
 	return err
 }
+
+func (m *GuestUserModel) IsUsernameTaken(username, excludeToken string) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `SELECT COUNT(*) FROM guest_users WHERE LOWER(username) = LOWER(?) AND token != ?`
+	var count int
+	err := m.DB.QueryRowContext(ctx, query, username, excludeToken).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}

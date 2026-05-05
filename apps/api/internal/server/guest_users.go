@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -223,8 +224,8 @@ func (app *Application) updateGuestUser(c *gin.Context) {
 	}
 
 	var input struct {
-		Username string `json:"username"`
-		RankID   *int   `json:"rank_id"`
+		Username *string `json:"username"`
+		RankID   *int    `json:"rank_id"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -232,15 +233,37 @@ func (app *Application) updateGuestUser(c *gin.Context) {
 		return
 	}
 
-	guest_user := database.GuestUser{
-		Token:    userToken,
-		Username: input.Username,
-		RankID:   input.RankID,
+	// Fetch current user to preserve values if they aren't provided in the patch
+	user, err := app.models.GuestUser.GetByToken(userToken)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user"})
+		return
+	}
+	if user == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
 	}
 
-	err = app.models.GuestUser.Update(&guest_user)
+	if input.Username != nil {
+		taken, err := app.models.GuestUser.IsUsernameTaken(*input.Username, userToken)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check username"})
+			return
+		}
+		if taken {
+			c.JSON(http.StatusConflict, gin.H{"error": "Username is already taken"})
+			return
+		}
+		user.Username = *input.Username
+	}
+	if input.RankID != nil {
+		user.RankID = input.RankID
+	}
+
+	err = app.models.GuestUser.Update(user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update guest user"})
+		log.Printf("Error updating guest user: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update guest user: " + err.Error()})
 		return
 	}
 

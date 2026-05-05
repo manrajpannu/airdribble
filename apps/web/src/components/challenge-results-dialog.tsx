@@ -303,7 +303,6 @@ export default function ChallengeResultsDialog({
   isLoading: isDataLoading,
   isError: isDataError,
 }: ChallengeResultsDialogProps) {
-  const [activeTab, setActiveTab] = useState("leaderboard")
   const [selectedStat, setSelectedStat] = useState<"Damage" | "Hits" | "Kills" | "Total">("Total")
   const [friendsOnly, setFriendsOnly] = useState(false)
   const [historyRange, setHistoryRange] = useState(25)
@@ -369,7 +368,7 @@ export default function ChallengeResultsDialog({
           </div>
         </TableCell>
         <TableCell className="px-1">
-          <RankBadge currentRankId={row.rank_id} mode="condensed" interactive={false} />
+          <RankBadge currentRankId={row.rank_id} interactive={false} />
         </TableCell>
         <TableCell className="text-right font-bold tracking-tight text-xs">{formatNumber(row.score)}</TableCell>
       </TableRow>
@@ -387,7 +386,7 @@ export default function ChallengeResultsDialog({
 
   return (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 pointer-events-none">
-      <div className="pointer-events-auto w-full max-w-6xl rounded-xl border bg-card shadow-lg overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="pointer-events-auto w-full max-w-6xl rounded-xl border bg-card shadow-lg overflow-hidden flex flex-col max-h-[95vh]">
         <div className="border-b bg-muted/30 px-6 py-4 flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-muted-foreground">Results</p>
@@ -546,78 +545,36 @@ export default function ChallengeResultsDialog({
                   </div>
                 </div>
 
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-                  <TabsList className="grid w-full grid-cols-2 bg-muted/50">
-                    <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
-                    <TabsTrigger value="analysis">Analysis</TabsTrigger>
-                  </TabsList>
+                <div className="flex-1 overflow-auto mt-4 rounded-xl border bg-card shadow-sm">
+                  <Table>
+                    <TableHeader className="bg-muted/50 sticky top-0 z-10">
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="w-14 font-bold text-[10px] uppercase">Rank</TableHead>
+                        <TableHead className="font-bold text-[10px] uppercase">Player</TableHead>
+                        <TableHead className="w-12 px-1"></TableHead>
+                        <TableHead className="text-right font-bold text-[10px] uppercase">Score</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {top10.map(renderLeaderboardRow)}
 
-                  <TabsContent value="leaderboard" className="flex-1 overflow-auto mt-4 rounded-xl border bg-card shadow-sm">
-                    <Table>
-                      <TableHeader className="bg-muted/50 sticky top-0 z-10">
-                        <TableRow className="hover:bg-transparent">
-                          <TableHead className="w-14 font-bold text-[10px] uppercase">Rank</TableHead>
-                          <TableHead className="font-bold text-[10px] uppercase">Player</TableHead>
-                          <TableHead className="w-12 px-1"></TableHead>
-                          <TableHead className="text-right font-bold text-[10px] uppercase">Score</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {top10.map(renderLeaderboardRow)}
-
-                        {neighbors.length > 0 && (
-                          <>
-                            <TableRow className="bg-muted/10 h-8 hover:bg-muted/10 border-none pointer-events-none">
-                              <TableCell colSpan={4} className="text-center py-1">
-                                <div className="flex items-center justify-center gap-3 text-[9px] text-muted-foreground/30 font-black tracking-[0.2em] uppercase">
-                                  <div className="h-px flex-1 bg-muted-foreground/10" />
-                                  <span>Your Position</span>
-                                  <div className="h-px flex-1 bg-muted-foreground/10" />
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                            {neighbors.map(renderLeaderboardRow)}
-                          </>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </TabsContent>
-
-                  <TabsContent value="analysis" className="mt-4 space-y-4 flex-1">
-                    <div className="rounded-xl border bg-card p-5 shadow-sm space-y-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-8 bg-primary rounded-full" />
-                        <div>
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Focusing On</p>
-                          <p className="text-xl font-black">{selectedStat}</p>
-                        </div>
-                      </div>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        Your performance in <span className="font-bold text-foreground">{selectedStat}</span> is currently
-                        at <span className="font-bold text-foreground">{metrics[selectedStat.toLowerCase() as keyof typeof metrics]}</span>.
-                        Select other cards in the center panel to compare.
-                      </p>
-                    </div>
-
-                    <div className="rounded-xl border bg-card p-5 shadow-sm">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Quick Summary</p>
-                      <ul className="space-y-3">
-                        {[
-                          { label: "Accuracy", value: `${metrics.accuracy.toFixed(1)}%`, desc: "precision in your shots" },
-                          { label: "Efficiency", value: `${metrics.damageEfficiency.toFixed(1)}%`, desc: "damage dealt vs possible" },
-                          { label: "KDR", value: metrics.kdr.toFixed(2), desc: "kills per hit ratio" }
-                        ].map(item => (
-                          <li key={item.label} className="flex gap-3 text-sm">
-                            <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                            <p className="text-muted-foreground">
-                              <span className="font-bold text-foreground">{item.label} is {item.value}</span>, reflecting your {item.desc}.
-                            </p>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                      {neighbors.length > 0 && (
+                        <>
+                          <TableRow className="bg-muted/10 h-8 hover:bg-muted/10 border-none pointer-events-none">
+                            <TableCell colSpan={4} className="text-center py-1">
+                              <div className="flex items-center justify-center gap-3 text-[9px] text-muted-foreground/30 font-black tracking-[0.2em] uppercase">
+                                <div className="h-px flex-1 bg-muted-foreground/10" />
+                                <span>Your Position</span>
+                                <div className="h-px flex-1 bg-muted-foreground/10" />
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                          {neighbors.map(renderLeaderboardRow)}
+                        </>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             </div>
 
@@ -628,9 +585,6 @@ export default function ChallengeResultsDialog({
                 <Button variant="ghost" size="icon"><ThumbsDown className="h-4 w-4" /></Button>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => { setActiveTab("analysis"); onOpenStats(); }}>
-                  <ChartColumn className="mr-2 h-4 w-4" /> Stats
-                </Button>
                 <Button variant="outline" onClick={onDone}>Done</Button>
                 <Button
                   onClick={onReplay}

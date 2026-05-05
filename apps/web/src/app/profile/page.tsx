@@ -1,15 +1,66 @@
 "use client";
 
-import { useMe, useRanks } from "@/hooks/use-api";
-import { User, Calendar, MapPin, Trophy, RefreshCw } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { useMe, useRanks, useUpdateMe } from "@/hooks/use-api";
+import { User, Calendar, MapPin, Trophy, RefreshCw, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { RankBadge } from "@/components/rank-badge";
 import UserActivity from "@/components/user-activity";
 
 export default function ProfilePage() {
   const { data: user, isLoading: isUserLoading, isError: isUserError, refetch: refetchUser } = useMe();
   const { data: ranks, isLoading: isRanksLoading, isError: isRanksError, refetch: refetchRanks } = useRanks();
+  const updateMe = useUpdateMe();
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editError, setEditError] = useState("");
+  const isSavingRef = useRef(false);
+
+  useEffect(() => {
+    if (user?.username) {
+      setEditName(user.username);
+    }
+  }, [user?.username]);
+
+  const handleUpdateName = async () => {
+    if (isSavingRef.current) return;
+    
+    setEditError("");
+    if (!editName.trim() || editName === user?.username) {
+      setIsEditing(false);
+      setEditName(user?.username || "");
+      return;
+    }
+
+    isSavingRef.current = true;
+    try {
+      await updateMe.mutateAsync({ username: editName });
+      setIsEditing(false);
+    } catch (err: any) {
+      console.error("Failed to update username:", err);
+      if (err.status === 409 || err.message?.toLowerCase().includes("taken")) {
+        setEditError("Username is already taken");
+      } else {
+        setEditError(err.message || "Failed to update username");
+      }
+    } finally {
+      isSavingRef.current = false;
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleUpdateName();
+    } else if (e.key === "Escape") {
+      setIsEditing(false);
+      setEditName(user?.username || "");
+      setEditError("");
+    }
+  };
 
   const isLoading = isUserLoading || isRanksLoading;
   const isError = isUserError || isRanksError;
@@ -79,9 +130,43 @@ export default function ProfilePage() {
             <div className="flex items-center justify-center size-20 rounded-full bg-primary/10 border-4 border-background shadow-sm">
               <User className="size-10 text-primary" />
             </div>
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center">
-                <CardTitle className="text-3xl font-black tracking-tight">{user.username}</CardTitle>
+            <div className="flex flex-col gap-1 flex-1">
+              <div className="flex items-center gap-3">
+                {isEditing ? (
+                  <div className="flex flex-col gap-1 flex-1 max-w-sm">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        autoFocus
+                        value={editName}
+                        onChange={(e) => {
+                          setEditName(e.target.value);
+                          setEditError("");
+                        }}
+                        onKeyDown={handleKeyDown}
+                        onBlur={() => {
+                          if (!editError && !updateMe.isPending) {
+                            handleUpdateName();
+                          }
+                        }}
+                        className={cn(
+                          "text-2xl font-black tracking-tight h-10 focus-visible:ring-primary",
+                          editError ? "border-destructive text-destructive focus-visible:ring-destructive" : "border-primary"
+                        )}
+                        disabled={updateMe.isPending}
+                      />
+                      {updateMe.isPending && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+                    </div>
+                    {editError && <p className="text-xs text-destructive font-bold">{editError}</p>}
+                  </div>
+                ) : (
+                  <CardTitle 
+                    className="text-3xl font-black tracking-tight cursor-text hover:text-primary transition-colors border-b-2 border-transparent hover:border-primary/30"
+                    onDoubleClick={() => setIsEditing(true)}
+                    title="Double-click to edit username"
+                  >
+                    {user.username}
+                  </CardTitle>
+                )}
                 <RankBadge currentRankId={user.rank_id} />
               </div>
               <CardDescription className="font-medium">Guest Account • Joined {createdAt}</CardDescription>
