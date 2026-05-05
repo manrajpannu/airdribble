@@ -109,3 +109,33 @@ func (m *GuestUserModel) IsUsernameTaken(username, excludeToken string) (bool, e
 	}
 	return count > 0, nil
 }
+
+func (m *GuestUserModel) GetByUsername(username string) (*GuestUser, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `SELECT id, username, token, rank_id, location, ip_address, games_played, shots, kills, created_at FROM guest_users WHERE LOWER(username) = LOWER(?)`
+
+	var guest_user GuestUser
+	err := m.DB.QueryRowContext(ctx, query, username).Scan(
+		&guest_user.ID,
+		&guest_user.Username,
+		&guest_user.Token,
+		&guest_user.RankID,
+		&guest_user.Location,
+		&guest_user.IPAddress,
+		&guest_user.GamesPlayed,
+		&guest_user.Shots,
+		&guest_user.Kills,
+		&guest_user.CreatedAt,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &guest_user, nil
+}

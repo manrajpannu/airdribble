@@ -48,6 +48,11 @@ func (app *Application) Routes() http.Handler {
 		v1.POST("/users/guest", guestLimiter.Middleware(), app.createGuestUser)
 		v1.GET("/users/me", app.getMe)
 		v1.PATCH("/users/me", app.updateGuestUser)
+
+		// Public profile routes — no auth required
+		v1.GET("/users/:username", app.getPublicProfile)
+		v1.GET("/users/:username/activity", app.getPublicUserActivity)
+		v1.GET("/users/:username/activity/feed", app.getPublicUserActivityFeed)
 	}
 
 	// challenge session

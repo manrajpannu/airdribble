@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useLeaderboardContext } from "@/hooks/use-api";
 import type { LeaderboardContextEntry } from "@/lib/api";
 import { RankBadge } from "@/components/rank-badge";
+import Link from "next/link";
 
 export type ChallengeScorePoint = {
   elapsed: number;
@@ -358,12 +359,18 @@ export default function ChallengeResultsDialog({
         <TableCell className="font-bold text-muted-foreground/60 text-xs ">#{row.rank}</TableCell>
         <TableCell>
           <div className="flex justify-start">
-            <span className={cn(
-              "truncate max-w-[100px] text-xs",
-              isMe ? "font-black text-primary" : "font-semibold"
-            )}>
-              {row.username}
-            </span>
+            {isMe ? (
+              <span className="truncate max-w-[100px] text-xs font-black text-primary">
+                {row.username}
+              </span>
+            ) : (
+              <Link
+                href={`/profile/${encodeURIComponent(row.username)}`}
+                className="truncate max-w-[100px] text-xs font-semibold hover:text-primary hover:underline underline-offset-2 transition-colors"
+              >
+                {row.username}
+              </Link>
+            )}
           </div>
         </TableCell>
         <TableCell className="px-1">

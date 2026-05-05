@@ -104,6 +104,18 @@ export interface GuestUser {
   created_at: string | null;
 }
 
+// Public view — no token or IP exposed
+export interface PublicGuestUser {
+  id: number;
+  username: string;
+  rank_id: number | null;
+  location: string | null;
+  games_played: number;
+  shots: number;
+  kills: number;
+  created_at: string | null;
+}
+
 export interface Rank {
   id: number;
   name: string;
@@ -260,6 +272,18 @@ export const api = {
   getUserActivityFeed: (limit: number, offset: number) =>
     apiFetch<UserActivity[]>(
       `/api/v1/me/activity/feed?limit=${limit}&offset=${offset}`
+    ),
+
+  // Public profiles
+  getPublicProfile: (username: string) =>
+    apiFetch<PublicGuestUser>(`/api/v1/users/${encodeURIComponent(username)}`),
+
+  getPublicUserActivity: (username: string) =>
+    apiFetch<ActivityRecord[]>(`/api/v1/users/${encodeURIComponent(username)}/activity`),
+
+  getPublicUserActivityFeed: (username: string, limit: number, offset: number) =>
+    apiFetch<UserActivity[]>(
+      `/api/v1/users/${encodeURIComponent(username)}/activity/feed?limit=${limit}&offset=${offset}`
     ),
 
   // Challenge Sessions

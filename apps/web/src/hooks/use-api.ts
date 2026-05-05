@@ -20,6 +20,9 @@ export const queryKeys = {
   activity: ["activity"] as const,
   activityFeed: (limit: number, offset: number) =>
     ["activityFeed", limit, offset] as const,
+  publicProfile: (username: string) => ["publicProfile", username] as const,
+  publicActivity: (username: string) => ["publicActivity", username] as const,
+  publicActivityFeed: (username: string) => ["publicActivityFeed", username] as const,
 };
 
 // ─── User Hooks ───────────────────────────────────────────────────────────────
@@ -72,6 +75,40 @@ export function useUpdateMe() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.me });
     },
+  });
+}
+
+/** Fetches a public player profile by username. */
+export function usePublicProfile(username: string) {
+  return useQuery({
+    queryKey: queryKeys.publicProfile(username),
+    queryFn: () => api.getPublicProfile(username),
+    enabled: !!username,
+    staleTime: 60 * 1000,
+    retry: (failureCount, error) => {
+      if (error instanceof ApiError && error.status === 404) return false;
+      return failureCount < 2;
+    },
+  });
+}
+
+/** Fetches a public player's activity heatmap by username. */
+export function usePublicUserActivity(username: string) {
+  return useQuery({
+    queryKey: queryKeys.publicActivity(username),
+    queryFn: () => api.getPublicUserActivity(username),
+    enabled: !!username,
+    staleTime: 60 * 1000,
+  });
+}
+
+/** Fetches a public player's milestone feed by username. */
+export function usePublicUserActivityFeed(username: string, limit = 10, offset = 0) {
+  return useQuery({
+    queryKey: queryKeys.publicActivityFeed(username),
+    queryFn: () => api.getPublicUserActivityFeed(username, limit, offset),
+    enabled: !!username,
+    staleTime: 60 * 1000,
   });
 }
 
