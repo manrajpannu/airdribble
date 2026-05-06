@@ -54,9 +54,10 @@ func (m *ChallengeRatingModel) SetRating(challengeID int, userToken string, rati
 	// 3. Update challenge counts
 	if hasExisting {
 		// Remove old rating effect
-		if existingRating == 1 {
+		switch existingRating {
+		case 1:
 			_, err = tx.ExecContext(ctx, "UPDATE challenges SET likes = MAX(0, likes - 1) WHERE id = ?", challengeID)
-		} else if existingRating == -1 {
+		case -1:
 			_, err = tx.ExecContext(ctx, "UPDATE challenges SET dislikes = MAX(0, dislikes - 1) WHERE id = ?", challengeID)
 		}
 		if err != nil {
@@ -66,9 +67,10 @@ func (m *ChallengeRatingModel) SetRating(challengeID int, userToken string, rati
 
 	// 4. Add new rating effect (if not removing)
 	if rating != 0 {
-		if rating == 1 {
+		switch rating {
+		case 1:
 			_, err = tx.ExecContext(ctx, "UPDATE challenges SET likes = likes + 1 WHERE id = ?", challengeID)
-		} else if rating == -1 {
+		case -1:
 			_, err = tx.ExecContext(ctx, "UPDATE challenges SET dislikes = dislikes + 1 WHERE id = ?", challengeID)
 		}
 		if err != nil {

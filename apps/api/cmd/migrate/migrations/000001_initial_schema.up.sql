@@ -1,15 +1,25 @@
 -- Initial Schema (Consolidated)
 
+CREATE TABLE IF NOT EXISTS ranks (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	tier VARCHAR(50) NOT NULL,
+	tier_number INTEGER CHECK (tier_number BETWEEN 1 AND 3 OR tier_number IS NULL),
+	division INTEGER CHECK (division BETWEEN 1 AND 4 OR division IS NULL)
+);
+
 CREATE TABLE IF NOT EXISTS guest_users (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	user_token TEXT UNIQUE NOT NULL,
+	token TEXT UNIQUE NOT NULL,
 	username TEXT UNIQUE NOT NULL,
-    total_score INTEGER DEFAULT 0,
-    total_hits INTEGER DEFAULT 0,
-    total_kills INTEGER DEFAULT 0,
-    total_sessions INTEGER DEFAULT 0,
+	rank_id INTEGER,
+	location TEXT,
+	ip_address TEXT,
+	games_played INTEGER DEFAULT 0,
+	shots INTEGER DEFAULT 0,
+	kills INTEGER DEFAULT 0,
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	FOREIGN KEY (rank_id) REFERENCES ranks(id)
 );
 
 CREATE TABLE IF NOT EXISTS challenges (
@@ -28,46 +38,49 @@ CREATE TABLE IF NOT EXISTS challenges (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS ranks (
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	tier VARCHAR(50) NOT NULL,
-	tier_number INTEGER CHECK (tier_number BETWEEN 1 AND 3 OR tier_number IS NULL),
-	division INTEGER CHECK (division BETWEEN 1 AND 4 OR division IS NULL)
-);
-
 CREATE TABLE IF NOT EXISTS challenge_sessions (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	challenge_id INTEGER NOT NULL,
 	user_token TEXT NOT NULL,
+    session_token TEXT UNIQUE NOT NULL,
+    seed INTEGER DEFAULT 0,
 	is_completed BOOLEAN DEFAULT FALSE,
+    used BOOLEAN DEFAULT FALSE,
+    metadata TEXT,
 	started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	completed_at TIMESTAMP,
-	FOREIGN KEY (challenge_id) REFERENCES challenges (id)
+	ended_at TIMESTAMP,
+	FOREIGN KEY (challenge_id) REFERENCES challenges (id),
+    FOREIGN KEY (user_token) REFERENCES guest_users(token)
 );
 
 CREATE TABLE IF NOT EXISTS scores (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	challenge_id INTEGER NOT NULL,
 	session_id INTEGER,
+    session_token TEXT,
 	user_token TEXT NOT NULL,
 	score INTEGER NOT NULL,
-	hits INTEGER NOT NULL DEFAULT 0,
+	shots INTEGER NOT NULL DEFAULT 0,
 	kills INTEGER NOT NULL DEFAULT 0,
     accuracy REAL DEFAULT 0,
     damage_dealt INTEGER DEFAULT 0,
     damage_possible INTEGER DEFAULT 0,
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	FOREIGN KEY (challenge_id) REFERENCES challenges (id),
-	FOREIGN KEY (session_id) REFERENCES challenge_sessions (id)
+	FOREIGN KEY (session_id) REFERENCES challenge_sessions (id),
+    FOREIGN KEY (user_token) REFERENCES guest_users(token)
 );
 
 CREATE TABLE IF NOT EXISTS leaderboards (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	challenge_id INTEGER NOT NULL,
 	user_token TEXT NOT NULL,
-	best_score INTEGER NOT NULL,
+    session_token TEXT,
+	score INTEGER NOT NULL,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	FOREIGN KEY (challenge_id) REFERENCES challenges (id)
+	FOREIGN KEY (challenge_id) REFERENCES challenges (id),
+    FOREIGN KEY (user_token) REFERENCES guest_users(token)
 );
 
 CREATE TABLE IF NOT EXISTS user_activity (
@@ -77,7 +90,7 @@ CREATE TABLE IF NOT EXISTS user_activity (
     challenge_id INTEGER NOT NULL REFERENCES challenges(id),
     score INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_token) REFERENCES guest_users(user_token)
+    FOREIGN KEY (user_token) REFERENCES guest_users(token)
 );
 
 CREATE TABLE IF NOT EXISTS challenge_ratings (
@@ -88,10 +101,12 @@ CREATE TABLE IF NOT EXISTS challenge_ratings (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(challenge_id, user_token),
-    FOREIGN KEY (challenge_id) REFERENCES challenges(id)
+    FOREIGN KEY (challenge_id) REFERENCES challenges(id),
+    FOREIGN KEY (user_token) REFERENCES guest_users(token)
 );
 
 CREATE INDEX idx_user_activity_user_token ON user_activity(user_token);
+CREATE INDEX idx_leaderboards_challenge_score ON leaderboards(challenge_id, score DESC);
 
 -- Seed Rocket League ranks
 INSERT INTO ranks (tier, tier_number, division) VALUES

@@ -96,7 +96,8 @@ func (app *Application) getMe(c *gin.Context) {
 
 	user, err := app.models.GuestUser.GetByToken(userToken)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user"})
+		log.Printf("Error fetching user by token: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 

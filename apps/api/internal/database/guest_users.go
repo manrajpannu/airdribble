@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"log"
 	"time"
 )
 
@@ -31,6 +32,7 @@ func (m *GuestUserModel) Insert(guest_user *GuestUser) error {
 
 	_, err := m.DB.ExecContext(ctx, query, guest_user.Username, guest_user.Token, guest_user.RankID, guest_user.IPAddress)
 	if err != nil {
+		log.Printf("Error inserting guest user: %v", err)
 		return err
 	}
 

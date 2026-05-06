@@ -43,7 +43,7 @@ func NewApp() *Application {
 		jwtSecret:         env.GetEnvString("JWT_SECRET", "defaultsecret"),
 		challengeDuration: env.GetEnvDuration("CHALLENGE_DURATION", 5*time.Minute),
 		cookieSecure:      env.GetEnvString("ENV", "development") == "production",
-		userDuration:      env.GetEnvDuration("USER_TOKEN_DURATION", 24*7*time.Hour),
+		userDuration:      env.GetEnvDuration("USER_TOKEN_DURATION", 24*30*time.Hour),
 		models:            models,
 	}
 
