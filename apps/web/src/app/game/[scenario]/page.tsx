@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import GameClient from "@/components/game-client";
 import GameOverlay from "@/components/game-overlay";
+import { SettingsDialog } from "@/components/settings/SettingsDialog";
 import { useChallenge, useEndSession, useUserBestScore, useMe, useCreateGuestUser, useStartSession } from "@/hooks/use-api";
 import { toast } from "sonner";
 import { Trophy } from "lucide-react";
@@ -29,6 +30,7 @@ export default function GamePage() {
   const [countdownValue, setCountdownValue] = useState<number | null>(null);
   const [showTutorialComplete, setShowTutorialComplete] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [freeplayConfig, setFreeplayConfig] = useState({ numBalls: 1, size: 1.5, boundary: 20 });
 
   const callbacksRef = useRef({
@@ -469,10 +471,15 @@ export default function GamePage() {
           bestScore={bestScore}
           onResume={resumeGame}
           onRestart={restartGame}
-          onOpenSettings={() => {}}
+          onOpenSettings={() => setSettingsOpen(true)}
           onExit={() => router.push("/")}
         />
       )}
+
+      <SettingsDialog 
+        isOpen={settingsOpen} 
+        onClose={() => setSettingsOpen(false)} 
+      />
       {/* Submitting Overlay */}
       {isSubmitting && (
         <div className="absolute inset-0 z-60000 flex items-center justify-center bg-background/80 backdrop-blur-md animate-in fade-in duration-300">

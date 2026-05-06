@@ -136,106 +136,102 @@ export default function PlayScenarios() {
           {isLoading
             ? Array.from({ length: 3 }).map((_, i) => <ScenarioCardSkeleton key={i} />)
             : filteredScenarios.map((scenario) => (
-                <Card
-                  key={scenario.slug}
-                  className="group cursor-pointer overflow-hidden hover:border-primary transition-colors relative"
-                  onClick={() => startScenario(scenario)}
-                >
-                  <div
-                    className={`absolute inset-0 bg-linear-to-br ${scenario.thumbnail} opacity-50 transition duration-300 group-hover:opacity-100`}
-                  />
-                  <CardHeader className="relative z-10">
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge variant="secondary" className="flex items-center gap-1">
-                        <ScenarioIcon icon={scenario.icon} />
-                        <span className="uppercase text-xs">{scenario.slug}</span>
-                      </Badge>
+              <Card
+                key={scenario.slug}
+                className="group cursor-pointer overflow-hidden hover:border-primary transition-colors relative"
+                onClick={() => startScenario(scenario)}
+              >
+                <div
+                  className={`absolute inset-0 bg-linear-to-br ${scenario.thumbnail} opacity-50 transition duration-300 group-hover:opacity-100`}
+                />
+                <CardHeader className="relative z-10">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <ScenarioIcon icon={scenario.icon} />
+                      <span className="uppercase text-xs">{scenario.slug}</span>
+                    </Badge>
 
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          className={cn(
-                            buttonVariants({ variant: "ghost", size: "icon" }),
-                            "h-8 w-8 relative z-20"
-                          )}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56 p-3" onClick={(e) => e.stopPropagation()}>
-                          <DropdownMenuGroup>
-                            <DropdownMenuLabel className="px-0 pt-0 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                              Scenario Details
-                            </DropdownMenuLabel>
-                          </DropdownMenuGroup>
-                          <p className="text-[11px] text-muted-foreground leading-relaxed mt-1 mb-2 italic">
-                            {scenario.description}
-                          </p>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        className={cn(
+                          buttonVariants({ variant: "ghost", size: "icon" }),
+                          "h-8 w-8 relative z-20"
+                        )}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56 p-3" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuGroup>
+                          <DropdownMenuLabel className="px-0 pt-0 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                            Scenario Details
+                          </DropdownMenuLabel>
+                        </DropdownMenuGroup>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed mt-1 mb-2 italic">
+                          {scenario.description}
+                        </p>
+                        <Separator className="my-2" />
+                        <div className="space-y-2.5">
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-muted-foreground">Target Health</span>
+                            <span className="font-medium">{(scenario.config.health as number) ?? 1} HP</span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-muted-foreground">Targets</span>
+                            <span className="font-medium">{(scenario.config.numBalls as number) ?? 1}</span>
+                          </div>
+
                           <Separator className="my-2" />
-                          <div className="space-y-2.5">
-                            <div className="flex justify-between items-center text-xs">
-                              <span className="text-muted-foreground">Time Limit</span>
-                              <span className="font-medium">{(scenario.config.timeLimit as number) ?? (scenario.duration_ms / 1000)}s</span>
-                            </div>
-                            <div className="flex justify-between items-center text-xs">
-                              <span className="text-muted-foreground">Target Health</span>
-                              <span className="font-medium">{(scenario.config.health as number) ?? 1} HP</span>
-                            </div>
-                            <div className="flex justify-between items-center text-xs">
-                              <span className="text-muted-foreground">Targets</span>
-                              <span className="font-medium">{(scenario.config.numBalls as number) ?? 1}</span>
-                            </div>
 
-                            <Separator className="my-2" />
-
-                            <div className="grid gap-1.5">
-                              <span className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground">Scoring Rules</span>
-                              <div className="flex justify-between items-center text-xs">
-                                <span className="text-muted-foreground">Kill</span>
-                                <span className="text-green-500 font-bold">+{(scenario.config.pointsPerKill as number) ?? 50}</span>
-                              </div>
-                              <div className="flex justify-between items-center text-xs">
-                                <span className="text-muted-foreground">Hit</span>
-                                <span className="text-blue-500 font-bold">+{(scenario.config.pointsPerHit as number) ?? 10}</span>
-                              </div>
-                              <div className="flex justify-between items-center text-xs">
-                                <span className="text-muted-foreground">Miss</span>
-                                <span className="text-red-500 font-bold">{(scenario.config.pointsPerMiss as number) ?? 0}</span>
-                              </div>
+                          <div className="grid gap-1.5">
+                            <span className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground">Scoring Rules</span>
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-muted-foreground">Kill</span>
+                              <span className="text-green-500 font-bold">+{(scenario.config.pointsPerKill as number) ?? 50}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-muted-foreground">Hit</span>
+                              <span className="text-blue-500 font-bold">+{(scenario.config.pointsPerHit as number) ?? 10}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-muted-foreground">Miss</span>
+                              <span className="text-red-500 font-bold">{(scenario.config.pointsPerMiss as number) ?? 0}</span>
                             </div>
                           </div>
-                          <Separator className="my-2" />
-                          <DropdownMenuItem
-                            className="cursor-pointer text-xs"
-                            onClick={() => startScenario(scenario)}
-                          >
-                            Launch Scenario
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        </div>
+                        <Separator className="my-2" />
+                        <DropdownMenuItem
+                          className="cursor-pointer text-xs"
+                          onClick={() => startScenario(scenario)}
+                        >
+                          Launch Scenario
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  <CardTitle>{scenario.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="relative z-10 flex flex-wrap gap-2 items-center justify-between">
+                  <div className="flex flex-wrap gap-2">
+                    {scenario.tags.map((tag) => (
+                      <Badge key={tag} variant="outline" className="text-[10px] uppercase">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-3 ml-auto">
+                    <div className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground/80">
+                      <ThumbsUp className="h-3 w-3" />
+                      <span>{scenario.likes}</span>
                     </div>
-                    <CardTitle>{scenario.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="relative z-10 flex flex-wrap gap-2 items-center justify-between">
-                    <div className="flex flex-wrap gap-2">
-                      {scenario.tags.map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-[10px] uppercase">
-                          {tag}
-                        </Badge>
-                      ))}
+                    <div className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground/80">
+                      <ThumbsDown className="h-3 w-3" />
+                      <span>{scenario.dislikes}</span>
                     </div>
-                    <div className="flex items-center gap-3 ml-auto">
-                      <div className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground/80">
-                        <ThumbsUp className="h-3 w-3" />
-                        <span>{scenario.likes}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground/80">
-                        <ThumbsDown className="h-3 w-3" />
-                        <span>{scenario.dislikes}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
         </div>
       </div>
       {resultsOpen && pendingResult && (
@@ -256,7 +252,7 @@ export default function PlayScenarios() {
               startScenario(scenario);
             }
           }}
-          onOpenStats={() => {}}
+          onOpenStats={() => { }}
         />
       )}
     </>

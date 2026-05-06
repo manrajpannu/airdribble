@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, memo } from "react";
+import { useAppSettings } from "@/lib/settings-store";
 
 type RuntimeHandle = {
   dispose?: () => void;
@@ -23,6 +24,7 @@ export const GameClient = memo(({
 }: GameClientProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const engineRef = useRef<any>(null);
+  const settings = useAppSettings();
 
   const darkModeRef = useRef(darkMode);
   darkModeRef.current = darkMode;
@@ -34,6 +36,13 @@ export const GameClient = memo(({
     }
   }, [darkMode]);
 
+  // Sync settings reactively
+  useEffect(() => {
+    if (engineRef.current) {
+      engineRef.current.applySettings(settings);
+    }
+  }, [settings]);
+
   useEffect(() => {
     let cancelled = false;
     let handle: any = null;
@@ -41,7 +50,6 @@ export const GameClient = memo(({
     const mount = async () => {
       if (!containerRef.current) return;
 
-      // Read dark mode directly from the DOM at mount time to avoid stale closure
       const currentDarkMode = document.documentElement.classList.contains("dark");
 
       const { initRlDartApp } = await import("../../../../src/main.js");
@@ -49,6 +57,7 @@ export const GameClient = memo(({
         modeName,
         challengeConfig,
         darkMode: currentDarkMode,
+        appSettings: settings,
         onModeStateChange: (state: any) => {
           if (!cancelled && onModeStateChange) {
             onModeStateChange(state);
@@ -63,9 +72,8 @@ export const GameClient = memo(({
 
       handle = runtime;
       engineRef.current = runtime.engine;
-
-      // Apply whatever the current React dark mode state is immediately after mount
       engineRef.current.setDarkMode(darkModeRef.current);
+      engineRef.current.applySettings(settings);
     };
 
     mount();
@@ -75,7 +83,7 @@ export const GameClient = memo(({
       handle?.dispose?.();
       engineRef.current = null;
     };
-  }, [onModeStateChange, modeName]); // Removed challengeConfig to prevent full re-renders
+  }, [onModeStateChange, modeName]);
 
   // Hot-reload config changes
   useEffect(() => {

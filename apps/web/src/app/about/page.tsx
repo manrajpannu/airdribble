@@ -73,12 +73,12 @@ export default function AboutPage() {
             engineered for performance, and designed to help you dominate the field.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Button size="lg" className="bg-accent hover:bg-accent/90 text-white font-bold tracking-tight">
+            {/* <Button size="lg" className="bg-accent hover:bg-accent/90 text-white font-bold tracking-tight">
               LAUNCH TRAINING
             </Button>
             <Button size="lg" variant="outline" className="border-zinc-800 bg-zinc-900/50 text-white hover:bg-zinc-800">
               <Terminal className="mr-2 h-4 w-4" /> SOURCE CODE
-            </Button>
+            </Button> */}
           </div>
         </div>
       </section>
