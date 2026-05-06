@@ -190,6 +190,23 @@ paths:
       summary: End a challenge session and submit score
       tags:
       - challenge_sessions
+  /api/v1/health:
+    get:
+      consumes:
+      - application/json
+      description: returns ok if the API is running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Check health of the API
+      tags:
+      - System
   /api/v1/leaderboard:
     get:
       description: Returns a ranked list of the top players for a specific challenge,
@@ -605,21 +622,4 @@ paths:
       summary: Update guest user profile
       tags:
       - users
-  /health:
-    get:
-      consumes:
-      - application/json
-      description: returns ok if the API is running
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Check health of the API
-      tags:
-      - System
 swagger: "2.0"

@@ -121,6 +121,32 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/health": {
+            "get": {
+                "description": "returns ok if the API is running",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "Check health of the API",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/leaderboard": {
             "get": {
                 "description": "Returns a ranked list of the top players for a specific challenge, ordered by best score descending. Each entry contains the player's username, their best score, and their Rocket League rank. Use this to display the challenge leaderboard and show where the current user stands relative to others.",
@@ -679,32 +705,6 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal server error — database update failed",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/health": {
-            "get": {
-                "description": "returns ok if the API is running",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "System"
-                ],
-                "summary": "Check health of the API",
-                "responses": {
-                    "200": {
-                        "description": "OK",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
