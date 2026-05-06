@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import GameClient from "@/components/game-client";
 import GameOverlay from "@/components/game-overlay";
+import { SettingsDialog } from "@/components/settings/SettingsDialog";
 import { useChallenge, useEndSession, useUserBestScore, useMe, useCreateGuestUser, useStartSession } from "@/hooks/use-api";
 import { toast } from "sonner";
 import { Trophy } from "lucide-react";
@@ -29,6 +30,7 @@ export default function GamePage() {
   const [countdownValue, setCountdownValue] = useState<number | null>(null);
   const [showTutorialComplete, setShowTutorialComplete] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [freeplayConfig, setFreeplayConfig] = useState({ numBalls: 1, size: 1.5, boundary: 20 });
 
   const callbacksRef = useRef({
@@ -207,7 +209,7 @@ export default function GamePage() {
               title: scenarioTitle
             }));
           }
-          router.push("/play/challenge");
+          router.push("/app/play/challenge");
         },
         onError: () => {
           toast.error("Failed to submit score", {
@@ -224,7 +226,7 @@ export default function GamePage() {
               error: true
             }));
           }
-          router.push("/play/challenge");
+          router.push("/app/play/challenge");
         }
       });
     },
@@ -314,7 +316,7 @@ export default function GamePage() {
   useEffect(() => {
     const onTutorialComplete = () => {
       setShowTutorialComplete(true);
-      setTimeout(() => router.push("/"), 2000);
+      setTimeout(() => router.push("/app/play"), 2000);
     };
     window.addEventListener("tutorial-complete", onTutorialComplete);
     return () => window.removeEventListener("tutorial-complete", onTutorialComplete);
@@ -413,7 +415,7 @@ export default function GamePage() {
                       variant="ghost" 
                       size="sm" 
                       className="rounded-xl font-bold uppercase text-[10px] tracking-widest h-9"
-                      onClick={() => router.push("/play/challenge")}
+                      onClick={() => router.push("/app/play/challenge")}
                     >
                       Go Back
                     </Button>
@@ -445,7 +447,7 @@ export default function GamePage() {
         <div className="absolute bottom-12 right-12 z-20000">
           <button
             className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold uppercase tracking-wider rounded-xl backdrop-blur-md transition-all active:scale-95"
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/app/play")}
           >
             Skip Tutorial
           </button>
@@ -469,10 +471,15 @@ export default function GamePage() {
           bestScore={bestScore}
           onResume={resumeGame}
           onRestart={restartGame}
-          onOpenSettings={() => {}}
-          onExit={() => router.push("/")}
+          onOpenSettings={() => setSettingsOpen(true)}
+          onExit={() => router.push("/app/play")}
         />
       )}
+
+      <SettingsDialog 
+        isOpen={settingsOpen} 
+        onClose={() => setSettingsOpen(false)} 
+      />
       {/* Submitting Overlay */}
       {isSubmitting && (
         <div className="absolute inset-0 z-60000 flex items-center justify-center bg-background/80 backdrop-blur-md animate-in fade-in duration-300">

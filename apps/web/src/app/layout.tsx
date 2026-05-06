@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next"
-import AppShell from "@/components/app-shell";
 import { QueryProvider } from "@/components/query-provider";
 import { Toaster } from "sonner";
 import "./globals.css";
@@ -15,10 +14,10 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: "airdribble",
-  description: "Rocket League Directional Air Roll Trainer",
+  description: "Rocket League Aim Trainer Platform ",
   openGraph: {
     title: "airdribble",
-    description: "Rocket League Directional Air Roll Trainer",
+    description: "Rocket League Aim Trainer Platform ",
     siteName: "airdribble",
     images: [
       {
@@ -34,7 +33,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary",
     title: "airdribble",
-    description: "Rocket League Directional Air Roll Trainer",
+    description: "Rocket League Aim Trainer Platform ",
     images: ["/icons/icon_square_lg.png"],
   },
 };
@@ -48,7 +47,7 @@ export default function RootLayout({
     <html lang="en" className={`h-full antialiased ${poppins.variable}`}>
       <body className="min-h-full bg-background text-foreground font-poppins">
         <QueryProvider>
-          <AppShell>{children}</AppShell>
+          {children}
           <Toaster
             position="bottom-right"
             richColors

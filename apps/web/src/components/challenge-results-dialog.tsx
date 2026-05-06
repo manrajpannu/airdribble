@@ -335,7 +335,7 @@ export default function ChallengeResultsDialog({
               </span>
             ) : (
               <Link
-                href={`/profile/${encodeURIComponent(row.username)}`}
+                href={`/app/profile/${encodeURIComponent(row.username)}`}
                 className="truncate max-w-[100px] text-xs font-semibold hover:text-primary hover:underline underline-offset-2 transition-colors"
               >
                 {row.username}

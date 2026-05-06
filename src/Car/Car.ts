@@ -511,7 +511,6 @@ export class Car extends THREE.Group {
   }
 
   loadCarModel(modelConfig: any): boolean {
-    console.log('Loading car model:', modelConfig.name);
 
     if (!this.carModels.has(modelConfig.name)) {
       const model = new CarModel(this.hostScene, modelConfig);

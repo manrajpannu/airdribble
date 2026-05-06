@@ -8,10 +8,8 @@ import ChallengeMode from './modes/ChallengeMode';
 import FreeplayMode from './modes/Freeplay';
 import TutorialMode from './modes/TutorialMode';
 import { Ball } from './Ball/Ball';
-import { FlowMovement } from './Ball/Movement/FlowMovement';
 import { ToonSky } from './environment/ToonSky';
-import { CoolMovement } from './Ball/Movement/CoolMovement';
-import { Flow } from 'three/examples/jsm/Addons.js';
+import { physics } from './physicsConfig.js';
 
 interface ModeLike {
   name?: string;
@@ -70,85 +68,6 @@ interface ChallengePreset {
   timeLimit: number;
   killEffect?: 'confetti' | 'bubble' | 'rainbowBubblePop' | 'neonStarburst' | 'plasmaRing' | 'holoShockwave' | 'whiteGlitterExplosion' | 'whiteGlitter' | 'rainbowGlitterExplosion' | 'rainbowGlitter' | 'glitterExplosion' | 'glitter' | 'shockwave' | null;
 }
-
-// const canvas = document.getElementById('hud') as HTMLCanvasElement | null;
-// const ctx = canvas?.getContext('2d') ?? null;
-// const R = 40;
-
-// function drawDot(yawDiff: number, pitchDiff: number): void {
-//   if (!ctx || !canvas) return;
-
-//   yawDiff = -yawDiff * 100;
-//   pitchDiff = -pitchDiff * 100;
-//   const angle = Math.atan2(pitchDiff, yawDiff);
-//   const length = Math.min(Math.sqrt(yawDiff * yawDiff + pitchDiff * pitchDiff), R - 5);
-
-//   const centerX = canvas.width / 2;
-//   const centerY = canvas.height / 2;
-//   const dotX = centerX + length * Math.cos(angle);
-//   const dotY = centerY + length * Math.sin(angle);
-
-//   ctx.beginPath();
-//   ctx.arc(centerX, centerY, R, 0, Math.PI * 2);
-//   ctx.fillStyle = 'grey';
-//   ctx.fill();
-//   ctx.lineWidth = 2;
-//   ctx.strokeStyle = 'black';
-//   ctx.stroke();
-
-//   ctx.beginPath();
-//   ctx.arc(dotX, dotY, 5, 0, Math.PI * 2);
-//   ctx.fillStyle = 'white';
-//   ctx.fill();
-// }
-
-// const deadzoneCanvas = document.getElementById('deadzone') as HTMLCanvasElement | null;
-// const deadzoneCtx = deadzoneCanvas?.getContext('2d') ?? null;
-// const DEADZONE_RADIUS = deadzoneCanvas ? deadzoneCanvas.width / 2 : 250;
-// const DEADZONE_CENTER_X = deadzoneCanvas ? deadzoneCanvas.width / 2 : 250;
-// const DEADZONE_CENTER_Y = deadzoneCanvas ? deadzoneCanvas.height / 2 : 250;
-// const deadzoneHistory: Array<{ yaw: number; pitch: number; time: number }> = [];
-
-// function drawDeadzone(yaw: number, pitch: number): void {
-//   if (!deadzoneCanvas || !deadzoneCtx) return;
-
-//   let movementSpeed = 0;
-//   if (deadzoneHistory.length > 0) {
-//     const prev = deadzoneHistory[deadzoneHistory.length - 1];
-//     const dx = yaw - prev.yaw;
-//     const dy = pitch - prev.pitch;
-//     movementSpeed = Math.sqrt(dx * dx + dy * dy);
-//   }
-//   deadzoneHistory.push({ yaw, pitch, time: performance.now() });
-
-//   const minLen = 25;
-//   const maxLen = 75;
-//   const histLen = Math.round(maxLen - Math.min(movementSpeed, 0.2) / 0.2 * (maxLen - minLen));
-//   if (deadzoneHistory.length > histLen) deadzoneHistory.shift();
-
-//   deadzoneCtx.clearRect(0, 0, deadzoneCanvas.width, deadzoneCanvas.height);
-
-//   deadzoneCtx.save();
-//   deadzoneCtx.font = '9px monospace';
-//   deadzoneCtx.fillStyle = 'white';
-//   deadzoneCtx.textAlign = 'left';
-//   deadzoneCtx.textBaseline = 'top';
-//   deadzoneCtx.fillText(`(${(-yaw).toFixed(4)}, ${pitch.toFixed(4)})`, 10, 10);
-//   deadzoneCtx.restore();
-
-//   deadzoneHistory.forEach(dot => {
-//     const x = DEADZONE_CENTER_X + (-dot.yaw) * DEADZONE_RADIUS;
-//     const y = DEADZONE_CENTER_Y + (-dot.pitch) * DEADZONE_RADIUS;
-
-//     deadzoneCtx.save();
-//     deadzoneCtx.globalAlpha = 1.0;
-//     deadzoneCtx.fillStyle = '#ffffffff';
-//     deadzoneCtx.beginPath();
-//     deadzoneCtx.arc(x, y, 1, 0, Math.PI * 2);
-//     deadzoneCtx.fill();
-//     deadzoneCtx.restore();
-//   });
-// }
 
 /**
  * Root gameplay coordinator.
@@ -262,7 +181,6 @@ export class Engine extends THREE.Group {
     this.map.setDarkMode(this._darkMode);
     this.map.gen();
     this.map.position.y = -15;
-    // this.add(this.map);
 
     this.controller = new Controller();
 
@@ -284,6 +202,10 @@ export class Engine extends THREE.Group {
       this.currentMode = new TutorialMode(challengeConfig);
     } else {
       this.currentMode = new ChallengeMode(challengeConfig);
+    }
+
+    if (options.appSettings) {
+      this.applySettings(options.appSettings);
     }
 
     if ('boundary' in (this.currentMode as any)) {
@@ -308,27 +230,14 @@ export class Engine extends THREE.Group {
     this.BallManager.on('hit', this._onHit);
     this.BallManager.on('killed', this._onKill);
 
-    // createUI(this.car, this.controller, undefined, this.map, renderer, this);
-
     window.addEventListener('gamepadconnected', e => {
       const gp = navigator.getGamepads()[e.gamepad.index];
       if (!gp) return;
-      console.log(
-        'Gamepad connected at index %d: %s. %d buttons, %d axes.',
-        gp.index,
-        gp.id,
-        gp.buttons.length,
-        gp.axes.length,
-      );
     });
 
     this._emitModeState();
   }
 
-  /**
-   * Advances one fixed simulation step.
-   * @param dt Fixed simulation delta time in seconds.
-   */
   update(dt: number): void {
     this.sky?.update(dt);
 
@@ -337,7 +246,6 @@ export class Engine extends THREE.Group {
     if (!this.currentMode.active && this.currentMode.shouldPauseGameplay?.()) {
       this.car.setNeutralState();
       this.currentMode.update(dt, { boostHeld: false, ballManager: this.BallManager });
-      // Throttle: emit paused state at ~15Hz only
       this._stateEmitAccumulator += dt;
       if (this._stateEmitAccumulator >= 0.067) {
         this._stateEmitAccumulator = 0;
@@ -348,7 +256,6 @@ export class Engine extends THREE.Group {
 
     const bulletState = this.car?.getBulletState ? this.car.getBulletState() : null;
     const bulletsEnabled = Boolean(bulletState?.enabled);
-    // Reuse pre-allocated vector — no GC per frame
     this._carUpDir.set(0, 1, 0).applyQuaternion(this.car.quaternion).normalize();
     this.BallManager.update(this.car.getForwardVector(), boostHeld, dt, this._carUpDir, {
       bulletsEnabled,
@@ -370,7 +277,6 @@ export class Engine extends THREE.Group {
     this.car.updateCamera(this.currentClosestBall ? this.currentClosestBall.position : null, ballCam, dt);
     this.currentMode.update(dt, { boostHeld, ballManager: this.BallManager });
 
-    // Throttle state emission to ~30Hz (every 33ms) instead of every physics step (~136Hz)
     this._stateEmitAccumulator += dt;
     if (this._stateEmitAccumulator >= 0.033) {
       this._stateEmitAccumulator = 0;
@@ -422,10 +328,6 @@ export class Engine extends THREE.Group {
     this._emitModeState();
   }
 
-  getAvailableModes(): string[] {
-    return ['Freeplay', 'Challenge'];
-  }
-
   setModeByName(modeName: string, options: Record<string, any> = {}): void {
     if (modeName === 'Challenge') {
       this.setMode(new ChallengeMode({
@@ -451,15 +353,6 @@ export class Engine extends THREE.Group {
     }));
   }
 
-  getChallengePresetNames(): string[] {
-    return Object.keys(this._challengePresets);
-  }
-
-  startChallengePreset(name: string): void {
-    const preset = this._challengePresets[name] || this._challengePresets.Warmup;
-    this.setMode(new ChallengeMode({ ...preset }));
-  }
-
   restartCurrentMode(): void {
     if (typeof (this.currentMode as any).restart === 'function') {
       (this.currentMode as any).restart();
@@ -482,6 +375,28 @@ export class Engine extends THREE.Group {
     if (this._scene) {
       this._scene.background = new THREE.Color(isDark ? 0x000000 : 0xfafafa);
       this._scene.environmentIntensity = isDark ? 0.2 : 0.8;
+    }
+  }
+
+  applySettings(settings: any): void {
+    if (!settings) return;
+
+    // 1. Camera
+    if (settings.camera) {
+      physics.camera.fov = settings.camera.fov;
+      physics.camera.distance = settings.camera.distance;
+      physics.camera.height = settings.camera.height;
+      this.car.updateFov();
+    }
+
+    // 2. Car Body
+    if (settings.carBody) {
+      this.car.switchCarModel(settings.carBody);
+    }
+
+    // 3. Controller
+    if (this.controller) {
+      this.controller.applySettings(settings);
     }
   }
 

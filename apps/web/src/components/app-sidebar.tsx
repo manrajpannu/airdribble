@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronUp, Info, MessageCircle, Play, Moon, Sun, GitBranch, User } from "lucide-react";
+import { ChevronUp, Info, MessageCircle, Play, Moon, Sun, GitBranch, User, Settings2 } from "lucide-react";
 
 import {
   Sidebar,
@@ -24,9 +24,10 @@ import { GuestInit } from "@/components/guest-init";
 import { useMe } from "@/hooks/use-api";
 
 const navItems = [
-  { href: "/play/challenge", label: "Challenge", icon: Play },
-  { href: "/game/freeplay", label: "Freeplay", icon: Play },
-  { href: "/about", label: "About", icon: Info },
+  { href: "/app/play/challenge", label: "Challenge", icon: Play },
+  { href: "/app/game/freeplay", label: "Freeplay", icon: Play },
+  { href: "/app/settings", label: "Settings", icon: Settings2 },
+  { href: "/app/about", label: "About", icon: Info },
 ];
 
 export function AppSidebar() {
@@ -179,7 +180,11 @@ export function AppSidebar() {
                 >
                   <DropdownMenuItem
                     className="focus:bg-muted focus:text-foreground"
-                    render={<Link href="/profile" className="cursor-pointer">Profile</Link>}
+                    render={<Link href="/app/profile" className="cursor-pointer">Profile</Link>}
+                  />
+                  <DropdownMenuItem
+                    className="focus:bg-muted focus:text-foreground"
+                    render={<Link href="/app/settings" className="cursor-pointer">Settings</Link>}
                   />
                   {/* <DropdownMenuItem className="cursor-pointer">Login</DropdownMenuItem>
                   <DropdownMenuItem className="cursor-pointer">Create Account</DropdownMenuItem> */}

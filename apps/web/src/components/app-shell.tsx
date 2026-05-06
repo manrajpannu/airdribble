@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { AppFooter } from "@/components/app-footer";
+import { StarProjectModal } from "@/components/star-project-modal";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 type AppShellProps = {
@@ -13,10 +14,15 @@ type AppShellProps = {
 
 export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
-  const isGameRoute = pathname.startsWith("/game/");
+  const isGameRoute = pathname.includes("/game/");
 
   if (isGameRoute) {
-    return <main className="min-h-screen bg-background">{children}</main>;
+    return (
+      <main className="min-h-screen bg-background">
+        {children}
+        <StarProjectModal />
+      </main>
+    );
   }
 
   return (
@@ -28,6 +34,7 @@ export default function AppShell({ children }: AppShellProps) {
           {children}
         </div>
         <AppFooter />
+        <StarProjectModal />
       </main>
     </SidebarProvider>
   );

@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export function AppFooter() {
   return (
-    <footer className="mt-8 border-t pt-16 pb-8 w-full max-w-7xl mx-auto">
+    <footer className="border-t pt-16 pb-8 w-full max-w-7xl mx-auto">
       <div className="flex flex-col items-center gap-6 text-center px-4">
         <div className="relative h-12 w-48">
           <Image

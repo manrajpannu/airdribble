@@ -33,7 +33,7 @@ export default function AboutPage() {
   return (
     <div className="flex flex-col gap-16 py-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
       {/* Hero Section */}
-      <section className="relative overflow-hidden rounded-3xl px-8 py-16 bg-[#000000] text-white shadow-2xl">
+      <section className="relative overflow-hidden rounded-3xl px-6 py-16 bg-[#000000] text-white shadow-2xl">
         {/* Professional Mesh Gradient Shader */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none select-none ">
           <MeshGradient
@@ -68,17 +68,17 @@ export default function AboutPage() {
               priority
             />
           </div>
-          <p className="mb-8 text-lg text-white md:text-xl leading-relaxed">
+          <p className=" text-lg text-white md:text-xl leading-relaxed">
             The ultimate mechanical trainer for high-stakes competition. Built for precision,
             engineered for performance, and designed to help you dominate the field.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Button size="lg" className="bg-accent hover:bg-accent/90 text-white font-bold tracking-tight">
+            {/* <Button size="lg" className="bg-accent hover:bg-accent/90 text-white font-bold tracking-tight">
               LAUNCH TRAINING
             </Button>
             <Button size="lg" variant="outline" className="border-zinc-800 bg-zinc-900/50 text-white hover:bg-zinc-800">
               <Terminal className="mr-2 h-4 w-4" /> SOURCE CODE
-            </Button>
+            </Button> */}
           </div>
         </div>
       </section>

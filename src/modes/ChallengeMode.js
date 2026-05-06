@@ -196,7 +196,7 @@ class ChallengeMode extends FreeplayMode {
         this.completed = false;
         this._cursorProgress = 0;
         this._lastHudTime = null;
-        
+
         if (this.scenarioId && typeof window !== 'undefined') {
             const raw = window.localStorage.getItem(`airdribble-best-score:${this.scenarioId}`);
             // Use localStorage value if available, otherwise keep the value from config
@@ -211,7 +211,6 @@ class ChallengeMode extends FreeplayMode {
         }
         this._initChallengeHud();
         this._syncChallengeHud();
-        console.log("Challenge started!");
     }
 
     stop() {
@@ -224,7 +223,6 @@ class ChallengeMode extends FreeplayMode {
             this.completed = false;
         }
         super.stop();
-        console.log(`Challenge Over! Score: ${this.score}, Hits: ${this.hits}, Kills: ${this.kills}`);
     }
 
     onMiss() {
@@ -237,14 +235,12 @@ class ChallengeMode extends FreeplayMode {
         super.onHit(ball);
         if (!this.active) return;
         this._syncChallengeHud();
-        console.log(`Hit! Total: ${this.hits}, Score: ${this.score}`);
     }
 
     onKill(ball) {
         super.onKill(ball);
         if (!this.active) return;
         this._syncChallengeHud();
-        console.log(`Kill! Total: ${this.kills}, Score: ${this.score}`);
     }
 
     _initChallengeHud() {
@@ -294,11 +290,11 @@ class ChallengeMode extends FreeplayMode {
         if (fields.kills) fields.kills.textContent = `Kills ${this.kills}`;
         if (fields.time) fields.time.textContent = this._formatTimeRemaining(this.timeElapsed);
         if (fields.percent) fields.percent.textContent = `${percentValue.toFixed(0)}%`;
-        
+
         if (fields.barWrapper) {
             fields.barWrapper.style.display = bestScore ? '' : 'none';
         }
-        
+
         if (bestScore) {
             if (fields.barFill) {
                 fields.barFill.style.width = `${(fillRatio * 100).toFixed(2)}%`;
