@@ -1,1 +1,48 @@
+# Dependency directories
 node_modules/
+jspm_packages/
+
+# Next.js build output
+.next/
+out/
+
+# Build outputs
+dist/
+build/
+bin/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.sample
+
+# Database files
+*.db
+*.db-journal
+*.sqlite
+data.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+logs/
+*.log
+
+# Editor/IDE configs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Go specific
+vendor/
+coverage.out
+
+# Turbo
+.turbo/

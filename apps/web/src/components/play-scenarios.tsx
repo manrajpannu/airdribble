@@ -104,37 +104,9 @@ export default function PlayScenarios() {
     [challenges]
   );
 
-  const startScenario = useCallback(async (scenario: Challenge) => {
-    setLoadingScenario(scenario);
-    try {
-      // 1. Prefetch full challenge data (with full config) so game page has it instantly
-      const prefetchChallenge = queryClient.prefetchQuery({
-        queryKey: queryKeys.challenge(scenario.slug),
-        queryFn: () => api.getChallenge(scenario.slug),
-        staleTime: 5 * 60 * 1000,
-      });
-
-      // 2. Prefetch user's best score for this challenge
-      const prefetchBestScore = queryClient.prefetchQuery({
-        queryKey: queryKeys.userBestScore(scenario.id),
-        queryFn: () => api.getUserBestScore(scenario.id),
-        staleTime: 5 * 60 * 1000,
-      });
-
-      // 3. Start the session on the backend
-      const startSession = startSessionMutation.mutateAsync(scenario.id);
-
-      // Wait for all to complete before navigating
-      await Promise.all([prefetchChallenge, prefetchBestScore, startSession]);
-      
-      router.push(`/game/${scenario.slug}`);
-    } catch {
-      toast.error("Failed to start session", {
-        description: "Could not initialize challenge session. Please try again.",
-      });
-      setLoadingScenario(null);
-    }
-  }, [startSessionMutation, router, queryClient]);
+  const startScenario = useCallback((scenario: Challenge) => {
+    router.push(`/game/${scenario.slug}`);
+  }, [router]);
 
   return (
     <>
@@ -266,26 +238,6 @@ export default function PlayScenarios() {
               ))}
         </div>
       </div>
-
-      {loadingScenario && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-          <Card className="w-full max-w-md p-6 text-center animate-in fade-in zoom-in duration-300">
-            <CardContent className="flex flex-col items-center justify-center pt-6 space-y-6">
-              <div className="relative w-16 h-16 flex items-center justify-center">
-                <div className="absolute inset-0 rounded-full border-2 border-primary/20" />
-                <div className="absolute inset-0 rounded-full border-t-2 border-primary animate-spin" />
-                <div className="absolute inset-2 rounded-full border-b border-primary/40 animate-spin" style={{ animationDuration: "0.8s" }} />
-                <div className="absolute inset-[1.4rem] rounded-full bg-primary/20 animate-pulse" />
-              </div>
-              <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Loading Scenario</p>
-                <h3 className="text-2xl font-bold">{loadingScenario.title}</h3>
-                <p className="text-sm text-muted-foreground animate-pulse">Preparing full-screen training...</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
       {resultsOpen && pendingResult && (
         <ChallengeResultsDialog
           open={resultsOpen}

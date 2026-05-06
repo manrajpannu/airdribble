@@ -6,8 +6,10 @@ import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import GameClient from "@/components/game-client";
 import GameOverlay from "@/components/game-overlay";
-import { useChallenge, useEndSession, useUserBestScore } from "@/hooks/use-api";
+import { useChallenge, useEndSession, useUserBestScore, useMe, useCreateGuestUser, useStartSession } from "@/hooks/use-api";
 import { toast } from "sonner";
+import { Trophy } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const FreeplayMenu = dynamic(() => import("@/components/freeplay-menu").then((mod) => mod.FreeplayMenu), { ssr: false });
 
@@ -46,6 +48,13 @@ export default function GamePage() {
   const sessionStartedRef = useRef(false);
   const sessionEndedRef = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [initError, setInitError] = useState<string | null>(null);
+
+  const { data: user, isLoading: isUserLoading } = useMe();
+  const createGuestUser = useCreateGuestUser();
+  const startSessionMutation = useStartSession();
+  const initAttemptedRef = useRef(false);
 
   // ── Scenario slug ──────────────────────────────────────────────
   const scenarioId = useMemo(
@@ -69,8 +78,58 @@ export default function GamePage() {
 
 
 
-  const { data: bestScoreData } = useUserBestScore(challengeDbId ?? 0, !!challengeDbId);
+  const { data: bestScoreData } = useUserBestScore(challengeDbId ?? 0, !!challengeDbId && !isInitializing);
   const bestScore = bestScoreData?.score ?? null;
+
+  // ── Initialization Flow ────────────────────────────────────────
+  useEffect(() => {
+    async function initialize() {
+      // Skip if already attempted or if we're not in a challenge
+      if (initAttemptedRef.current) return;
+      
+      // Wait for basic user/challenge query states to settle
+      if (isUserLoading || (isChallenge && !challenge && !isChallengeError)) return;
+
+      initAttemptedRef.current = true;
+      
+      try {
+        // 1. Ensure User Exists
+        if (!user) {
+          try {
+            await createGuestUser.mutateAsync();
+          } catch (err) {
+            console.error("Failed to create guest user", err);
+            setInitError("Could not create player account. Please try again.");
+            return;
+          }
+        }
+
+        // 2. Start Session for Challenges
+        if (isChallenge) {
+          if (isChallengeError || !challenge) {
+            setInitError("Challenge not found or server is offline.");
+            return;
+          }
+
+          try {
+            await startSessionMutation.mutateAsync(challenge.id);
+            sessionStartedRef.current = true;
+          } catch (err) {
+            console.error("Failed to start session", err);
+            setInitError("Could not start training session.");
+            return;
+          }
+        }
+
+        // Success!
+        setIsInitializing(false);
+      } catch (err) {
+        setInitError("An unexpected error occurred during initialization.");
+      }
+    }
+
+    initialize();
+  }, [isChallenge, challenge, isChallengeError, user, isUserLoading, createGuestUser, startSessionMutation]);
 
   // ── Dark mode sync ─────────────────────────────────────────────
   useEffect(() => {
@@ -297,7 +356,76 @@ export default function GamePage() {
 
   return (
     <section className="fixed inset-0 overflow-hidden bg-background">
-      {(!isChallenge || challenge) && (
+      {/* Loading Phase */}
+      {isInitializing && (
+        <div className="absolute inset-0 z-100 flex flex-col items-center justify-center bg-background">
+          <div className="absolute inset-0 overflow-hidden opacity-20">
+             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/30 blur-[120px] animate-pulse" />
+             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-primary/20 blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
+          </div>
+
+          <div className="relative flex flex-col items-center gap-12 max-w-sm w-full px-8">
+            {/* Logo/Icon Area */}
+            <div className="relative size-32">
+              <div className="absolute inset-0 rounded-full border-4 border-primary/10" />
+              <div className="absolute inset-0 rounded-full border-t-4 border-primary animate-spin shadow-[0_0_15px_rgba(var(--primary),0.5)]" />
+              <div className="absolute inset-4 rounded-full border-2 border-primary/5 animate-reverse-spin" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Trophy className="size-10 text-primary animate-pulse" />
+              </div>
+            </div>
+
+            {/* Text Area */}
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/60">
+                  Initializing {isChallenge ? "Challenge" : "Scenario"}
+                </p>
+                <h2 className="text-3xl font-black tracking-tighter text-foreground uppercase italic">
+                  {scenarioTitle}
+                </h2>
+              </div>
+              
+              {!initError ? (
+                <div className="flex flex-col items-center gap-2">
+                  <p className="text-sm text-muted-foreground font-medium animate-pulse">
+                    Synchronizing game state...
+                  </p>
+                  <div className="w-48 h-1 bg-muted/40 rounded-full overflow-hidden">
+                    <div className="h-full bg-primary animate-progress-fast" />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                  <p className="text-sm text-destructive font-bold uppercase tracking-tight">
+                    {initError}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="rounded-xl font-bold uppercase text-[10px] tracking-widest h-9"
+                      onClick={() => window.location.reload()}
+                    >
+                      Retry
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="rounded-xl font-bold uppercase text-[10px] tracking-widest h-9"
+                      onClick={() => router.push("/play/challenge")}
+                    >
+                      Go Back
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!isInitializing && (
         <GameClient
           fullscreen
           onModeStateChange={onModeStateChange}
@@ -344,32 +472,6 @@ export default function GamePage() {
           onOpenSettings={() => {}}
           onExit={() => router.push("/")}
         />
-      )}
-
-      {/* Full-page error overlay if challenge data failed to load */}
-      {isChallenge && isChallengeError && (
-        <div className="absolute inset-0 z-50000 flex items-center justify-center bg-background/95 backdrop-blur-md">
-          <div className="text-center space-y-4 max-w-md p-8">
-            <h2 className="text-2xl font-bold text-destructive">Failed to Load Challenge</h2>
-            <p className="text-sm text-muted-foreground">
-              Could not fetch challenge data from the server. This may be a network issue.
-            </p>
-            <div className="flex gap-3 justify-center">
-              <button
-                onClick={() => refetchChallenge()}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
-                Retry
-              </button>
-              <button
-                onClick={() => router.push("/play/challenge")}
-                className="px-4 py-2 text-sm font-medium rounded-lg border bg-background hover:bg-muted transition-colors"
-              >
-                Go Back
-              </button>
-            </div>
-          </div>
-        </div>
       )}
       {/* Submitting Overlay */}
       {isSubmitting && (
