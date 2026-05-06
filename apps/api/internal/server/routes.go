@@ -23,7 +23,7 @@ func (app *Application) Routes() http.Handler {
 	g.Use(cors.New(cors.Config{
 		AllowOrigins:     allowedOrigins,
 		AllowMethods:     []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Fingerprint"},
 		AllowCredentials: true, // Required for cookies (user_token, session_token)
 		MaxAge:           12 * time.Hour,
 	}))

@@ -22,6 +22,8 @@ export default function PrivacyPage() {
           <CardContent className="text-sm text-muted-foreground leading-relaxed">
             airdribble primarily operates locally in your browser. We do not store personal identification information.
             We may collect anonymous usage statistics (such as session duration or selected scenarios) to help us improve the trainer's performance and accuracy.
+            <br /><br />
+            To prevent system abuse and ensure fair leaderboard rankings, we use lightweight browser fingerprinting (hashed hashes of browser attributes like resolution and device type) to identify unique users for rate limiting purposes. This data is rotated periodically and cannot be used to identify you personally.
           </CardContent>
         </Card>
 

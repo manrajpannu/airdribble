@@ -1,10 +1,21 @@
+import { getFingerprint } from "@/lib/fingerprint";
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
+let cachedFingerprint: string | null = null;
+
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  if (!cachedFingerprint && typeof window !== "undefined") {
+    cachedFingerprint = await getFingerprint();
+  }
+
   try {
     const res = await fetch(`${API_BASE}${path}`, {
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(cachedFingerprint ? { "X-Fingerprint": cachedFingerprint } : {}),
+      },
       ...options,
     });
 
