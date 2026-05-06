@@ -19,6 +19,7 @@ import {
 } from "date-fns";
 import { ScrollArea } from "./ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { UserActivity as UserActivityType } from "@/lib/api";
 
 export default function UserActivity() {
   const { data: activityData, isLoading: isActivityLoading } = useUserActivity();
@@ -28,7 +29,7 @@ export default function UserActivity() {
     hasNextPage,
     isFetchingNextPage,
     isLoading: isFeedLoading,
-  } = useUserActivityFeedInfinite(8);
+  } = useUserActivityFeedInfinite(10);
 
   const monthData = useMemo(() => {
     const today = startOfToday();
@@ -58,7 +59,7 @@ export default function UserActivity() {
     });
   }, [activityData]);
 
-  const milestones = feedData?.pages.flatMap((page) => page) ?? [];
+  const milestones = feedData?.pages.flatMap((page: UserActivityType[]) => page) ?? [];
   const isLoading = isActivityLoading || isFeedLoading;
 
   if (isLoading) {
@@ -160,7 +161,7 @@ export default function UserActivity() {
               No milestones yet. Keep training!
             </div>
           ) : (
-            milestones.map((activity) => (
+            milestones.map((activity: UserActivityType) => (
               <div
                 key={activity.id}
                 className="group relative flex items-center gap-4 p-4 rounded-2xl border bg-card/40 hover:bg-muted/50 transition-all duration-200"
@@ -197,7 +198,7 @@ export default function UserActivity() {
                 ) : (
                   <ChevronDown className="size-3 transition-transform group-hover:translate-y-0.5" />
                 )}
-                {isFetchingNextPage ? "Loading..." : "View Older Activity"}
+                {isFetchingNextPage ? "Loading..." : "Show More"}
               </Button>
             </div>
           )}

@@ -1,80 +1,32 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
-/** Determines if a failed request should be retried */
-function isRetryable(status: number): boolean {
-  // Retry on server errors (5xx) and rate limits (429), never on client errors (4xx)
-  return status >= 500 || status === 429;
-}
-
-/** Sleep for a given number of milliseconds */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-const MAX_RETRIES = 3;
-const BASE_DELAY_MS = 300; // 300ms, 900ms, 2700ms exponential backoff
-
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
-  let lastError: Error | null = null;
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      ...options,
+    });
 
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      const res = await fetch(`${API_BASE}${path}`, {
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        ...options,
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        const retryAfter = res.headers.get("Retry-After");
-        const error = new ApiError(
-          body.error ?? `Request failed: ${res.status}`,
-          res.status,
-          retryAfter ? parseInt(retryAfter, 10) : undefined
-        );
-
-        // Don't retry client errors (4xx except 429)
-        if (!isRetryable(res.status)) {
-          throw error;
-        }
-
-        lastError = error;
-
-        // If we have retries left, back off and try again
-        if (attempt < MAX_RETRIES) {
-          // If 429, respect Retry-After if provided, otherwise use exponential backoff
-          const delay = (res.status === 429 && error.retryAfter) 
-            ? error.retryAfter * 1000 
-            : BASE_DELAY_MS * Math.pow(3, attempt);
-          
-          await sleep(delay);
-          continue;
-        }
-
-        throw error;
-      }
-
-      // Handle 204 No Content
-      if (res.status === 204) return {} as T;
-
-      return res.json();
-    } catch (err) {
-      // Network errors (fetch itself threw — offline, DNS, CORS, etc.)
-      if (err instanceof ApiError) {
-        throw err; // Already handled above
-      }
-
-      lastError = err instanceof Error ? err : new Error(String(err));
-
-      if (attempt < MAX_RETRIES) {
-        await sleep(BASE_DELAY_MS * Math.pow(3, attempt));
-        continue;
-      }
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      const retryAfter = res.headers.get("Retry-After");
+      throw new ApiError(
+        body.error ?? `Request failed: ${res.status}`,
+        res.status,
+        retryAfter ? parseInt(retryAfter, 10) : undefined
+      );
     }
-  }
 
-  throw lastError ?? new Error("Request failed after retries");
+    // Handle 204 No Content
+    if (res.status === 204) return {} as T;
+
+    return res.json();
+  } catch (err) {
+    if (err instanceof ApiError) throw err;
+    console.error("API Network Error:", err);
+    throw new Error(err instanceof Error ? err.message : String(err));
+  }
 }
 
 /** Custom error class that carries the HTTP status code and optional retry hint */

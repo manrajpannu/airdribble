@@ -14,15 +14,17 @@ const RETRY_DELAY_MS = 2000;
 export function GuestInit() {
   const { data: user, isLoading, isError: isMeError } = useMe();
   const { mutate: createGuest, isPending, isError: isCreateError, error: createError, reset } = useCreateGuestUser();
+  const creatingRef = useRef(false);
   const retryCountRef = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     // Wait for the user check to complete before acting
-    if (isLoading || isPending) return;
+    if (isLoading || isPending || creatingRef.current) return;
 
     // If no user found, create a guest account automatically
     if (user === null && !isCreateError) {
+      creatingRef.current = true;
       createGuest();
     }
   }, [isLoading, isPending, user, createGuest, isCreateError]);

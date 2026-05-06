@@ -1,14 +1,15 @@
 "use client";
 
 import { use } from "react";
-import { usePublicProfile, usePublicUserActivity, usePublicUserActivityFeed, useUserRanks } from "@/hooks/use-api";
-import { User, Calendar, MapPin, Trophy, ArrowLeft, Target } from "lucide-react";
+import { usePublicProfile, usePublicUserActivity, usePublicUserActivityFeedInfinite, useUserRanks } from "@/hooks/use-api";
+import { User, Calendar, MapPin, Trophy, ArrowLeft, Target, Loader2, ChevronDown } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { RankBadge } from "@/components/rank-badge";
 import { ScenarioRankBadge } from "@/components/scenario-rank-badge";
 import { calculateAimlabsPercentile } from "@/lib/scenario-ranks";
 import Link from "next/link";
+import { UserActivity } from "@/lib/api";
 import { useMemo } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -34,7 +35,13 @@ export default function PublicProfilePage({
 
   const { data: user, isLoading, isError } = usePublicProfile(decodedUsername);
   const { data: activityData, isLoading: isActivityLoading } = usePublicUserActivity(decodedUsername);
-  const { data: feedData, isLoading: isFeedLoading } = usePublicUserActivityFeed(decodedUsername, 10, 0);
+  const {
+    data: feedData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isFeedLoading,
+  } = usePublicUserActivityFeedInfinite(decodedUsername, 10);
   const { data: userRanks, isLoading: isRanksLoading } = useUserRanks(decodedUsername);
 
   const monthData = useMemo(() => {
@@ -60,6 +67,8 @@ export default function PublicProfilePage({
       };
     });
   }, [activityData]);
+
+  const milestones = feedData?.pages.flatMap((page: UserActivity[]) => page) ?? [];
 
   if (isLoading || isActivityLoading || isFeedLoading) {
     return (
@@ -290,12 +299,12 @@ export default function PublicProfilePage({
             Milestones
           </div>
           <div className="space-y-2">
-            {!feedData || feedData.length === 0 ? (
+            {!milestones || milestones.length === 0 ? (
               <div className="py-12 text-center text-sm text-muted-foreground italic border rounded-2xl bg-muted/5">
                 No milestones yet.
               </div>
             ) : (
-              feedData.map((activity) => (
+              milestones.map((activity: UserActivity) => (
                 <div
                   key={activity.id}
                   className="group relative flex items-center gap-4 p-4 rounded-2xl border bg-card/40 hover:bg-muted/50 transition-all duration-200"
@@ -317,6 +326,25 @@ export default function PublicProfilePage({
                   </div>
                 </div>
               ))
+            )}
+
+            {hasNextPage && (
+              <div className="pt-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/50 gap-2 h-10 rounded-2xl border border-dashed"
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                >
+                  {isFetchingNextPage ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : (
+                    <ChevronDown className="size-3 transition-transform group-hover:translate-y-0.5" />
+                  )}
+                  {isFetchingNextPage ? "Loading..." : "Show More"}
+                </Button>
+              </div>
             )}
           </div>
         </section>

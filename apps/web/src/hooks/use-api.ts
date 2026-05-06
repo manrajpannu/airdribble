@@ -114,6 +114,19 @@ export function usePublicUserActivityFeed(username: string, limit = 10, offset =
   });
 }
 
+export function usePublicUserActivityFeedInfinite(username: string, limit: number) {
+  return useInfiniteQuery({
+    queryKey: ["publicActivityFeed", username, "infinite"],
+    queryFn: ({ pageParam = 0 }) => api.getPublicUserActivityFeed(username, limit, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      if (lastPage.length < limit) return undefined;
+      return allPages.length * limit;
+    },
+    enabled: !!username,
+  });
+}
+
 export function useUserRanks(username: string) {
   return useQuery({
     queryKey: queryKeys.userRanks(username),
