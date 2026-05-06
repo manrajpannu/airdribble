@@ -15,95 +15,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/challenge": {
-            "get": {
-                "description": "Returns a single challenge by its unique slug (e.g. \"ball-tracking\"). Includes the full parsed config object, tags, thumbnail, and icon.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "challenges"
-                ],
-                "summary": "Get a challenge by slug",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "example": "\"ball-tracking\"",
-                        "description": "Challenge slug",
-                        "name": "slug",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Challenge found",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.Challenge"
-                        }
-                    },
-                    "400": {
-                        "description": "Missing slug parameter",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Challenge not found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/challenges": {
-            "get": {
-                "description": "Returns a list of all active challenges ordered by difficulty. Each challenge includes its slug, title, tags, thumbnail, icon, and parsed config object.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "challenges"
-                ],
-                "summary": "List all challenges",
-                "responses": {
-                    "200": {
-                        "description": "List of challenges",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.Challenge"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/challenges/session/end": {
             "patch": {
                 "description": "Marks an active challenge session as complete and saves the player's final score. This endpoint validates both the ` + "`" + `user_token` + "`" + ` and ` + "`" + `session_token` + "`" + ` cookies to prevent score manipulation. After saving the score, it automatically updates the leaderboard if the new score is the user's personal best. The ` + "`" + `session_token` + "`" + ` cookie is cleared on success. Requires both ` + "`" + `user_token` + "`" + ` and ` + "`" + `session_token` + "`" + ` cookies to be present.",
@@ -124,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.Score"
+                            "$ref": "#/definitions/database.Score"
                         }
                     }
                 ],
@@ -286,7 +197,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Leaderboard context for the given challenge and user",
                         "schema": {
-                            "$ref": "#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.LeaderboardContext"
+                            "$ref": "#/definitions/database.LeaderboardContext"
                         }
                     },
                     "400": {
@@ -326,7 +237,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.ActivityRecord"
+                                "$ref": "#/definitions/database.ActivityRecord"
                             }
                         }
                     },
@@ -381,7 +292,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.UserActivity"
+                                "$ref": "#/definitions/database.UserActivity"
                             }
                         }
                     },
@@ -430,7 +341,7 @@ const docTemplate = `{
                     "200": {
                         "description": "The user's personal best score entry for this challenge",
                         "schema": {
-                            "$ref": "#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.Score"
+                            "$ref": "#/definitions/database.Score"
                         }
                     },
                     "400": {
@@ -532,7 +443,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.Score"
+                                "$ref": "#/definitions/database.Score"
                             }
                         }
                     },
@@ -581,7 +492,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Rank found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.Rank"
+                            "$ref": "#/definitions/database.Rank"
                         }
                     },
                     "400": {
@@ -630,7 +541,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.Rank"
+                                "$ref": "#/definitions/database.Rank"
                             }
                         }
                     },
@@ -692,7 +603,7 @@ const docTemplate = `{
                     "200": {
                         "description": "User profile found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.GuestUser"
+                            "$ref": "#/definitions/database.GuestUser"
                         }
                     },
                     "400": {
@@ -777,10 +688,36 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/health": {
+            "get": {
+                "description": "returns ok if the API is running",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "Check health of the API",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
-        "github_com_manrajpannu_airdribble_apps_api_internal_database.ActivityRecord": {
+        "database.ActivityRecord": {
             "type": "object",
             "properties": {
                 "count": {
@@ -794,55 +731,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_manrajpannu_airdribble_apps_api_internal_database.Challenge": {
-            "type": "object",
-            "properties": {
-                "active": {
-                    "type": "boolean"
-                },
-                "config": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "difficulty": {
-                    "type": "integer"
-                },
-                "duration_ms": {
-                    "type": "integer"
-                },
-                "icon": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "slug": {
-                    "type": "string"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "thumbnail": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_manrajpannu_airdribble_apps_api_internal_database.GuestUser": {
+        "database.GuestUser": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -877,14 +766,14 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_manrajpannu_airdribble_apps_api_internal_database.LeaderboardContext": {
+        "database.LeaderboardContext": {
             "type": "object",
             "properties": {
                 "above_entry": {
-                    "$ref": "#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.LeaderboardEntry"
+                    "$ref": "#/definitions/database.LeaderboardEntry"
                 },
                 "below_entry": {
-                    "$ref": "#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.LeaderboardEntry"
+                    "$ref": "#/definitions/database.LeaderboardEntry"
                 },
                 "median_score": {
                     "type": "integer"
@@ -892,24 +781,27 @@ const docTemplate = `{
                 "top_10": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.LeaderboardEntry"
+                        "$ref": "#/definitions/database.LeaderboardEntry"
                     }
                 },
                 "total_entries": {
                     "type": "integer"
                 },
                 "user_entry": {
-                    "$ref": "#/definitions/github_com_manrajpannu_airdribble_apps_api_internal_database.LeaderboardEntry"
+                    "$ref": "#/definitions/database.LeaderboardEntry"
                 }
             }
         },
-        "github_com_manrajpannu_airdribble_apps_api_internal_database.LeaderboardEntry": {
+        "database.LeaderboardEntry": {
             "type": "object",
             "properties": {
                 "is_user": {
                     "type": "boolean"
                 },
                 "rank": {
+                    "type": "integer"
+                },
+                "rank_id": {
                     "type": "integer"
                 },
                 "score": {
@@ -920,14 +812,14 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_manrajpannu_airdribble_apps_api_internal_database.Rank": {
+        "database.Rank": {
             "type": "object",
             "required": [
                 "name"
             ],
             "properties": {
                 "division": {
-                    "$ref": "#/definitions/sql.NullInt64"
+                    "type": "integer"
                 },
                 "id": {
                     "type": "integer"
@@ -936,15 +828,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "tier_number": {
-                    "$ref": "#/definitions/sql.NullInt64"
+                    "type": "integer"
                 }
             }
         },
-        "github_com_manrajpannu_airdribble_apps_api_internal_database.Score": {
+        "database.Score": {
             "type": "object",
-            "required": [
-                "score"
-            ],
             "properties": {
                 "challenge_id": {
                     "type": "integer"
@@ -966,7 +855,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_manrajpannu_airdribble_apps_api_internal_database.UserActivity": {
+        "database.UserActivity": {
             "type": "object",
             "properties": {
                 "challenge_id": {
@@ -983,19 +872,9 @@ const docTemplate = `{
                 },
                 "score": {
                     "type": "integer"
-                }
-            }
-        },
-        "sql.NullInt64": {
-            "type": "object",
-            "properties": {
-                "int64": {
-                    "type": "integer",
-                    "format": "int64"
                 },
-                "valid": {
-                    "description": "Valid is true if Int64 is not NULL",
-                    "type": "boolean"
+                "type": {
+                    "type": "string"
                 }
             }
         }

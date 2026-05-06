@@ -27,8 +27,9 @@ func (app *Application) Routes() http.Handler {
 		AllowCredentials: true, // Required for cookies (user_token, session_token)
 		MaxAge:           12 * time.Hour,
 	}))
-	globalLimiter := middleware.NewRateLimiter(60, 1*time.Minute)
+	globalLimiter := middleware.NewRateLimiter(60, 1*time.Minute, "Too many requests. Please wait a minute before trying again.")
 	v1 := g.Group("/api/v1", globalLimiter.Middleware())
+	v1.GET("/health", app.getHealth)
 
 	// ranks routes
 	{
@@ -45,7 +46,7 @@ func (app *Application) Routes() http.Handler {
 	}
 
 	// users — guest creation has an additional strict limiter (3 per hour)
-	guestLimiter := middleware.NewRateLimiter(3, 1*time.Hour)
+	guestLimiter := middleware.NewRateLimiter(3, 1*time.Hour, "Too many requests — you can only create 3 guest accounts per hour.")
 	{
 		v1.POST("/users/guest", guestLimiter.Middleware(), app.createGuestUser)
 		v1.GET("/users/me", app.getMe)
@@ -78,7 +79,7 @@ func (app *Application) Routes() http.Handler {
 		v1.GET("/leaderboard", app.getLeaderboard)
 		v1.GET("/leaderboard/context", app.getLeaderboardContext)
 	}
-	g.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	g.GET("/swagger/*any", globalLimiter.Middleware(), ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return g
 }

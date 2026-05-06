@@ -19,16 +19,18 @@ type RateLimiter struct {
 	records  map[string]*ipRecord
 	limit    int
 	window   time.Duration
+	message  string
 }
 
 // NewRateLimiter creates a new rate limiter.
 // limit  = max number of requests allowed per window per IP
 // window = the rolling time window (e.g. 1*time.Hour)
-func NewRateLimiter(limit int, window time.Duration) *RateLimiter {
+func NewRateLimiter(limit int, window time.Duration, message string) *RateLimiter {
 	rl := &RateLimiter{
 		records: make(map[string]*ipRecord),
 		limit:   limit,
 		window:  window,
+		message: message,
 	}
 	// Background goroutine to clean up expired IPs and prevent memory leaks
 	go rl.cleanup()
@@ -59,9 +61,9 @@ func (rl *RateLimiter) Middleware() gin.HandlerFunc {
 			// IP has exceeded the limit within the window
 			retryAfter := int(time.Until(record.windowEnd).Seconds())
 			rl.mu.Unlock()
-			c.Header("Retry-After", time.Now().Add(time.Duration(retryAfter)*time.Second).Format(time.RFC1123))
+			c.Header("Retry-After", time.Now().Add(time.Until(record.windowEnd)).Format(time.RFC1123))
 			c.JSON(http.StatusTooManyRequests, gin.H{
-				"error":       "Too many requests — you can only create 3 guest accounts per hour.",
+				"error":       rl.message,
 				"retry_after": retryAfter,
 			})
 			c.Abort()
