@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"math"
 	"net/http"
 	"sync"
 	"time"
@@ -8,86 +9,144 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type ipRecord struct {
-	count     int
-	windowEnd time.Time
+type bucket struct {
+	tokens         float64
+	lastRefillTime time.Time
 }
 
-// RateLimiter holds the state for a single rate-limited route.
-type RateLimiter struct {
-	mu       sync.Mutex
-	records  map[string]*ipRecord
-	limit    int
-	window   time.Duration
-	message  string
+// TierConfig defines the limits for a specific tier using Token Bucket parameters
+type TierConfig struct {
+	IPLimit     int           // Sustained limit (e.g., 200)
+	UserLimit   int           // Sustained limit (e.g., 100)
+	Window      time.Duration // Time window for sustained limit (e.g., 1m)
+	BurstLimit  int           // Max burst size (e.g., 3)
+	BurstWindow time.Duration // Time window for burst (e.g., 5s)
 }
 
-// NewRateLimiter creates a new rate limiter.
-// limit  = max number of requests allowed per window per IP
-// window = the rolling time window (e.g. 1*time.Hour)
-func NewRateLimiter(limit int, window time.Duration, message string) *RateLimiter {
-	rl := &RateLimiter{
-		records: make(map[string]*ipRecord),
-		limit:   limit,
-		window:  window,
-		message: message,
+// TieredLimiter handles rate limiting using the Token Bucket algorithm
+type TieredLimiter struct {
+	mu           sync.Mutex
+	ipBuckets    map[string]*bucket
+	userBuckets  map[string]*bucket
+	burstBuckets map[string]*bucket
+	config       TierConfig
+	message      string
+}
+
+// NewTieredLimiter creates a new rate limiter with the specified tiered config
+func NewTieredLimiter(config TierConfig, message string) *TieredLimiter {
+	tl := &TieredLimiter{
+		ipBuckets:    make(map[string]*bucket),
+		userBuckets:  make(map[string]*bucket),
+		burstBuckets: make(map[string]*bucket),
+		config:       config,
+		message:      message,
 	}
-	// Background goroutine to clean up expired IPs and prevent memory leaks
-	go rl.cleanup()
-	return rl
+	go tl.cleanup()
+	return tl
 }
 
-// Middleware returns a Gin middleware function for this rate limiter.
-func (rl *RateLimiter) Middleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ip := c.ClientIP()
-
-		rl.mu.Lock()
-		record, exists := rl.records[ip]
+func (tl *TieredLimiter) cleanup() {
+	ticker := time.NewTicker(15 * time.Minute)
+	defer ticker.Stop()
+	for range ticker.C {
+		tl.mu.Lock()
 		now := time.Now()
-
-		if !exists || now.After(record.windowEnd) {
-			// First request from this IP, or their window has expired — reset
-			rl.records[ip] = &ipRecord{
-				count:     1,
-				windowEnd: now.Add(rl.window),
-			}
-			rl.mu.Unlock()
-			c.Next()
-			return
+		// If a bucket hasn't been touched in longer than its window (or 1 hour), remove it
+		threshold := tl.config.Window
+		if threshold < time.Hour {
+			threshold = time.Hour
 		}
 
-		if record.count >= rl.limit {
-			// IP has exceeded the limit within the window
-			retryAfter := int(time.Until(record.windowEnd).Seconds())
-			rl.mu.Unlock()
-			c.Header("Retry-After", time.Now().Add(time.Until(record.windowEnd)).Format(time.RFC1123))
-			c.JSON(http.StatusTooManyRequests, gin.H{
-				"error":       rl.message,
-				"retry_after": retryAfter,
-			})
+		for id, b := range tl.ipBuckets {
+			if now.Sub(b.lastRefillTime) > threshold {
+				delete(tl.ipBuckets, id)
+			}
+		}
+		for id, b := range tl.userBuckets {
+			if now.Sub(b.lastRefillTime) > threshold {
+				delete(tl.userBuckets, id)
+			}
+		}
+		for id, b := range tl.burstBuckets {
+			if now.Sub(b.lastRefillTime) > 10*time.Minute {
+				delete(tl.burstBuckets, id)
+			}
+		}
+		tl.mu.Unlock()
+	}
+}
+
+// Middleware returns a Gin middleware function
+func (tl *TieredLimiter) Middleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ip := c.ClientIP()
+		userToken, _ := c.Cookie("user_token")
+		now := time.Now()
+
+		tl.mu.Lock()
+		defer tl.mu.Unlock()
+
+		// 1. Check Burst Limit (if configured)
+		if tl.config.BurstLimit > 0 && tl.config.BurstWindow > 0 {
+			refillRate := float64(tl.config.BurstLimit) / tl.config.BurstWindow.Seconds()
+			if !tl.allow(tl.burstBuckets, "ip:"+ip, float64(tl.config.BurstLimit), refillRate, now) {
+				c.JSON(http.StatusTooManyRequests, gin.H{"error": "Burst limit exceeded. Please wait a few seconds."})
+				c.Abort()
+				return
+			}
+			if userToken != "" {
+				if !tl.allow(tl.burstBuckets, "user:"+userToken, float64(tl.config.BurstLimit), refillRate, now) {
+					c.JSON(http.StatusTooManyRequests, gin.H{"error": "Burst limit exceeded. Please wait a few seconds."})
+					c.Abort()
+					return
+				}
+			}
+		}
+
+		// 2. Check IP Limit
+		ipRefillRate := float64(tl.config.IPLimit) / tl.config.Window.Seconds()
+		if !tl.allow(tl.ipBuckets, ip, float64(tl.config.IPLimit), ipRefillRate, now) {
+			c.JSON(http.StatusTooManyRequests, gin.H{"error": tl.message})
 			c.Abort()
 			return
 		}
 
-		record.count++
-		rl.mu.Unlock()
+		// 3. Check User Limit
+		if userToken != "" {
+			userRefillRate := float64(tl.config.UserLimit) / tl.config.Window.Seconds()
+			if !tl.allow(tl.userBuckets, userToken, float64(tl.config.UserLimit), userRefillRate, now) {
+				c.JSON(http.StatusTooManyRequests, gin.H{"error": tl.message})
+				c.Abort()
+				return
+			}
+		}
+
 		c.Next()
 	}
 }
 
-// cleanup removes expired entries every 10 minutes to keep memory usage low.
-func (rl *RateLimiter) cleanup() {
-	ticker := time.NewTicker(10 * time.Minute)
-	defer ticker.Stop()
-	for range ticker.C {
-		now := time.Now()
-		rl.mu.Lock()
-		for ip, record := range rl.records {
-			if now.After(record.windowEnd) {
-				delete(rl.records, ip)
-			}
+// allow checks if a request is allowed by the token bucket and consumes a token if so
+func (tl *TieredLimiter) allow(buckets map[string]*bucket, id string, capacity float64, refillRate float64, now time.Time) bool {
+	b, exists := buckets[id]
+	if !exists {
+		// Initialize bucket at full capacity minus the current request
+		buckets[id] = &bucket{
+			tokens:         capacity - 1,
+			lastRefillTime: now,
 		}
-		rl.mu.Unlock()
+		return true
 	}
+
+	// Refill tokens based on elapsed time
+	elapsed := now.Sub(b.lastRefillTime).Seconds()
+	b.tokens = math.Min(capacity, b.tokens+(elapsed*refillRate))
+	b.lastRefillTime = now
+
+	if b.tokens >= 1 {
+		b.tokens -= 1
+		return true
+	}
+
+	return false
 }
