@@ -65,53 +65,6 @@ function formatNumber(value: number) {
   return new Intl.NumberFormat("en-US").format(Math.round(value));
 }
 
-function buildLeaderboard(finalScore: number): LeaderboardRow[] {
-  const seedRows: LeaderboardRow[] = [
-    { player: "NeoArc", score: 18240, accuracy: "97.1%", friend: true },
-    { player: "Pulse", score: 18110, accuracy: "96.7%", friend: false },
-    { player: "Miko", score: 17920, accuracy: "96.1%", friend: true },
-    { player: "Static", score: 17790, accuracy: "95.8%", friend: false },
-    { player: "Cinder", score: 17540, accuracy: "95.2%", friend: true },
-    { player: "Vanta", score: 17310, accuracy: "94.9%", friend: false },
-    { player: "Kite", score: 17080, accuracy: "94.2%", friend: false },
-    { player: "Nova", score: 16950, accuracy: "93.8%", friend: true },
-    { player: "Echo", score: 16720, accuracy: "93.5%", friend: false },
-    { player: "Rift", score: 16580, accuracy: "92.9%", friend: true },
-  ]
-
-  const generatedRows = Array.from({ length: 110 }, (_, index) => {
-    const score = 16400 - index * 90
-    const accuracy = (91.8 - index * 0.18).toFixed(1)
-    return {
-      player: `Runner-${String(index + 1).padStart(3, "0")}`,
-      score,
-      accuracy: `${Math.max(40, Number(accuracy)).toFixed(1)}%`,
-      friend: index % 9 === 0,
-    }
-  })
-
-  return [...seedRows, { player: "You", score: finalScore, accuracy: "92.8%", friend: true }, ...generatedRows]
-    .sort((a, b) => b.score - a.score)
-}
-
-function buildLeaderboardWindow(rows: LeaderboardRow[]) {
-  const playerIndex = rows.findIndex((row) => row.player === "You")
-  const topRows = rows.slice(0, 10)
-
-  if (playerIndex < 0) {
-    return topRows
-  }
-
-  const aroundPlayerStart = Math.max(0, playerIndex - 50)
-  const aroundPlayerEnd = Math.min(rows.length, playerIndex + 51)
-  const windowRows = rows.slice(aroundPlayerStart, aroundPlayerEnd)
-
-  const combinedRows = [...topRows, ...windowRows]
-  const uniqueRows = combinedRows.filter((row, index, allRows) => allRows.findIndex((candidate) => candidate.player === row.player) === index)
-
-  return uniqueRows.sort((a, b) => b.score - a.score)
-}
-
 function useScoreMetrics(state: ChallengeModeState | null) {
   return useMemo(() => {
     const hits = Number(state?.hits ?? 0)
@@ -310,8 +263,7 @@ export default function ChallengeResultsDialog({
   const { data: ratingData } = useUserRating(challengeId);
   const rateMutation = useRateChallenge();
 
-  const [selectedStat, setSelectedStat] = useState<"Damage" | "Hits" | "Kills" | "Total">("Total")
-  const [friendsOnly, setFriendsOnly] = useState(false)
+  const [selectedStat, setSelectedStat] = useState<"Hits" | "Kills">("Hits")
   const [historyRange, setHistoryRange] = useState(25)
   const [userRating, setUserRating] = useState<number | null>(null);
 
@@ -402,10 +354,8 @@ export default function ChallengeResultsDialog({
   if (!open) return null
 
   const scoreRows = [
-    { label: "Damage", value: formatNumber(metrics.damageDealt) },
     { label: "Hits", value: formatNumber(metrics.hits) },
     { label: "Kills", value: formatNumber(metrics.kills) },
-    { label: "Total", value: formatNumber(metrics.total) },
   ] as const
 
   return (
@@ -444,9 +394,9 @@ export default function ChallengeResultsDialog({
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x overflow-y-auto">
+            <div className="grid grid-cols-1 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x overflow-y-auto">
               {/* Column 1: Score History & Calculation (2/3 width) */}
-              <div className="md:col-span-2 p-6 space-y-8">
+              <div className="md:col-span-3 p-6 space-y-8">
                 <section className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -455,7 +405,7 @@ export default function ChallengeResultsDialog({
                     </div>
                     <div className="text-right">
                       <div className="flex flex-wrap justify-end gap-2 mb-1">
-                        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">{percentile}th percentile</Badge>
+                        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">{percentile.toFixed(2)}th percentile</Badge>
                         {isSessionBest && <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/20 hover:bg-amber-500/30">New Personal Best!</Badge>}
                       </div>
                     </div>
@@ -472,20 +422,21 @@ export default function ChallengeResultsDialog({
                       />
                     </div>
 
-                    <div className="flex flex-col justify-between gap-4">
-                      <div className="p-5 rounded-xl border bg-card/50 space-y-1">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Final Score</p>
-                        <p className="text-4xl font-black text-primary leading-none">{formatNumber(finalScore)}</p>
-                      </div>
+                    <div className="flex flex-col gap-4">
+                      <div className="p-4 rounded-2xl border bg-primary/5 space-y-4 flex flex-col items-center justify-center text-center">
+                        <div className="space-y-1">
+                          <p className="text-[12px] font-bold text-primary uppercase tracking-[0.2em]">Final Score</p>
+                          <p className="text-5xl font-black text-primary leading-none tracking-tighter">{formatNumber(finalScore)}</p>
+                        </div>
 
-                      <div className="p-5 rounded-xl border bg-card/50 space-y-1">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Personal Best</p>
+                      </div>
+                      <div className="p-4 rounded-2xl border space-y-1 flex flex-col items-center justify-center text-center">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Personal Best</p>
                         <p className="text-3xl font-bold text-foreground leading-none">{formatNumber(highScore)}</p>
-                      </div>
-
-                      <div className="p-5 rounded-xl border bg-card/50 space-y-1">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Session Median</p>
-                        <p className="text-3xl font-bold text-foreground leading-none">{formatNumber(medianScore)}</p>
+                        <div className="pt-2 mt-2 border-t border-primary/10 w-full flex flex-col items-center">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Scenario Rank</p>
+                          <ScenarioRankBadge percentile={percentile} size="xl" showName={false} />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -499,77 +450,48 @@ export default function ChallengeResultsDialog({
                     <p className="text-sm text-muted-foreground mt-1">Detailed breakdown of your session performance.</p>
                   </div>
 
-                  <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+                  <div className="grid gap-4 grid-cols-3">
                     {scoreRows.map((row) => {
                       const active = selectedStat === row.label
                       return (
-                        <Button
+                        <div
                           key={row.label}
-                          variant={active ? "default" : "outline"}
-                          className={cn(
-                            "h-auto flex-col items-start py-5 px-5 transition-all duration-200",
-                            active ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : "hover:bg-muted/50"
-                          )}
-                          onClick={() => setSelectedStat(row.label)}
+                          className="flex flex-col p-5 rounded-xl border bg-card/50"
                         >
-                          <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">{row.label}</span>
-                          <span className="text-2xl font-black">{row.value}</span>
-                        </Button>
+                          <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1">{row.label}</span>
+                          <span className="text-3xl font-black">{row.value}</span>
+                        </div>
                       )
                     })}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="rounded-xl border bg-primary/5 p-5 flex flex-col items-center justify-center text-center">
-                      <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Accuracy</p>
-                      <p className="text-2xl font-black text-primary">{metrics.accuracy.toFixed(1)}%</p>
-                    </div>
-                    <div className="rounded-xl border bg-muted/30 p-5 flex flex-col items-center justify-center text-center">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Efficiency</p>
-                      <p className="text-2xl font-black text-foreground">{metrics.damageEfficiency.toFixed(1)}%</p>
-                    </div>
-                    <div className="rounded-xl border bg-muted/30 p-5 flex flex-col items-center justify-center text-center">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">KDR</p>
-                      <p className="text-2xl font-black text-foreground">{metrics.kdr.toFixed(2)}</p>
+                    <div className="rounded-xl border bg-muted/30 p-5 flex flex-col">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Accuracy</p>
+                      <p className="text-3xl font-black text-foreground">{metrics.accuracy.toFixed(1)}%</p>
                     </div>
                   </div>
                 </section>
               </div>
 
               {/* Column 2: Leaderboard (1/3 width) */}
-              <div className="p-6 space-y-6 flex flex-col bg-muted/5">
+              <div className="md:col-span-2 p-6 space-y-6 flex flex-col bg-muted/5">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-bold text-xl tracking-tight">Leaderboard</h3>
                     <p className="text-sm text-muted-foreground mt-1">Global rankings for this challenge.</p>
                   </div>
-                  <label className="flex items-center gap-2 text-sm font-medium cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={friendsOnly}
-                      onChange={(event) => setFriendsOnly(event.target.checked)}
-                      className="rounded border-input text-primary focus:ring-primary w-4 h-4"
-                    />
-                    <span className="group-hover:text-primary transition-colors">Friends</span>
-                  </label>
                 </div>
 
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <div className="rounded-xl border bg-card p-3 text-center shadow-sm">
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter mb-1">Entries</div>
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter mb-1">Total Entries</div>
                     <div className="font-bold text-foreground">{formatNumber(entriesCount)}</div>
                   </div>
-                  <div className="rounded-xl border bg-card p-3 text-center shadow-sm flex flex-col items-center justify-center">
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter mb-1">Scenario Rank</div>
-                    <ScenarioRankBadge percentile={percentile} size="sm" showName={true} />
-                  </div>
                   <div className="rounded-xl border bg-card p-3 text-center shadow-sm">
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter mb-1">Median</div>
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter mb-1">Global Median</div>
                     <div className="font-bold text-foreground">{formatNumber(medianScore)}</div>
                   </div>
                   <div className="rounded-xl border bg-card p-3 text-center shadow-sm">
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter mb-1">Top %</div>
-                    <div className="font-bold text-foreground">{(100 - percentile).toFixed(1)}%</div>
+                    <div className="font-bold text-foreground">{(100 - percentile).toFixed(2)}%</div>
                   </div>
                 </div>
 

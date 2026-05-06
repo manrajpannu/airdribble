@@ -46,3 +46,4 @@ coverage.out
 
 # Turbo
 .turbo/
+apps/api/data.db

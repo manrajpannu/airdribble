@@ -7,7 +7,7 @@ export default function SettingsPage() {
 
   return (
     <section className="space-y-4">
-      <div className="retro-card-gradient-a border-2 border-border p-5 shadow-[var(--shadow-sm)]">
+      <div className="retro-card-gradient-a border-2 border-border p-5 shadow-(--shadow-sm)">
         <h2 className="text-xl font-semibold text-foreground">Settings</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Global app settings are persisted in localStorage and restored on reload.
@@ -15,7 +15,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
-        <div className="retro-card-gradient-b space-y-4 border-2 border-border p-4 shadow-[var(--shadow-xs)]">
+        <div className="retro-card-gradient-b space-y-4 border-2 border-border p-4 shadow-(--shadow-xs)">
           <p className="text-sm font-medium text-foreground">Gameplay</p>
 
           <label className="flex items-center justify-between text-sm">
@@ -39,7 +39,7 @@ export default function SettingsPage() {
           </label>
         </div>
 
-        <div className="retro-card-gradient-c space-y-4 border-2 border-border p-4 shadow-[var(--shadow-xs)]">
+        <div className="retro-card-gradient-c space-y-4 border-2 border-border p-4 shadow-(--shadow-xs)">
           <p className="text-sm font-medium text-foreground">Audio</p>
 
           <label className="grid gap-2 text-sm">

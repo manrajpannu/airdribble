@@ -7,14 +7,14 @@ interface ScenarioRankBadgeProps {
   percentile: number;
   className?: string;
   showName?: boolean;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
 }
 
-export function ScenarioRankBadge({ 
-  percentile, 
-  className, 
+export function ScenarioRankBadge({
+  percentile,
+  className,
   showName = true,
-  size = "md" 
+  size = "md"
 }: ScenarioRankBadgeProps) {
   const rank = getScenarioRank(percentile);
 
@@ -22,11 +22,12 @@ export function ScenarioRankBadge({
     sm: "text-[9px] px-1.5 py-0.5",
     md: "text-[10px] px-2 py-0.5",
     lg: "text-xs px-3 py-1",
+    xl: "text-[14px] px-4 py-1",
   };
 
   return (
     <div className={cn("flex flex-col items-center gap-1", className)}>
-      <div 
+      <div
         className={cn(
           "font-black uppercase tracking-tighter rounded-sm shadow-sm flex items-center justify-center text-white",
           sizeClasses[size]
