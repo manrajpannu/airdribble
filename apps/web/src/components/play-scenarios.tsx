@@ -105,7 +105,7 @@ export default function PlayScenarios() {
   );
 
   const startScenario = useCallback((scenario: Challenge) => {
-    router.push(`/game/${scenario.slug}`);
+    router.push(`/app/game/${scenario.slug}`);
   }, [router]);
 
   return (

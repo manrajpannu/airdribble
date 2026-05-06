@@ -14,7 +14,7 @@ type AppShellProps = {
 
 export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
-  const isGameRoute = pathname.startsWith("/game/");
+  const isGameRoute = pathname.includes("/game/");
 
   if (isGameRoute) {
     return (

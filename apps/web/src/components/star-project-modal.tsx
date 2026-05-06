@@ -18,7 +18,7 @@ export function StarProjectModal() {
     if (typeof window === "undefined") return;
     const dismissed = localStorage.getItem(DISMISS_KEY);
     if (dismissed) return;
-    
+
     setHasDismissed(false);
 
     const timer = setInterval(() => {
@@ -46,7 +46,7 @@ export function StarProjectModal() {
 
   return (
     <div className="fixed inset-0 z-100000 flex items-center justify-center p-4 bg-background/40 backdrop-blur-md animate-in fade-in duration-500">
-      <div 
+      <div
         className="relative w-full max-w-md bg-card/90 border border-primary/20 rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-700"
         onClick={(e) => e.stopPropagation()}
       >
@@ -54,7 +54,7 @@ export function StarProjectModal() {
         <div className="absolute -top-24 -left-24 size-48 bg-primary/20 blur-[80px] rounded-full animate-pulse" />
         <div className="absolute -bottom-24 -right-24 size-48 bg-primary/10 blur-[80px] rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
 
-        <button 
+        <button
           onClick={() => dismiss(false)}
           className="absolute top-6 right-6 p-2 rounded-full hover:bg-secondary/50 text-muted-foreground transition-colors z-10"
         >
@@ -63,7 +63,7 @@ export function StarProjectModal() {
 
         <div className="relative p-10 flex flex-col items-center text-center gap-8">
           <div className="relative">
-            <div className="p-5 bg-primary/10 rounded-[2rem] border border-primary/20 shadow-[0_0_40px_rgba(var(--primary),0.15)]">
+            <div className="p-5 bg-primary/10 rounded-4xl border border-primary/20 shadow-[0_0_40px_rgba(var(--primary),0.15)]">
               <Star className="size-10 text-primary fill-primary/20 animate-pulse" />
             </div>
             <div className="absolute -top-1 -right-1 size-6 bg-red-500 rounded-full flex items-center justify-center border-4 border-card">
@@ -79,9 +79,9 @@ export function StarProjectModal() {
           </div>
 
           <div className="flex flex-col w-full gap-3">
-            <a 
-              href="https://github.com/manrajpannu/airdribble" 
-              target="_blank" 
+            <a
+              href="https://github.com/manrajpannu/airdribble"
+              target="_blank"
               rel="noopener noreferrer"
               onClick={() => dismiss(true)}
               className={cn(
@@ -92,8 +92,8 @@ export function StarProjectModal() {
               <Star className="size-4 fill-current" />
               Star on GitHub
             </a>
-            
-            <button 
+
+            <button
               onClick={() => dismiss(true)}
               className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-colors py-2"
             >
