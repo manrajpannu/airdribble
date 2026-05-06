@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import AppShell from "@/components/app-shell";
 import { QueryProvider } from "@/components/query-provider";
 import { Toaster } from "sonner";
@@ -58,6 +59,8 @@ export default function RootLayout({
           />
         </QueryProvider>
         <Analytics />
+        <SpeedInsights />
+
       </body>
     </html>
   );
