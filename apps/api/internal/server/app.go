@@ -35,6 +35,14 @@ func NewApp() *Application {
 	dbUrl := env.GetEnvString("DB_URL", "file:./data.db")
 	dbAuthToken := env.GetEnvString("DB_AUTH_TOKEN", "")
 
+	// Mask token for logging
+	maskedUrl := dbUrl
+	if strings.Contains(dbUrl, "libsql://") {
+		log.Printf("Connecting to remote Turso DB: %s", dbUrl)
+	} else {
+		log.Printf("WARNING: Using local database file: %s. This will fail on Vercel!", dbUrl)
+	}
+
 	// If using Turso (libsql) and a token is provided, append it to the URL if not already present
 	if dbAuthToken != "" && !strings.Contains(dbUrl, "authToken=") {
 		if strings.Contains(dbUrl, "?") {
@@ -46,11 +54,16 @@ func NewApp() *Application {
 
 	db, err := sql.Open("libsql", dbUrl)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Critical: Failed to initialize libsql driver: %v", err)
+	}
+
+	// Test the connection immediately
+	if err := db.Ping(); err != nil {
+		log.Fatalf("Critical: Could not connect to database at %s: %v", maskedUrl, err)
 	}
 
 	if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
-		log.Fatal(err)
+		log.Printf("Warning: Failed to set PRAGMA foreign_keys: %v", err)
 	}
 
 	models := database.NewModels(db)

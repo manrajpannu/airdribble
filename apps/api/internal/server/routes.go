@@ -14,6 +14,9 @@ import (
 )
 
 func (app *Application) Routes() http.Handler {
+	if env.GetEnvString("ENV", "development") == "production" {
+		gin.SetMode(gin.ReleaseMode)
+	}
 	g := gin.Default()
 
 	// CORS — read allowed origins from env, default to localhost for dev
