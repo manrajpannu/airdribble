@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -19,15 +20,19 @@ func (app *Application) Routes() http.Handler {
 	}
 	g := gin.Default()
 
-	// CORS — read allowed origins from env, default to localhost for dev
-	allowedOriginsEnv := env.GetEnvString("ALLOWED_ORIGINS", "http://localhost:3000")
+	// CORS — include common local variants
+	allowedOriginsEnv := env.GetEnvString("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
 	allowedOrigins := strings.Split(allowedOriginsEnv, ",")
+	for i := range allowedOrigins {
+		allowedOrigins[i] = strings.TrimSpace(allowedOrigins[i])
+	}
+	log.Printf("CORS: Allowed Origins: %v", allowedOrigins)
 
 	g.Use(cors.New(cors.Config{
 		AllowOrigins:     allowedOrigins,
 		AllowMethods:     []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Fingerprint"},
-		AllowCredentials: true, // Required for cookies (user_token, session_token)
+		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
 
