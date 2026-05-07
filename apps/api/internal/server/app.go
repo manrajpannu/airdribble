@@ -7,6 +7,7 @@ import (
 
 	_ "github.com/manrajpannu/airdribble/apps/api/docs"
 
+	"github.com/manrajpannu/airdribble/apps/api/internal/cache"
 	"github.com/manrajpannu/airdribble/apps/api/internal/database"
 	"github.com/manrajpannu/airdribble/apps/api/internal/env"
 	"github.com/manrajpannu/airdribble/apps/api/internal/middleware"
@@ -26,6 +27,7 @@ type Application struct {
 	userDuration      time.Duration
 	cookieSecure      bool
 	activeTracker     *middleware.ActiveTracker
+	cache             *cache.MemoryCache
 }
 
 func NewApp() *Application {
@@ -48,6 +50,7 @@ func NewApp() *Application {
 		userDuration:      env.GetEnvDuration("USER_TOKEN_DURATION", 24*30*time.Hour),
 		models:            models,
 		activeTracker:     middleware.NewActiveTracker(2 * time.Minute),
+		cache:             cache.New(),
 	}
 
 	return app

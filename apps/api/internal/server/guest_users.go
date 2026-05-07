@@ -1,10 +1,12 @@
 package server
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/manrajpannu/airdribble/apps/api/internal/auth"
@@ -92,6 +94,12 @@ func (app *Application) getMe(c *gin.Context) {
 		return
 	}
 
+	cacheKey := fmt.Sprintf("user:%s", userToken)
+	if cached, ok := app.cache.Get(cacheKey); ok {
+		c.JSON(http.StatusOK, cached)
+		return
+	}
+
 	user, err := app.models.GuestUser.GetByToken(userToken)
 	if err != nil {
 		log.Printf("Error fetching user by token: %v", err)
@@ -104,6 +112,7 @@ func (app *Application) getMe(c *gin.Context) {
 		return
 	}
 
+	app.cache.Set(cacheKey, user, 90*time.Second)
 	c.JSON(http.StatusOK, user)
 }
 
@@ -163,11 +172,19 @@ func (app *Application) getUserBestScore(c *gin.Context) {
 		return
 	}
 
+	cacheKey := fmt.Sprintf("best_score:%s:%d", userToken, challenge_id)
+	if cached, ok := app.cache.Get(cacheKey); ok {
+		c.JSON(http.StatusOK, cached)
+		return
+	}
+
 	score, err := app.models.Leaderboard.GetBestScore(userToken, challenge_id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user best scores"})
 		return
 	}
+
+	app.cache.Set(cacheKey, score, 45*time.Second)
 	c.JSON(http.StatusOK, score)
 }
 
@@ -270,6 +287,9 @@ func (app *Application) updateGuestUser(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update guest user: " + err.Error()})
 		return
 	}
+
+	// Invalidate user cache
+	app.cache.Delete(fmt.Sprintf("user:%s", userToken))
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "guest user updated",

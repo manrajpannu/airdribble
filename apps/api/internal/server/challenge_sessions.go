@@ -1,9 +1,11 @@
 package server
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/manrajpannu/airdribble/apps/api/internal/auth"
@@ -214,7 +216,17 @@ func (app *Application) endChallengeSession(c *gin.Context) {
 				}
 			}
 		}
+		}
 	}
+
+	// Invalidate caches
+	app.cache.Delete(fmt.Sprintf("leaderboard:%d", challengeID))
+	app.cache.DeletePrefix(fmt.Sprintf("leaderboard_context:%d", challengeID))
+	app.cache.Delete(fmt.Sprintf("best_score:%s:%d", userToken, challengeID))
+	app.cache.Delete(fmt.Sprintf("activity:%s", userToken))
+	app.cache.DeletePrefix(fmt.Sprintf("activity_feed:%s", userToken))
+	app.cache.Delete(fmt.Sprintf("user:%s", userToken))
+
 	// Respond success
 	c.JSON(http.StatusOK, gin.H{
 		"message":       "Session ended and Score saved",
@@ -242,11 +254,18 @@ func (app *Application) getUserActivity(c *gin.Context) {
 		return
 	}
 
+	cacheKey := fmt.Sprintf("activity:%s", userToken)
+	if cached, ok := app.cache.Get(cacheKey); ok {
+		c.JSON(http.StatusOK, cached)
+		return
+	}
+
 	activity, err := app.models.ChallengeSession.GetActivity(userToken, 90)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user activity"})
 		return
 	}
 
+	app.cache.Set(cacheKey, activity, 5*time.Minute)
 	c.JSON(http.StatusOK, activity)
 }

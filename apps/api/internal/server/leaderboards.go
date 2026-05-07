@@ -1,8 +1,10 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/manrajpannu/airdribble/apps/api/internal/database"
@@ -26,12 +28,19 @@ func (app *Application) getLeaderboard(c *gin.Context) {
 		return
 	}
 
+	cacheKey := fmt.Sprintf("leaderboard:%d", challengeID)
+	if cached, ok := app.cache.Get(cacheKey); ok {
+		c.JSON(http.StatusOK, cached)
+		return
+	}
+
 	leaderboard, err := app.models.Leaderboard.Get(challengeID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch leaderboard"})
 		return
 	}
 
+	app.cache.Set(cacheKey, leaderboard, 45*time.Second)
 	c.JSON(http.StatusOK, leaderboard)
 }
 
@@ -54,6 +63,11 @@ func (app *Application) getLeaderboardContext(c *gin.Context) {
 	}
 
 	userToken, _ := c.Cookie("user_token")
+	cacheKey := fmt.Sprintf("leaderboard_context:%d:%s", challengeID, userToken)
+	if cached, ok := app.cache.Get(cacheKey); ok {
+		c.JSON(http.StatusOK, cached)
+		return
+	}
 
 	context, err := app.models.Leaderboard.GetLeaderboardContext(userToken, challengeID)
 	if err != nil {
@@ -61,6 +75,7 @@ func (app *Application) getLeaderboardContext(c *gin.Context) {
 		return
 	}
 
+	app.cache.Set(cacheKey, context, 30*time.Second)
 	c.JSON(http.StatusOK, context)
 }
 
