@@ -31,8 +31,6 @@ func (app *Application) createGuestUser(c *gin.Context) {
 		return
 	}
 
-	ip := c.ClientIP()
-	guest_user.IPAddress = &ip
 	guest_user.Token = token
 
 	// Attempt to find a unique username (max 5 retries)

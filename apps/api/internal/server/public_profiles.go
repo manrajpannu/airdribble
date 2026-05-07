@@ -13,7 +13,6 @@ type PublicGuestUser struct {
 	ID          int     `json:"id"`
 	Username    string  `json:"username"`
 	RankID      *int    `json:"rank_id"`
-	Location    *string `json:"location"`
 	GamesPlayed int     `json:"games_played"`
 	Shots       int     `json:"shots"`
 	Kills       int     `json:"kills"`
@@ -42,7 +41,6 @@ func (app *Application) getPublicProfile(c *gin.Context) {
 		ID:          user.ID,
 		Username:    user.Username,
 		RankID:      user.RankID,
-		Location:    user.Location,
 		GamesPlayed: user.GamesPlayed,
 		Shots:       user.Shots,
 		Kills:       user.Kills,

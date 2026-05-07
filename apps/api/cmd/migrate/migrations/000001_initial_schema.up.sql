@@ -12,8 +12,6 @@ CREATE TABLE IF NOT EXISTS guest_users (
 	token TEXT UNIQUE NOT NULL,
 	username TEXT UNIQUE NOT NULL,
 	rank_id INTEGER,
-	location TEXT,
-	ip_address TEXT,
 	games_played INTEGER DEFAULT 0,
 	shots INTEGER DEFAULT 0,
 	kills INTEGER DEFAULT 0,

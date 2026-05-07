@@ -143,13 +143,6 @@ export default function PublicProfilePage({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
               <div className="flex flex-col gap-1 p-5 rounded-2xl bg-muted/30 border">
                 <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                  <MapPin className="size-4" />
-                  <span className="text-xs font-bold uppercase tracking-wider">Region</span>
-                </div>
-                <span className="text-lg font-bold">{user.location || "Global"}</span>
-              </div>
-              <div className="flex flex-col gap-1 p-5 rounded-2xl bg-muted/30 border">
-                <div className="flex items-center gap-2 text-muted-foreground mb-2">
                   <Calendar className="size-4" />
                   <span className="text-xs font-bold uppercase tracking-wider">Status</span>
                 </div>

@@ -16,8 +16,6 @@ type GuestUser struct {
 	Username  string  `json:"username"`
 	Token     string  `json:"token"`
 	RankID    *int    `json:"rank_id"`
-	Location  *string `json:"location"`
-	IPAddress   *string `json:"ip_address"`
 	GamesPlayed int     `json:"games_played"`
 	Shots       int     `json:"shots"`
 	Kills       int     `json:"kills"`
@@ -28,9 +26,9 @@ func (m *GuestUserModel) Insert(guest_user *GuestUser) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `INSERT INTO guest_users (username, token, rank_id, ip_address) VALUES (?, ?, ?, ?)`
+	query := `INSERT INTO guest_users (username, token, rank_id) VALUES (?, ?, ?)`
 
-	_, err := m.DB.ExecContext(ctx, query, guest_user.Username, guest_user.Token, guest_user.RankID, guest_user.IPAddress)
+	_, err := m.DB.ExecContext(ctx, query, guest_user.Username, guest_user.Token, guest_user.RankID)
 	if err != nil {
 		log.Printf("Error inserting guest user: %v", err)
 		return err
@@ -57,7 +55,7 @@ func (m *GuestUserModel) GetByToken(token string) (*GuestUser, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `SELECT id, username, token, rank_id, location, ip_address, games_played, shots, kills, created_at FROM guest_users WHERE token = ?`
+	query := `SELECT id, username, token, rank_id, games_played, shots, kills, created_at FROM guest_users WHERE token = ?`
 
 	var guest_user GuestUser
 	err := m.DB.QueryRowContext(ctx, query, token).Scan(
@@ -65,8 +63,6 @@ func (m *GuestUserModel) GetByToken(token string) (*GuestUser, error) {
 		&guest_user.Username,
 		&guest_user.Token,
 		&guest_user.RankID,
-		&guest_user.Location,
-		&guest_user.IPAddress,
 		&guest_user.GamesPlayed,
 		&guest_user.Shots,
 		&guest_user.Kills,
@@ -116,7 +112,7 @@ func (m *GuestUserModel) GetByUsername(username string) (*GuestUser, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `SELECT id, username, token, rank_id, location, ip_address, games_played, shots, kills, created_at FROM guest_users WHERE LOWER(username) = LOWER(?)`
+	query := `SELECT id, username, token, rank_id, games_played, shots, kills, created_at FROM guest_users WHERE LOWER(username) = LOWER(?)`
 
 	var guest_user GuestUser
 	err := m.DB.QueryRowContext(ctx, query, username).Scan(
@@ -124,8 +120,6 @@ func (m *GuestUserModel) GetByUsername(username string) (*GuestUser, error) {
 		&guest_user.Username,
 		&guest_user.Token,
 		&guest_user.RankID,
-		&guest_user.Location,
-		&guest_user.IPAddress,
 		&guest_user.GamesPlayed,
 		&guest_user.Shots,
 		&guest_user.Kills,

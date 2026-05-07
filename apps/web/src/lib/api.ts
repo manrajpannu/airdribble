@@ -59,8 +59,6 @@ export interface GuestUser {
   username: string;
   token: string;
   rank_id: number | null;
-  location: string | null;
-  ip_address: string | null;
   games_played: number;
   shots: number;
   kills: number;
@@ -72,7 +70,6 @@ export interface PublicGuestUser {
   id: number;
   username: string;
   rank_id: number | null;
-  location: string | null;
   games_played: number;
   shots: number;
   kills: number;

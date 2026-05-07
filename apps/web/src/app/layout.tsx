@@ -45,7 +45,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`h-full antialiased ${poppins.variable}`}>
-      <body className="min-h-full bg-background text-foreground font-poppins">
+      <body className="min-h-full bg-background text-foreground font-poppins" suppressHydrationWarning>
         <QueryProvider>
           {children}
           <Toaster

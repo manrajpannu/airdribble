@@ -28,13 +28,13 @@ const CompactSlider = ({ label, value, min, max, step, param, format = (v: any) 
       <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">{label}</Label>
       <span className="text-[11px] font-mono font-bold text-primary">{format(value)}</span>
     </div>
-    <Slider 
-      value={[typeof value === 'number' ? value : min]} 
-      min={min} 
-      max={max} 
-      step={step} 
-      onValueChange={(val) => onChange(param, getSingleValue(val))} 
-      className="py-1" 
+    <Slider
+      value={[typeof value === 'number' ? value : min]}
+      min={min}
+      max={max}
+      step={step}
+      onValueChange={(val) => onChange(param, getSingleValue(val))}
+      className="py-1"
     />
   </div>
 );
@@ -99,9 +99,9 @@ export const FreeplayMenu = React.memo(function FreeplayMenu({ config, onChange 
   };
 
   return (
-    <div 
-      className="fixed inset-0 pointer-events-none z-[14000] p-4 flex animate-in fade-in duration-500"
-      style={{ 
+    <div
+      className="fixed inset-0 pointer-events-none z-1000 p-4 flex animate-in fade-in duration-500"
+      style={{
         justifyContent: side === "right" ? "flex-end" : "flex-start",
         alignItems: "flex-start",
         paddingTop: "25px"
@@ -122,7 +122,7 @@ export const FreeplayMenu = React.memo(function FreeplayMenu({ config, onChange 
         className="pointer-events-auto w-72 flex flex-col"
       >
         <Card className="bg-background/60 dark:bg-background/45 backdrop-blur-3xl border-border shadow-2xl flex flex-col w-full overflow-hidden ring-1 ring-border/20 py-0 gap-0">
-          <CardHeader 
+          <CardHeader
             className="py-2 px-4 flex-none border-b border-border bg-muted/40 dark:bg-muted/20 flex flex-row items-center justify-between space-y-0 select-none"
             style={{ cursor: isDragging ? "grabbing" : "grab" }}
             onPointerDown={(e) => dragControls.start(e)}
@@ -134,7 +134,7 @@ export const FreeplayMenu = React.memo(function FreeplayMenu({ config, onChange 
                 <Badge variant="outline" className="ml-2 text-[10px] h-4.5 px-1.5 bg-primary/10 text-primary border-primary/20 animate-pulse">LIVE</Badge>
               </CardTitle>
             </div>
-            <button 
+            <button
               onClick={(e) => { e.stopPropagation(); setIsCollapsed(!isCollapsed); }}
               className="text-muted-foreground/70 hover:text-foreground transition-colors p-1"
             >
@@ -149,50 +149,50 @@ export const FreeplayMenu = React.memo(function FreeplayMenu({ config, onChange 
           >
             <CardContent className="p-0 overflow-y-auto custom-scrollbar max-h-[calc(100vh-6rem)]">
               <div className="p-3 space-y-3">
-            
-            <div className="space-y-2.5">
-              <SectionTitle title="Targets & Health" />
-              <CompactSlider label="Target Count" value={localConfig.numBalls} min={1} max={20} step={1} param="numBalls" onChange={handleChange} />
-              <CompactSlider label="Target Size" value={localConfig.size} min={0.5} max={5} step={0.1} param="size" format={(v: any) => `${(v || 1.5).toFixed(1)}x`} onChange={handleChange} />
-              <CompactSlider label="Health Points" value={localConfig.health} min={1} max={50} step={1} param="health" onChange={handleChange} />
-              <CompactSelect label="Movement Pattern" value={localConfig.movement} param="movement" options={["None", "CoolMovement", "CurvyMovement", "FlowMovement", "NaturalMovement", "OrbitingMovement", "ProceduralMovement", "SinusoidalMovement"]} onChange={handleChange} />
-            </div>
 
-            <Separator className="opacity-10" />
+                <div className="space-y-2.5">
+                  <SectionTitle title="Targets & Health" />
+                  <CompactSlider label="Target Count" value={localConfig.numBalls} min={1} max={20} step={1} param="numBalls" onChange={handleChange} />
+                  <CompactSlider label="Target Size" value={localConfig.size} min={0.5} max={5} step={0.1} param="size" format={(v: any) => `${(v || 1.5).toFixed(1)}x`} onChange={handleChange} />
+                  <CompactSlider label="Health Points" value={localConfig.health} min={1} max={50} step={1} param="health" onChange={handleChange} />
+                  <CompactSelect label="Movement Pattern" value={localConfig.movement} param="movement" options={["None", "CoolMovement", "CurvyMovement", "FlowMovement", "NaturalMovement", "OrbitingMovement", "ProceduralMovement", "SinusoidalMovement"]} onChange={handleChange} />
+                </div>
 
-            <div className="space-y-2.5">
-              <SectionTitle title="Environment & HUD" />
-              <CompactSlider label="Spawn Boundary" value={localConfig.boundary} min={5} max={100} step={1} param="boundary" format={(v: any) => `${v || 20}m`} onChange={handleChange} />
-              <CompactSwitch label="Display HUD" checked={localConfig.showHud ?? true} param="showHud" onChange={handleChange} />
-            </div>
+                <Separator className="opacity-10" />
 
-            <Separator className="opacity-10" />
+                <div className="space-y-2.5">
+                  <SectionTitle title="Environment & HUD" />
+                  <CompactSlider label="Spawn Boundary" value={localConfig.boundary} min={5} max={100} step={1} param="boundary" format={(v: any) => `${v || 20}m`} onChange={handleChange} />
+                  <CompactSwitch label="Display HUD" checked={localConfig.showHud ?? true} param="showHud" onChange={handleChange} />
+                </div>
 
-            <div className="space-y-2.5">
-              <SectionTitle title="Logic & Mechanics" />
-              <CompactSwitch label="Tracking Mode" checked={localConfig.holdSliderEnabled ?? false} param="holdSliderEnabled" onChange={handleChange} />
-              <CompactSlider label="Hold Duration" value={localConfig.holdSliderSeconds} min={0.1} max={10} step={0.1} param="holdSliderSeconds" format={(v: any) => `${(v || 2.5).toFixed(1)}s`} onChange={handleChange} />
-              <CompactSlider label="Miss Rate" value={localConfig.missSampleRate} min={1} max={20} step={1} param="missSampleRate" onChange={handleChange} />
-            </div>
+                <Separator className="opacity-10" />
 
-            <Separator className="opacity-10" />
+                <div className="space-y-2.5">
+                  <SectionTitle title="Logic & Mechanics" />
+                  <CompactSwitch label="Tracking Mode" checked={localConfig.holdSliderEnabled ?? false} param="holdSliderEnabled" onChange={handleChange} />
+                  <CompactSlider label="Hold Duration" value={localConfig.holdSliderSeconds} min={0.1} max={10} step={0.1} param="holdSliderSeconds" format={(v: any) => `${(v || 2.5).toFixed(1)}s`} onChange={handleChange} />
+                  <CompactSlider label="Miss Rate" value={localConfig.missSampleRate} min={1} max={20} step={1} param="missSampleRate" onChange={handleChange} />
+                </div>
 
-            <div className="space-y-2.5">
-              <SectionTitle title="Visual Effects" />
-              <CompactSelect label="Kill Animation" value={localConfig.killEffect ?? "confetti"} param="killEffect" options={["None", "confetti", "bubble", "rainbowBubblePop", "neonStarburst", "plasmaRing", "holoShockwave", "whiteGlitterExplosion", "whiteGlitter", "rainbowGlitterExplosion", "rainbowGlitter", "glitterExplosion", "glitter", "shockwave"]} onChange={handleChange} />
-              <CompactSwitch label="Striped Skins" checked={localConfig.isStriped ?? false} param="isStriped" onChange={handleChange} />
-              <CompactSlider label="Stripe Angle" value={localConfig.stripedAngle} min={0} max={360} step={1} param="stripedAngle" format={(v: any) => `${v || 0}°`} onChange={handleChange} />
-            </div>
+                <Separator className="opacity-10" />
+
+                <div className="space-y-2.5">
+                  <SectionTitle title="Visual Effects" />
+                  <CompactSelect label="Kill Animation" value={localConfig.killEffect ?? "confetti"} param="killEffect" options={["None", "confetti", "bubble", "rainbowBubblePop", "neonStarburst", "plasmaRing", "holoShockwave", "whiteGlitterExplosion", "whiteGlitter", "rainbowGlitterExplosion", "rainbowGlitter", "glitterExplosion", "glitter", "shockwave"]} onChange={handleChange} />
+                  <CompactSwitch label="Striped Skins" checked={localConfig.isStriped ?? false} param="isStriped" onChange={handleChange} />
+                  <CompactSlider label="Stripe Angle" value={localConfig.stripedAngle} min={0} max={360} step={1} param="stripedAngle" format={(v: any) => `${v || 0}°`} onChange={handleChange} />
+                </div>
 
 
 
-            <div className="space-y-2.5 pb-4">
-              <SectionTitle title="Combat" />
-              <CompactSwitch label="Bullet Visuals" checked={localConfig.bulletsEnabled ?? false} param="bulletsEnabled" onChange={handleChange} />
-              <CompactSlider label="Max Ammo" value={localConfig.bulletAmmo === 'infinite' ? 100 : (localConfig.bulletAmmo ?? 100)} min={1} max={100} step={1} param="bulletAmmo" format={(v: any) => (v === 100 ? 'inf' : v)} onChange={handleChange} />
-              <CompactSlider label="Fire Rate (s)" value={localConfig.bulletCooldownSeconds} min={0.05} max={2} step={0.01} param="bulletCooldownSeconds" format={(v: any) => (v || 0.18).toFixed(2)} onChange={handleChange} />
-              <CompactSlider label="Reload (s)" value={localConfig.bulletReloadSeconds} min={0.1} max={5} step={0.1} param="bulletReloadSeconds" format={(v: any) => (v || 1.25).toFixed(2)} onChange={handleChange} />
-            </div>
+                <div className="space-y-2.5 pb-4">
+                  <SectionTitle title="Combat" />
+                  <CompactSwitch label="Bullet Visuals" checked={localConfig.bulletsEnabled ?? false} param="bulletsEnabled" onChange={handleChange} />
+                  <CompactSlider label="Max Ammo" value={localConfig.bulletAmmo === 'infinite' ? 100 : (localConfig.bulletAmmo ?? 100)} min={1} max={100} step={1} param="bulletAmmo" format={(v: any) => (v === 100 ? 'inf' : v)} onChange={handleChange} />
+                  <CompactSlider label="Fire Rate (s)" value={localConfig.bulletCooldownSeconds} min={0.05} max={2} step={0.01} param="bulletCooldownSeconds" format={(v: any) => (v || 0.18).toFixed(2)} onChange={handleChange} />
+                  <CompactSlider label="Reload (s)" value={localConfig.bulletReloadSeconds} min={0.1} max={5} step={0.1} param="bulletReloadSeconds" format={(v: any) => (v || 1.25).toFixed(2)} onChange={handleChange} />
+                </div>
 
               </div>
             </CardContent>
