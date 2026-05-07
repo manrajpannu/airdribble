@@ -1,6 +1,6 @@
 import { getFingerprint } from "@/lib/fingerprint";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 let cachedFingerprint: string | null = null;
 
