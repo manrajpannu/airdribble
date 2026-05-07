@@ -280,3 +280,22 @@ export function useEndSession() {
     },
   });
 }
+
+// ─── Stats & Activity Hooks ───────────────────────────────────────────────────
+
+export function useActiveCount() {
+  return useQuery({
+    queryKey: ["stats", "active"],
+    queryFn: api.getActiveCount,
+    refetchInterval: 30 * 1000, // Poll every 30s
+  });
+}
+
+export function useUserActiveStatus(username: string) {
+  return useQuery({
+    queryKey: ["userStatus", username],
+    queryFn: () => api.getUserActiveStatus(username),
+    enabled: !!username,
+    refetchInterval: 5 * 60 * 1000, // Poll every 5 minutes
+  });
+}

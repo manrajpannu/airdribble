@@ -583,6 +583,29 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/stats/active": {
+            "get": {
+                "description": "Returns the total number of unique users who have made a request to the API within the last 2 minutes.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stats"
+                ],
+                "summary": "Get active users count",
+                "responses": {
+                    "200": {
+                        "description": "Total active users",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/guest": {
             "post": {
                 "description": "Instantly creates an anonymous guest account with no sign-up required. No request body needed. A believable, gamer-style random username (e.g. \"SlyPigeon99\" or \"NeonShadow\") and a secure 64-character hex identity token are generated automatically. The token is set as an HttpOnly ` + "`" + `user_token` + "`" + ` cookie valid for 7 days. All challenge scores are tied to this identity — calling this endpoint again creates a fresh guest account.",
@@ -714,6 +737,54 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/users/{username}/active": {
+            "get": {
+                "description": "Checks if the specified player has pinged the backend within the last 2 minutes.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stats"
+                ],
+                "summary": "Check if a user is active",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Username to check",
+                        "name": "username",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User active status",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Username is required",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -743,14 +814,8 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "ip_address": {
-                    "type": "string"
-                },
                 "kills": {
                     "type": "integer"
-                },
-                "location": {
-                    "type": "string"
                 },
                 "rank_id": {
                     "type": "integer"

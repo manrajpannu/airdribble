@@ -281,4 +281,9 @@ export const api = {
       "/api/v1/challenges/session/end",
       { method: "PATCH", body: JSON.stringify(data) }
     ),
+
+  // Stats & Real-time activity
+  getActiveCount: () => apiFetch<{ active_users: number }>("/api/v1/stats/active"),
+  getUserActiveStatus: (username: string) =>
+    apiFetch<{ username: string; active: boolean }>(`/api/v1/users/${encodeURIComponent(username)}/active`),
 };

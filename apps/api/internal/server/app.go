@@ -9,6 +9,7 @@ import (
 
 	"github.com/manrajpannu/airdribble/apps/api/internal/database"
 	"github.com/manrajpannu/airdribble/apps/api/internal/env"
+	"github.com/manrajpannu/airdribble/apps/api/internal/middleware"
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
 	_ "modernc.org/sqlite"
 )
@@ -24,6 +25,7 @@ type Application struct {
 	challengeDuration time.Duration
 	userDuration      time.Duration
 	cookieSecure      bool
+	activeTracker     *middleware.ActiveTracker
 }
 
 func NewApp() *Application {
@@ -45,6 +47,7 @@ func NewApp() *Application {
 		cookieSecure:      env.GetEnvString("ENV", "development") == "production",
 		userDuration:      env.GetEnvDuration("USER_TOKEN_DURATION", 24*30*time.Hour),
 		models:            models,
+		activeTracker:     middleware.NewActiveTracker(2 * time.Minute),
 	}
 
 	return app

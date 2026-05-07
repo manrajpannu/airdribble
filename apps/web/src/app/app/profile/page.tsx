@@ -217,7 +217,10 @@ export default function ProfilePage() {
                   <Calendar className="size-4" />
                   <span className="text-xs font-bold uppercase tracking-wider">Status</span>
                 </div>
-                <span className="text-lg font-bold text-emerald-500">Active Now</span>
+                <div className="flex items-center gap-2">
+                  <div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-lg font-bold text-emerald-500">Active Now</span>
+                </div>
               </div>
             </div>
           </CardContent>

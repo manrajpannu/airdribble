@@ -16,12 +16,8 @@ definitions:
         type: integer
       id:
         type: integer
-      ip_address:
-        type: string
       kills:
         type: integer
-      location:
-        type: string
       rank_id:
         type: integer
       shots:
@@ -522,6 +518,55 @@ paths:
       summary: List all Rocket League ranks
       tags:
       - ranks
+  /api/v1/stats/active:
+    get:
+      description: Returns the total number of unique users who have made a request
+        to the API within the last 2 minutes.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Total active users
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+      summary: Get active users count
+      tags:
+      - stats
+  /api/v1/users/{username}/active:
+    get:
+      description: Checks if the specified player has pinged the backend within the
+        last 2 minutes.
+      parameters:
+      - description: Username to check
+        in: path
+        name: username
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User active status
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Username is required
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Check if a user is active
+      tags:
+      - stats
   /api/v1/users/guest:
     post:
       description: Instantly creates an anonymous guest account with no sign-up required.

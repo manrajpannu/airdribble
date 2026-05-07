@@ -59,7 +59,15 @@ func (app *Application) Routes() http.Handler {
 	}, "Too many guest accounts created from this IP. Please wait an hour.")
 
 	v1 := g.Group("/api/v1")
+	v1.Use(middleware.TrackActiveUsers(app.activeTracker))
+	
 	v1.GET("/health", tier1.Middleware(), app.getHealth)
+
+	// Activity Tracking
+	{
+		v1.GET("/stats/active", tier1.Middleware(), app.getActiveUsersCount)
+		v1.GET("/users/:username/active", tier1.Middleware(), app.checkUserActiveStatus)
+	}
 
 	// Tier 1: Ranks & Challenges
 	{

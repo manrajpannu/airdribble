@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { usePublicProfile, usePublicUserActivity, usePublicUserActivityFeedInfinite, useUserRanks } from "@/hooks/use-api";
+import { usePublicProfile, usePublicUserActivity, usePublicUserActivityFeedInfinite, useUserRanks, useUserActiveStatus } from "@/hooks/use-api";
 import { User, Calendar, MapPin, Trophy, ArrowLeft, Target, Loader2, ChevronDown } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -69,6 +69,8 @@ export default function PublicProfilePage({
   }, [activityData]);
 
   const milestones = feedData?.pages.flatMap((page: UserActivity[]) => page) ?? [];
+
+  const { data: activeStatus, isLoading: isActiveLoading } = useUserActiveStatus(decodedUsername);
 
   if (isLoading || isActivityLoading || isFeedLoading) {
     return (
@@ -141,12 +143,23 @@ export default function PublicProfilePage({
           </CardHeader>
           <CardContent className="px-0">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
-              <div className="flex flex-col gap-1 p-5 rounded-2xl bg-muted/30 border">
+              <div className="flex flex-col gap-1 p-5 rounded-2xl bg-muted/30 border transition-colors">
                 <div className="flex items-center gap-2 text-muted-foreground mb-2">
                   <Calendar className="size-4" />
                   <span className="text-xs font-bold uppercase tracking-wider">Status</span>
                 </div>
-                <span className="text-lg font-bold text-emerald-500">Active</span>
+                <div className="flex items-center gap-2">
+                  <div className={cn(
+                    "size-2 rounded-full",
+                    activeStatus?.active ? "bg-emerald-500 animate-pulse" : "bg-slate-300"
+                  )} />
+                  <span className={cn(
+                    "text-lg font-bold",
+                    activeStatus?.active ? "text-emerald-500" : "text-muted-foreground"
+                  )}>
+                    {isActiveLoading ? "Loading..." : (activeStatus?.active ? "Online Now" : "Offline")}
+                  </span>
+                </div>
               </div>
             </div>
           </CardContent>
