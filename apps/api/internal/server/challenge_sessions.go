@@ -216,7 +216,6 @@ func (app *Application) endChallengeSession(c *gin.Context) {
 				}
 			}
 		}
-		}
 	}
 
 	// Invalidate caches

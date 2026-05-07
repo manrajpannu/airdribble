@@ -60,7 +60,7 @@ func (app *Application) Routes() http.Handler {
 
 	v1 := g.Group("/api/v1")
 	v1.Use(middleware.TrackActiveUsers(app.activeTracker))
-	
+
 	v1.GET("/health", tier1.Middleware(), app.getHealth)
 
 	// Activity Tracking
