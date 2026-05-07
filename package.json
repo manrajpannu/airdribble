@@ -26,7 +26,6 @@
   },
   "dependencies": {
     "@paper-design/shaders-react": "^0.0.76",
-    "@vercel/speed-insights": "^2.0.0",
     "dat.gui": "^0.7.9",
     "stats.js": "^0.17.0",
     "three": "^0.183.2",
