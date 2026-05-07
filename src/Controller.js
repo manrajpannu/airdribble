@@ -170,18 +170,24 @@ export class Controller {
       let boostHeld = false;
 
       if (this.gamepadIndex === null) {
-        return { pitch, yaw, roll, boostHeld };
+        // Try to find a connected gamepad if we don't have one
+        const gamepads = navigator.getGamepads();
+        for (let i = 0; i < gamepads.length; i++) {
+          if (gamepads[i] && gamepads[i].connected) {
+            this.gamepadIndex = i;
+            break;
+          }
+        }
+        if (this.gamepadIndex === null) return { pitch, yaw, roll, boostHeld };
       }
 
       const gp = navigator.getGamepads()[this.gamepadIndex];
       if (!gp || !gp.connected) {
+        this.gamepadIndex = null;
         return { pitch, yaw, roll, boostHeld };
       }
 
-      const { x, y } = this._applyStickDeadzone(gp);
-      pitch = y;
-      yaw = -x;
-
+      // 1. Handle Binary/Digital Inputs (Buttons)
       Object.entries(this.mappings).forEach(([action, binding]) => {
         const isPressed = (binding.button !== undefined && gp.buttons[binding.button]?.pressed) || 
                           (binding.button2 !== undefined && gp.buttons[binding.button2]?.pressed);
@@ -193,13 +199,62 @@ export class Controller {
           if (action === 'yawRight') yaw = -1;
           if (action === 'airRollLeft') roll = -1;
           if (action === 'airRollRight') roll = 1;
-          if (action === 'freeAirRoll') {
-            roll = -yaw;
-            yaw = 0;
-          }
           if (action === 'boost') boostHeld = true;
+          // Note: freeAirRoll handled after analog to allow override
         }
       });
+
+      // 2. Handle Analog Inputs (Axes) with Deadzones and Sensitivity
+      const getAxisValue = (binding) => {
+        if (!binding) return 0;
+        let val = 0;
+        if (binding.axis !== undefined && gp.axes[binding.axis] !== undefined) {
+          const raw = gp.axes[binding.axis];
+          const dir = binding.axisDirection || 1;
+          if ((dir === 1 && raw > 0) || (dir === -1 && raw < 0)) val = Math.abs(raw);
+        }
+        if (binding.axis2 !== undefined && gp.axes[binding.axis2] !== undefined) {
+          const raw = gp.axes[binding.axis2];
+          const dir = binding.axis2Direction || 1;
+          if ((dir === 1 && raw > 0) || (dir === -1 && raw < 0)) val = Math.max(val, Math.abs(raw));
+        }
+        return val;
+      };
+
+      const rawYawLeft = getAxisValue(this.mappings.yawLeft);
+      const rawYawRight = getAxisValue(this.mappings.yawRight);
+      const rawPitchUp = getAxisValue(this.mappings.pitchUp);
+      const rawPitchDown = getAxisValue(this.mappings.pitchDown);
+
+      let analogYaw = rawYawRight - rawYawLeft;
+      let analogPitch = rawPitchUp - rawPitchDown;
+
+      // Fallback: If NO axis mapping is configured at all for yaw, use standard Axis 0
+      if (this.mappings.yawLeft.axis === undefined && this.mappings.yawLeft.axis2 === undefined &&
+          this.mappings.yawRight.axis === undefined && this.mappings.yawRight.axis2 === undefined) {
+        analogYaw = gp.axes[0] || 0;
+      }
+      // Fallback: If NO axis mapping for pitch, use standard Axis 1
+      if (this.mappings.pitchUp.axis === undefined && this.mappings.pitchUp.axis2 === undefined &&
+          this.mappings.pitchDown.axis === undefined && this.mappings.pitchDown.axis2 === undefined) {
+        analogPitch = gp.axes[1] || 0;
+      }
+
+      if (Math.abs(analogYaw) > 0.001 || Math.abs(analogPitch) > 0.001) {
+        const { x, y } = this._applyStickDeadzone({ axes: [analogYaw, analogPitch] });
+        // Only override if the analog stick is actually pushing something (after deadzone)
+        if (Math.abs(x) > 0) yaw = -x;
+        if (Math.abs(y) > 0) pitch = y;
+      }
+
+      // 3. Handle Free Air Roll override (X/Square or Shift)
+      const isFreeAirRoll = (this.mappings.freeAirRoll.button !== undefined && gp.buttons[this.mappings.freeAirRoll.button]?.pressed) ||
+                            (this.mappings.freeAirRoll.button2 !== undefined && gp.buttons[this.mappings.freeAirRoll.button2]?.pressed);
+      
+      if (isFreeAirRoll) {
+        roll = -yaw;
+        yaw = 0;
+      }
 
       return { pitch, yaw, roll, boostHeld };
     }

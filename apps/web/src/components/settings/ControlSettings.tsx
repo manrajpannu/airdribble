@@ -30,9 +30,19 @@ export function ControlSettings({ settings }: { settings: AppSettings }) {
       const gamepads = navigator.getGamepads();
       const gp = gamepads[0];
       if (gp) {
+        // Poll Buttons
         gp.buttons.forEach((btn, index) => {
-          if (btn.pressed) {
+          if (btn.pressed || btn.value > 0.5) {
             updateBinding(bindingTarget.action, bindingTarget.slot, { button: index });
+            setBindingTarget(null);
+          }
+        });
+
+        // Poll Axes (Sticks)
+        gp.axes.forEach((val, index) => {
+          if (Math.abs(val) > 0.6) {
+            const direction = val > 0 ? 1 : -1;
+            updateBinding(bindingTarget.action, bindingTarget.slot, { axis: index, axisDirection: direction });
             setBindingTarget(null);
           }
         });
@@ -52,15 +62,19 @@ export function ControlSettings({ settings }: { settings: AppSettings }) {
     };
   }, [bindingTarget]);
 
-  const updateBinding = (action: keyof AppSettings["controls"], slot: BindingSlot, input: { key?: string; mouse?: number; button?: number }) => {
+  const updateBinding = (action: keyof AppSettings["controls"], slot: BindingSlot, input: { key?: string; mouse?: number; button?: number; axis?: number; axisDirection?: 1 | -1 }) => {
     const newControls = { ...settings.controls };
     const key = slot === "primary" ? "key" : "key2";
     const mouse = slot === "primary" ? "mouse" : "mouse2";
     const button = slot === "primary" ? "button" : "button2";
+    const axis = slot === "primary" ? "axis" : "axis2";
+    const axisDir = slot === "primary" ? "axisDirection" : "axis2Direction";
 
     const altKey = slot === "primary" ? "key2" : "key";
     const altMouse = slot === "primary" ? "mouse2" : "mouse";
     const altButton = slot === "primary" ? "button2" : "button";
+    const altAxis = slot === "primary" ? "axis2" : "axis";
+    const altAxisDir = slot === "primary" ? "axis2Direction" : "axisDirection";
 
     Object.keys(newControls).forEach((k) => {
       const act = k as keyof AppSettings["controls"];
@@ -78,6 +92,16 @@ export function ControlSettings({ settings }: { settings: AppSettings }) {
         if (binding.button === input.button) binding.button = undefined;
         if (binding.button2 === input.button) binding.button2 = undefined;
       }
+      if (input.axis !== undefined) {
+        if (binding.axis === input.axis && binding.axisDirection === input.axisDirection) {
+           binding.axis = undefined;
+           binding.axisDirection = undefined;
+        }
+        if (binding.axis2 === input.axis && binding.axis2Direction === input.axisDirection) {
+           binding.axis2 = undefined;
+           binding.axis2Direction = undefined;
+        }
+      }
       newControls[act] = binding;
     });
 
@@ -85,10 +109,16 @@ export function ControlSettings({ settings }: { settings: AppSettings }) {
     targetBinding[key] = input.key;
     targetBinding[mouse] = input.mouse;
     targetBinding[button] = input.button;
+    targetBinding[axis] = input.axis;
+    targetBinding[axisDir] = input.axisDirection;
 
     if (input.key && targetBinding[altKey] === input.key) targetBinding[altKey] = undefined;
     if (input.mouse !== undefined && targetBinding[altMouse] === input.mouse) targetBinding[altMouse] = undefined;
     if (input.button !== undefined && targetBinding[altButton] === input.button) targetBinding[altButton] = undefined;
+    if (input.axis !== undefined && targetBinding[altAxis] === input.axis && targetBinding[altAxisDir] === input.axisDirection) {
+       targetBinding[altAxis] = undefined;
+       targetBinding[altAxisDir] = undefined;
+    }
 
     newControls[action] = targetBinding;
     updateSettings({ controls: newControls });
@@ -97,14 +127,14 @@ export function ControlSettings({ settings }: { settings: AppSettings }) {
   const resetControls = () => {
     updateSettings({
       controls: {
-        yawLeft: { key: "a" },
-        yawRight: { key: "d" },
-        pitchUp: { key: "s" },
-        pitchDown: { key: "w" },
-        airRollLeft: { key: "q", button: 4 },
-        airRollRight: { key: "e", button: 5 },
-        freeAirRoll: { key: "Shift", button: 2 },
-        boost: { key: " ", button: 1 },
+        yawLeft: { key: "a", axis2: 0, axis2Direction: -1 },
+        yawRight: { key: "d", axis2: 0, axis2Direction: 1 },
+        pitchUp: { key: "s", axis2: 1, axis2Direction: 1 },
+        pitchDown: { key: "w", axis2: 1, axis2Direction: -1 },
+        airRollLeft: { key: "q", button2: 4 },
+        airRollRight: { key: "e", button2: 5 },
+        freeAirRoll: { key: "Shift", button2: 2 },
+        boost: { mouse: 0, button2: 1 },
       },
     });
   };
@@ -124,6 +154,8 @@ export function ControlSettings({ settings }: { settings: AppSettings }) {
     const key = slot === "primary" ? binding.key : binding.key2;
     const mouse = slot === "primary" ? binding.mouse : binding.mouse2;
     const button = slot === "primary" ? binding.button : binding.button2;
+    const axis = slot === "primary" ? binding.axis : binding.axis2;
+    const axisDir = slot === "primary" ? binding.axisDirection : binding.axis2Direction;
 
     if (key) return { icon: <KeyboardIcon className="size-2.5 opacity-60" />, text: key === " " ? "SPC" : key };
     if (mouse !== undefined) {
@@ -131,6 +163,7 @@ export function ControlSettings({ settings }: { settings: AppSettings }) {
       return { icon: <MousePointer2 className="size-2.5 opacity-60" />, text: mouseLabels[mouse] || `M${mouse}` };
     }
     if (button !== undefined) return { icon: <GamepadIcon className="size-2.5 opacity-60" />, text: `B${button}` };
+    if (axis !== undefined) return { icon: <GamepadIcon className="size-2.5 opacity-60" />, text: `AX${axis}${axisDir === 1 ? "+" : "-"}` };
     return null;
   };
 

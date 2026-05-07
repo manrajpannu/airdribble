@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 
 export function DeadzoneSettings({ settings }: { settings: AppSettings }) {
-  const [input, setInput] = useState({ x: 0, y: 0 });
+  const [rawInput, setRawInput] = useState({ x: 0, y: 0 });
+  const [processedInput, setProcessedInput] = useState({ x: 0, y: 0 });
   const rafRef = useRef<number>(0);
 
   useEffect(() => {
@@ -16,13 +17,45 @@ export function DeadzoneSettings({ settings }: { settings: AppSettings }) {
       const gamepads = navigator.getGamepads();
       const gp = gamepads[0];
       if (gp) {
-        setInput({ x: gp.axes[0], y: gp.axes[1] });
+        const rx = gp.axes[0];
+        const ry = gp.axes[1];
+        setRawInput({ x: rx, y: ry });
+
+        // Calculate Processed Input
+        let px = 0;
+        let py = 0;
+        const dz = settings.deadzone.size;
+        const sens = settings.deadzone.sensitivity;
+
+        if (settings.deadzone.type === "circle") {
+          const mag = Math.sqrt(rx * rx + ry * ry);
+          if (mag > dz) {
+            const normalizedMag = Math.min(1, (mag - dz) / (1 - dz));
+            const finalMag = normalizedMag * sens;
+            px = (rx / mag) * finalMag;
+            py = (ry / mag) * finalMag;
+          }
+        } else if (settings.deadzone.type === "square") {
+          if (Math.abs(rx) > dz || Math.abs(ry) > dz) {
+            px = rx * sens;
+            py = ry * sens;
+          }
+        } else if (settings.deadzone.type === "cross") {
+          if (Math.abs(rx) > dz) px = rx * sens;
+          if (Math.abs(ry) > dz) py = ry * sens;
+        }
+
+        // Clamp to [-1, 1]
+        setProcessedInput({
+          x: Math.max(-1, Math.min(1, px)),
+          y: Math.max(-1, Math.min(1, py))
+        });
       }
       rafRef.current = requestAnimationFrame(updateInput);
     };
     rafRef.current = requestAnimationFrame(updateInput);
     return () => cancelAnimationFrame(rafRef.current);
-  }, []);
+  }, [settings.deadzone]);
 
   const handleChange = (key: keyof AppSettings["deadzone"], value: any) => {
     updateSettings({
@@ -79,9 +112,9 @@ export function DeadzoneSettings({ settings }: { settings: AppSettings }) {
             </div>
             <Slider
               value={[settings.deadzone.sensitivity]}
-              min={0.0}
-              max={5.0}
-              step={0.01}
+              min={1.0}
+              max={10.0}
+              step={0.1}
               onValueChange={(v) => handleChange("sensitivity", v[0])}
               className="h-1.5"
             />
@@ -89,7 +122,7 @@ export function DeadzoneSettings({ settings }: { settings: AppSettings }) {
         </div>
 
         {/* Mini Visualizer */}
-        <div className="relative aspect-square w-full max-w-[140px] mx-auto bg-black/40 rounded-2xl border border-border/30 flex items-center justify-center overflow-hidden group shadow-inner">
+        <div className="relative aspect-square w-full  mx-auto rounded-2xl border flex items-center justify-center overflow-hidden group ">
           {/* Grid Background */}
           <div className="absolute inset-0 opacity-20 pointer-events-none">
             <div className="absolute inset-0 flex items-center justify-center">
@@ -103,7 +136,7 @@ export function DeadzoneSettings({ settings }: { settings: AppSettings }) {
           {/* Deadzone Boundary Area */}
           <div
             className={cn(
-              "border border-primary/40 bg-primary/10 transition-all duration-300 shadow-[0_0_20px_rgba(var(--primary),0.1)]",
+              "border border-primary/40 transition-all duration-100",
               settings.deadzone.type === "circle" ? "rounded-full" : "rounded-sm"
             )}
             style={{
@@ -128,20 +161,28 @@ export function DeadzoneSettings({ settings }: { settings: AppSettings }) {
             )}
           </div>
 
-          {/* Current Input Marker */}
+          {/* Raw Input Marker (Ghost) */}
           <div
-            className="absolute size-2.5 bg-red-500 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.8)] z-20 border border-white/20 transition-transform duration-75"
+            className="absolute size-1.5 bg-red-500/20 rounded-full z-10 transition-transform duration-75"
             style={{
-              transform: `translate(${input.x * 60}px, ${input.y * 60}px)`
+              transform: `translate(${rawInput.x * 60}px, ${rawInput.y * 60}px)`
+            }}
+          />
+
+          {/* Processed Input Marker (Active) */}
+          <div
+            className="absolute size-2.5 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(139,92,246,0.8)] z-20 border border-white/20 transition-transform duration-75"
+            style={{
+              transform: `translate(${processedInput.x * 60}px, ${processedInput.y * 60}px)`
             }}
           />
 
           {/* Origin Point */}
-          <div className="size-1 bg-primary/40 rounded-full z-10" />
+          {/* <div className="size-1 bg-primary/40 rounded-full z-10" /> */}
 
-          <div className="absolute bottom-2 inset-x-0 text-center">
+          {/* <div className="absolute bottom-2 inset-x-0 text-center">
             <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.3em]">Precision Hub</span>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

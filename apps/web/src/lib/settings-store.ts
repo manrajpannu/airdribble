@@ -9,6 +9,10 @@ export type ControlBinding = {
   mouse2?: number;
   button?: number;
   button2?: number;
+  axis?: number;
+  axisDirection?: 1 | -1;
+  axis2?: number;
+  axis2Direction?: 1 | -1;
 };
 
 export type AppSettings = {
@@ -56,14 +60,14 @@ const defaultSettings: AppSettings = {
     type: "cross",
   },
   controls: {
-    yawLeft: { key: "a" },
-    yawRight: { key: "d" },
-    pitchUp: { key: "s" },
-    pitchDown: { key: "w" },
-    airRollLeft: { key: "q", button: 4 }, // LB
-    airRollRight: { key: "e", button: 5 }, // RB
-    freeAirRoll: { key: "Shift", button: 2 }, // X / Square
-    boost: { mouse: 0, button: 1, }, // B / Circle / Left Click
+    yawLeft: { key: "a", axis2: 0, axis2Direction: -1 },
+    yawRight: { key: "d", axis2: 0, axis2Direction: 1 },
+    pitchUp: { key: "s", axis2: 1, axis2Direction: 1 },
+    pitchDown: { key: "w", axis2: 1, axis2Direction: -1 },
+    airRollLeft: { key: "q", button2: 4 },
+    airRollRight: { key: "e", button2: 5 },
+    freeAirRoll: { key: "Shift", button2: 2 },
+    boost: { mouse: 0, button2: 1 },
   },
 };
 
@@ -96,14 +100,14 @@ function normalizeSettings(value: Partial<AppSettings>): AppSettings {
       type: value.deadzone?.type ?? defaultSettings.deadzone.type,
     },
     controls: {
-      yawLeft: value.controls?.yawLeft ?? defaultSettings.controls.yawLeft,
-      yawRight: value.controls?.yawRight ?? defaultSettings.controls.yawRight,
-      pitchUp: value.controls?.pitchUp ?? defaultSettings.controls.pitchUp,
-      pitchDown: value.controls?.pitchDown ?? defaultSettings.controls.pitchDown,
-      airRollLeft: value.controls?.airRollLeft ?? defaultSettings.controls.airRollLeft,
-      airRollRight: value.controls?.airRollRight ?? defaultSettings.controls.airRollRight,
-      freeAirRoll: value.controls?.freeAirRoll ?? defaultSettings.controls.freeAirRoll,
-      boost: value.controls?.boost ?? defaultSettings.controls.boost,
+      yawLeft: { ...defaultSettings.controls.yawLeft, ...value.controls?.yawLeft },
+      yawRight: { ...defaultSettings.controls.yawRight, ...value.controls?.yawRight },
+      pitchUp: { ...defaultSettings.controls.pitchUp, ...value.controls?.pitchUp },
+      pitchDown: { ...defaultSettings.controls.pitchDown, ...value.controls?.pitchDown },
+      airRollLeft: { ...defaultSettings.controls.airRollLeft, ...value.controls?.airRollLeft },
+      airRollRight: { ...defaultSettings.controls.airRollRight, ...value.controls?.airRollRight },
+      freeAirRoll: { ...defaultSettings.controls.freeAirRoll, ...value.controls?.freeAirRoll },
+      boost: { ...defaultSettings.controls.boost, ...value.controls?.boost },
     },
   };
 }

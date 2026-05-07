@@ -41,7 +41,7 @@ export function InputVisualizer() {
         setGamepadState({
           connected: true,
           buttons: primary.buttons.map((b) => b.pressed),
-          axes: [...primary.axes],
+          axes: primary.axes.length >= 6 ? [...primary.axes] : [...primary.axes, 0, 0, 0, 0, 0, 0],
         });
       } else {
         setGamepadState((prev) => (prev.connected ? { ...prev, connected: false } : prev));
@@ -106,6 +106,33 @@ export function InputVisualizer() {
             <span className="text-[8px] text-muted-foreground uppercase tracking-tighter opacity-40 italic">Waiting...</span>
           ) : (
             <div className="flex items-center gap-6">
+              {/* Bumpers & Triggers */}
+              <div className="flex flex-col gap-1">
+                <div className="flex gap-1">
+                  <ControllerButton label="L1" pressed={gamepadState.buttons[4]} className="rounded-md w-7 h-4" />
+                  <ControllerButton label="R1" pressed={gamepadState.buttons[5]} className="rounded-md w-7 h-4" />
+                </div>
+                <div className="flex gap-1">
+                  <ControllerButton label="L2" pressed={gamepadState.buttons[6]} className="rounded-md w-7 h-4" />
+                  <ControllerButton label="R2" pressed={gamepadState.buttons[7]} className="rounded-md w-7 h-4" />
+                </div>
+              </div>
+
+              {/* Joysticks */}
+              <div className="flex gap-3">
+                <div className="flex flex-col items-center gap-1">
+                  <Joystick x={gamepadState.axes[0]} y={gamepadState.axes[1]} />
+                  <span className="text-[7px] font-bold opacity-40">LS</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <Joystick
+                    x={gamepadState.axes[3]}
+                    y={gamepadState.axes[2]}
+                  />
+                  <span className="text-[7px] font-bold opacity-40">RS</span>
+                </div>
+              </div>
+
               {/* Face Buttons */}
               <div className="grid grid-cols-3 gap-0.5">
                 <div />
@@ -118,12 +145,6 @@ export function InputVisualizer() {
                 <ControllerButton label="A" pressed={gamepadState.buttons[0]} />
                 <div />
               </div>
-
-              {/* Joysticks */}
-              <div className="flex gap-3">
-                <Joystick x={gamepadState.axes[0]} y={gamepadState.axes[1]} />
-                <Joystick x={gamepadState.axes[2]} y={gamepadState.axes[3]} />
-              </div>
             </div>
           )}
         </div>
@@ -135,9 +156,9 @@ export function InputVisualizer() {
 function Key({ label, pressed, className }: { label: string; pressed: boolean; className?: string }) {
   return (
     <div className={cn(
-      "h-6 min-w-[1.5rem] px-1 flex items-center justify-center rounded border text-[8px] font-bold transition-all duration-75 uppercase",
-      pressed 
-        ? "bg-primary text-primary-foreground border-primary scale-95 shadow-[0_0_8px_rgba(var(--primary),0.4)]" 
+      "h-6 min-w-6 px-1 flex items-center justify-center rounded border text-[8px] font-bold transition-all duration-75 uppercase",
+      pressed
+        ? "bg-primary text-primary-foreground border-primary scale-95 shadow-[0_0_8px_rgba(var(--primary),0.4)]"
         : "bg-background/40 border-border/40 text-muted-foreground"
       , className
     )}>
@@ -146,26 +167,27 @@ function Key({ label, pressed, className }: { label: string; pressed: boolean; c
   );
 }
 
-function ControllerButton({ label, pressed }: { label: string; pressed: boolean }) {
+function ControllerButton({ label, pressed, className }: { label: string; pressed: boolean; className?: string }) {
   return (
     <div className={cn(
       "size-5 flex items-center justify-center rounded-full border text-[7px] font-bold transition-all duration-75",
-      pressed 
-        ? "bg-primary text-primary-foreground border-primary scale-90" 
-        : "bg-background/40 border-border/40 text-muted-foreground"
+      pressed
+        ? "bg-primary text-primary-foreground border-primary scale-90"
+        : "bg-background/40 border-border/40 text-muted-foreground",
+      className
     )}>
       {label}
     </div>
   );
 }
 
-function Joystick({ x, y }: { x: number; y: number }) {
+function Joystick({ x = 0, y = 0 }: { x?: number; y?: number }) {
   return (
     <div className="relative size-8 bg-background/40 border border-border/40 rounded-full flex items-center justify-center">
-      <div 
+      <div
         className="size-3 bg-primary/80 rounded-full shadow-sm transition-transform duration-75"
         style={{
-          transform: `translate(${x * 8}px, ${y * 8}px)`
+          transform: `translate(${x * 12}px, ${y * 12}px)`
         }}
       />
     </div>
