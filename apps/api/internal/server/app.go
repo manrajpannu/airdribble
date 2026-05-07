@@ -3,6 +3,7 @@ package server
 import (
 	"database/sql"
 	"log"
+	"strings"
 	"time"
 
 	_ "github.com/manrajpannu/airdribble/apps/api/docs"
@@ -32,6 +33,17 @@ type Application struct {
 
 func NewApp() *Application {
 	dbUrl := env.GetEnvString("DB_URL", "file:./data.db")
+	dbAuthToken := env.GetEnvString("DB_AUTH_TOKEN", "")
+
+	// If using Turso (libsql) and a token is provided, append it to the URL if not already present
+	if dbAuthToken != "" && !strings.Contains(dbUrl, "authToken=") {
+		if strings.Contains(dbUrl, "?") {
+			dbUrl = dbUrl + "&authToken=" + dbAuthToken
+		} else {
+			dbUrl = dbUrl + "?authToken=" + dbAuthToken
+		}
+	}
+
 	db, err := sql.Open("libsql", dbUrl)
 	if err != nil {
 		log.Fatal(err)
