@@ -14,10 +14,10 @@ export function StarProjectModal() {
   const [hasDismissed, setHasDismissed] = useState(true);
 
   useEffect(() => {
-    // Check if already dismissed
     if (typeof window === "undefined") return;
     const dismissed = localStorage.getItem(DISMISS_KEY);
-    if (dismissed) return;
+    const snoozed = sessionStorage.getItem(DISMISS_KEY);
+    if (dismissed || snoozed) return;
 
     setHasDismissed(false);
 
@@ -37,8 +37,12 @@ export function StarProjectModal() {
 
   const dismiss = (forever = true) => {
     setIsOpen(false);
-    if (forever && typeof window !== "undefined") {
-      localStorage.setItem(DISMISS_KEY, "true");
+    if (typeof window !== "undefined") {
+      if (forever) {
+        localStorage.setItem(DISMISS_KEY, "true");
+      } else {
+        sessionStorage.setItem(DISMISS_KEY, "true");
+      }
     }
   };
 
@@ -94,7 +98,7 @@ export function StarProjectModal() {
             </a>
 
             <button
-              onClick={() => dismiss(true)}
+              onClick={() => dismiss(false)}
               className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-colors py-2"
             >
               Maybe later

@@ -40,7 +40,6 @@ export default function GamePage() {
     challengeDbId: 0 as number | undefined,
     scenarioTitle: "",
     isSubmitting: false,
-    dispatchEscapeToGame: null as (() => void) | null,
     startCountdown: null as ((onDone: () => void) => void) | null,
     endSession: null as ((modeState: any) => void) | null,
   });
@@ -153,10 +152,6 @@ export default function GamePage() {
     }
   }, []);
 
-  const dispatchEscapeToGame = useCallback(() => {
-    window.dispatchEvent(new KeyboardEvent("keydown", { code: "Escape" }));
-  }, []);
-
   const startCountdown = useCallback(
     (onDone: () => void) => {
       clearCountdownTimer();
@@ -238,7 +233,7 @@ export default function GamePage() {
   const onModeStateChange = useCallback(
     (state: any) => {
       modeStateRef.current = state;
-      const { scenarioId, isChallenge, dispatchEscapeToGame, startCountdown, endSession } = callbacksRef.current;
+      const { scenarioId, isChallenge, startCountdown, endSession } = callbacksRef.current;
 
       // First state event — boot the countdown and start the API session
       if (!bootPauseAppliedRef.current) {
@@ -248,9 +243,7 @@ export default function GamePage() {
           setIsPaused(false);
         } else {
           setIsPaused(true);
-          dispatchEscapeToGame?.();
           startCountdown?.(() => {
-            dispatchEscapeToGame?.();
             setIsPaused(false);
           });
         }
@@ -272,11 +265,10 @@ export default function GamePage() {
       challengeDbId,
       scenarioTitle,
       isSubmitting,
-      dispatchEscapeToGame,
       startCountdown,
       endSession,
     };
-  }, [scenarioId, isChallenge, challengeDbId, scenarioTitle, isSubmitting, dispatchEscapeToGame, startCountdown, endSession]);
+  }, [scenarioId, isChallenge, challengeDbId, scenarioTitle, isSubmitting, startCountdown, endSession]);
 
   // ── Keyboard shortcuts ─────────────────────────────────────────
   useEffect(() => {
@@ -299,19 +291,18 @@ export default function GamePage() {
       if (countdownValue !== null) return;
 
       if (!isPaused) {
-        dispatchEscapeToGame();
         setIsPaused(true);
         return;
       }
 
       startCountdown(() => {
-        dispatchEscapeToGame();
+        // startCountdown automatically resumes the game when done
       });
     };
 
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [clearCountdownTimer, countdownValue, dispatchEscapeToGame, isPaused, scenarioId, startCountdown]);
+  }, [clearCountdownTimer, countdownValue, isPaused, scenarioId, startCountdown]);
 
   // ── Tutorial events ────────────────────────────────────────────
   useEffect(() => {
@@ -341,17 +332,14 @@ export default function GamePage() {
   // ── Actions ────────────────────────────────────────────────────
   const resumeGame = () => {
     if (!isPaused || countdownValue !== null) return;
-    startCountdown(() => dispatchEscapeToGame());
+    startCountdown(() => {});
   };
 
   const restartGame = () => {
     sessionStartedRef.current = false;
     sessionEndedRef.current = false;
     window.dispatchEvent(new CustomEvent("rldart:restart"));
-    dispatchEscapeToGame();
-    startCountdown(() => {
-      dispatchEscapeToGame();
-    });
+    startCountdown(() => {});
   };
 
   const combinedChallengeConfig = useMemo(
@@ -436,6 +424,7 @@ export default function GamePage() {
           onModeStateChange={onModeStateChange}
           challengeConfig={scenarioId === "freeplay" ? freeplayConfig : combinedChallengeConfig}
           darkMode={darkMode}
+          isPaused={isPaused}
           modeName={
             scenarioId === "tutorial" ? "Tutorial" : scenarioId === "freeplay" ? "Freeplay" : "Challenge"
           }

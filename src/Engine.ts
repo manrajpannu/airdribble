@@ -405,6 +405,28 @@ export class Engine extends THREE.Group {
     this._emitModeState();
   }
 
+  pauseGameplay(): void {
+    if (this.currentMode) {
+      if (typeof (this.currentMode as any).pause === 'function') {
+        (this.currentMode as any).pause();
+      } else {
+        this.currentMode.active = false;
+        (this.currentMode as any)._paused = true;
+      }
+    }
+  }
+
+  resumeGameplay(): void {
+    if (this.currentMode) {
+      if (typeof (this.currentMode as any).resume === 'function') {
+        (this.currentMode as any).resume();
+      } else {
+        this.currentMode.active = true;
+        (this.currentMode as any)._paused = false;
+      }
+    }
+  }
+
   getModeState(): ModeState {
     return buildModeState(this.currentMode, this.car);
   }

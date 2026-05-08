@@ -13,6 +13,7 @@ type GameClientProps = {
   challengeConfig?: any;
   darkMode?: boolean;
   modeName?: string;
+  isPaused?: boolean;
 };
 
 export const GameClient = memo(({
@@ -21,6 +22,7 @@ export const GameClient = memo(({
   challengeConfig,
   darkMode = false,
   modeName = "Challenge",
+  isPaused = false,
 }: GameClientProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const engineRef = useRef<any>(null);
@@ -91,6 +93,17 @@ export const GameClient = memo(({
       engineRef.current.setModeByName(modeName, challengeConfig);
     }
   }, [challengeConfig, modeName]);
+
+  // Sync external pause state
+  useEffect(() => {
+    if (engineRef.current) {
+      if (isPaused) {
+        engineRef.current.pauseGameplay?.();
+      } else {
+        engineRef.current.resumeGameplay?.();
+      }
+    }
+  }, [isPaused]);
 
   return (
     <div

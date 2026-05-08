@@ -149,31 +149,36 @@ class ChallengeMode extends FreeplayMode {
         return dt;
     }
 
+    pause() {
+        if (!this.active) return;
+        this.active = false;
+        this._paused = true;
+        if (this._car && typeof this._car.setNeutralState === 'function') {
+            this._car.setNeutralState();
+        }
+    }
+
+    resume() {
+        if (!this._paused) return;
+        this._paused = false;
+        this.active = true;
+    }
+
     _bindPauseHotkey() {
         if (typeof window === 'undefined' || this._keydownHandler) return;
         this._keydownHandler = (event) => {
             if (event.code !== 'Escape' || this._completed) return;
             event.preventDefault();
             if (this.active) {
-                this.active = false;
-                this._paused = true;
-                if (this._car && typeof this._car.setNeutralState === 'function') {
-                    this._car.setNeutralState();
-                }
+                this.pause();
                 return;
             }
 
             if (this._paused) {
-                this._resumeFromPause();
+                this.resume();
             }
         };
         window.addEventListener('keydown', this._keydownHandler);
-    }
-
-    _resumeFromPause() {
-        if (!this._paused) return;
-        this._paused = false;
-        this.active = true;
     }
 
     _unbindPauseHotkey() {
