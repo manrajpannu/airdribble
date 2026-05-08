@@ -1,7 +1,8 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useMe } from "@/hooks/use-api";
+import { useRouter, usePathname } from "next/navigation";
+import { useEffect, type ReactNode } from "react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { AppFooter } from "@/components/app-footer";
@@ -16,7 +17,18 @@ type AppShellProps = {
 
 export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { data: user, isLoading } = useMe();
+  
   const isGameRoute = pathname.includes("/game/");
+  const isTutorial = pathname.includes("/game/tutorial");
+
+  // Onboarding: Redirect new users to tutorial
+  useEffect(() => {
+    if (!isLoading && user && user.games_played === 0 && !isTutorial) {
+      router.push("/app/game/tutorial");
+    }
+  }, [user, isLoading, isTutorial, router]);
 
   if (isGameRoute) {
     return (

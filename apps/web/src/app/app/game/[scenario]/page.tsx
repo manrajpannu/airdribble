@@ -8,6 +8,7 @@ import GameClient from "@/components/game-client";
 import GameOverlay from "@/components/game-overlay";
 import { SettingsDialog } from "@/components/settings/SettingsDialog";
 import { useChallenge, useEndSession, useUserBestScore, useMe, useCreateGuestUser, useStartSession } from "@/hooks/use-api";
+import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -314,24 +315,26 @@ export default function GamePage() {
 
   // ── Tutorial events ────────────────────────────────────────────
   useEffect(() => {
-    const onTutorialComplete = () => {
+    const onTutorialComplete = async () => {
+      // Save the session to increment games_played
+      try {
+        await api.endSession({ score: 0, shots: 0, kills: 0 });
+      } catch (err) {
+        console.error("Failed to end tutorial session:", err);
+      }
+      
       setShowTutorialComplete(true);
-      setTimeout(() => router.push("/app/play"), 2000);
+      setTimeout(() => router.push("/app/play"), 3000);
     };
+    
     window.addEventListener("tutorial-complete", onTutorialComplete);
-    return () => window.removeEventListener("tutorial-complete", onTutorialComplete);
-  }, [router]);
-
-  useEffect(() => {
-    const onTutorialComplete = () => {
-      window.dispatchEvent(new CustomEvent("rldart:restart"));
-      setIsPaused(true);
-      dispatchEscapeToGame();
-      startCountdown(() => dispatchEscapeToGame());
-    };
     window.addEventListener("rldart:tutorial-complete", onTutorialComplete);
-    return () => window.removeEventListener("rldart:tutorial-complete", onTutorialComplete);
-  }, [dispatchEscapeToGame, startCountdown]);
+    
+    return () => {
+      window.removeEventListener("tutorial-complete", onTutorialComplete);
+      window.removeEventListener("rldart:tutorial-complete", onTutorialComplete);
+    };
+  }, [router]);
 
   useEffect(() => () => clearCountdownTimer(), [clearCountdownTimer]);
 
