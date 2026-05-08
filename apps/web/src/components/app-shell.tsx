@@ -25,7 +25,12 @@ export default function AppShell({ children }: AppShellProps) {
 
   // Onboarding: Redirect new users to tutorial
   useEffect(() => {
-    if (!isLoading && user && user.games_played === 0 && !isTutorial) {
+    if (typeof window === "undefined") return;
+    
+    const tutorialCompleted = localStorage.getItem("airdribble-tutorial-completed");
+    
+    // Redirect if user exists but hasn't done tutorial (and isn't currently in it)
+    if (!isLoading && user && !tutorialCompleted && !isTutorial) {
       router.push("/app/game/tutorial");
     }
   }, [user, isLoading, isTutorial, router]);

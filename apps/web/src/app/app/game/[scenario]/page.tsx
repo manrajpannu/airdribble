@@ -307,12 +307,8 @@ export default function GamePage() {
   // ── Tutorial events ────────────────────────────────────────────
   useEffect(() => {
     const onTutorialComplete = async () => {
-      // Save the session to increment games_played
-      try {
-        await api.endSession({ score: 0, shots: 0, kills: 0 });
-      } catch (err) {
-        console.error("Failed to end tutorial session:", err);
-      }
+      // Mark as completed in local storage
+      localStorage.setItem("airdribble-tutorial-completed", "true");
       
       setShowTutorialComplete(true);
       setTimeout(() => router.push("/app/play"), 3000);
@@ -439,7 +435,10 @@ export default function GamePage() {
         <div className="absolute bottom-12 right-12 z-20000">
           <button
             className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold uppercase tracking-wider rounded-xl backdrop-blur-md transition-all active:scale-95"
-            onClick={() => router.push("/app/play")}
+            onClick={() => {
+              localStorage.setItem("airdribble-tutorial-completed", "true");
+              router.push("/app/play");
+            }}
           >
             Skip Tutorial
           </button>
