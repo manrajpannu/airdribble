@@ -26,34 +26,71 @@ export function ControlSettings({ settings }: { settings: AppSettings }) {
       setBindingTarget(null);
     };
 
-    const pollGamepad = () => {
-      const gamepads = navigator.getGamepads();
-      const gp = gamepads[0];
-      if (gp) {
-        // Poll Buttons
-        gp.buttons.forEach((btn, index) => {
-          if (btn.pressed || btn.value > 0.5) {
-            updateBinding(bindingTarget.action, bindingTarget.slot, { button: index });
-            setBindingTarget(null);
-          }
-        });
+    const startTime = Date.now();
+    const initialAxes: number[][] = [];
+    const initialButtons: boolean[][] = [];
 
-        // Poll Axes (Sticks)
-        gp.axes.forEach((val, index) => {
-          if (Math.abs(val) > 0.6) {
-            const direction = val > 0 ? 1 : -1;
-            updateBinding(bindingTarget.action, bindingTarget.slot, { axis: index, axisDirection: direction });
-            setBindingTarget(null);
-          }
-        });
+    // Capture initial state to avoid instant-binding already-active inputs
+    const gamepads = navigator.getGamepads();
+    for (let i = 0; i < gamepads.length; i++) {
+      const gp = gamepads[i];
+      if (gp) {
+        initialAxes[i] = [...gp.axes];
+        initialButtons[i] = gp.buttons.map(b => b.pressed || b.value > 0.5);
       }
-      if (bindingTarget) requestAnimationFrame(pollGamepad);
+    }
+
+    let rafId: number;
+    const pollGamepad = () => {
+      // Ignore all inputs for the first 100ms to prevent accidental double-clicks from mouse/keyboard
+      if (Date.now() - startTime < 100) {
+        rafId = requestAnimationFrame(pollGamepad);
+        return;
+      }
+
+      const gamepads = navigator.getGamepads();
+      for (let i = 0; i < gamepads.length; i++) {
+        const gp = gamepads[i];
+        if (!gp) continue;
+
+        const initAxes = initialAxes[i] || [];
+        const initButtons = initialButtons[i] || [];
+
+        // Poll Buttons
+        for (let bIndex = 0; bIndex < gp.buttons.length; bIndex++) {
+          const btn = gp.buttons[bIndex];
+          const isPressed = btn.pressed || btn.value > 0.5;
+          const wasPressed = initButtons[bIndex];
+
+          // Trigger only on NEW press
+          if (isPressed && !wasPressed) {
+            updateBinding(bindingTarget.action, bindingTarget.slot, { button: bIndex });
+            setBindingTarget(null);
+            return;
+          }
+        }
+
+        // Poll Axes (Sticks/Triggers)
+        for (let aIndex = 0; aIndex < gp.axes.length; aIndex++) {
+          const val = gp.axes[aIndex];
+          const initVal = initAxes[aIndex] ?? 0;
+          
+          // Trigger if the axis has moved significantly from its starting position
+          if (Math.abs(val) > 0.75 && Math.abs(val - initVal) > 0.4) {
+            const direction = val > 0 ? 1 : -1;
+            updateBinding(bindingTarget.action, bindingTarget.slot, { axis: aIndex, axisDirection: direction });
+            setBindingTarget(null);
+            return;
+          }
+        }
+      }
+      rafId = requestAnimationFrame(pollGamepad);
     };
 
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("mousedown", handleMouseDown);
     window.addEventListener("contextmenu", (e) => e.preventDefault());
-    const rafId = requestAnimationFrame(pollGamepad);
+    rafId = requestAnimationFrame(pollGamepad);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
