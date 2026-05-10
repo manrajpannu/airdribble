@@ -8,13 +8,9 @@ Master your aerial mechanics, visualize your rotations, and perfect your ball co
 [![Reddit Discussion](https://img.shields.io/badge/Community-Reddit-FF4500?style=for-the-badge&logo=reddit)](https://www.reddit.com/r/RocketLeagueSchool/comments/1ovdu2o/directional_air_roll_visualized_in_real_time/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
----
 
-## 📽️ Demo
-
-<div align="center">
-  <video src="https://raw.githubusercontent.com/manrajpannu/airdribble/a2bcd02cbc8db8a132f1a3b4d0761cdbb594e361/public/videos/demo/airdribble-demo-low.mp4" width="100%" controls autoplay muted loop></video>
-</div>
+Demo:
+https://raw.githubusercontent.com/manrajpannu/airdribble/a2bcd02cbc8db8a132f1a3b4d0761cdbb594e361/public/videos/demo/airdribble-demo-low.mp4
 
 ---
 
