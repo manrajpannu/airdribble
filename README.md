@@ -13,7 +13,7 @@ Master your aerial mechanics, visualize your rotations, and perfect your ball co
 ## 📽️ Demo
 
 <div align="center">
-  <video src="https://github.com/manrajpannu/airdribble/raw/main/public/videos/demo/airdribble-demo-low.mp4" width="100%" controls autoplay muted loop></video>
+  <video src="https://raw.githubusercontent.com/manrajpannu/airdribble/a2bcd02cbc8db8a132f1a3b4d0761cdbb594e361/public/videos/demo/airdribble-demo-low.mp4" width="100%" controls autoplay muted loop></video>
 </div>
 
 ---
