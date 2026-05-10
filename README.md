@@ -2,7 +2,7 @@
 
 **A Rocket League aim training platform.**
 
-Master your aerial mechanics, visualize your rotations, and perfect your ball control with a professional-grade simulation engine built for the community.
+Master your aerial mechanics, visualize your rotations, and perfect your ball control with a simulation engine built for the community.
 
 [![Live App](https://img.shields.io/badge/Live-airdribble.net-blue?style=for-the-badge&logo=vercel)](https://airdribble.net)
 [![Reddit Discussion](https://img.shields.io/badge/Community-Reddit-FF4500?style=for-the-badge&logo=reddit)](https://www.reddit.com/r/RocketLeagueSchool/comments/1ovdu2o/directional_air_roll_visualized_in_real_time/)
