@@ -13,19 +13,16 @@ Master your aerial mechanics, visualize your rotations, and perfect your ball co
 ## 📽️ Demo
 
 <div align="center">
-  <video src="public/videos/demo/airdribble-demo.mp4" width="100%" controls autoplay muted loop style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"></video>
+  <video src="https://github.com/manrajpannu/airdribble/raw/main/public/videos/demo/airdribble-demo.mp4" width="100%" controls autoplay muted loop></video>
 </div>
 
 ---
 
 ## ✨ Key Features
 
-- **🎯 Real-time 3D Simulation**: High-fidelity car and ball physics powered by Three.js.
-- **🔄 Mechanics Visualization**: Real-time display of rotation axes, forward vectors, and helper donuts to demystify directional air roll.
-- **🎮 Precision Controls**: Full support for Keyboard and Gamepad (Xbox/PlayStation) with low-latency input handling.
-- **🏆 Training Modes**:
-    - **Freeplay**: Endless practice with score tracking and instant resets.
-    - **Challenge Mode**: Add pressure with countdowns and time limits to test your consistency.
+- **Competitive Scenarios**: Play diverse training scenarios, track your performance with real-time scoring, and compete on the global leaderboards.
+- **Real-time 3D Simulation**: High-fidelity car and ball physics powered by Three.js, featuring advanced visualization of rotation axes and mechanics.
+- **Universal Input Support**: Full support for Keyboard & Mouse and Gamepad (Xbox/PlayStation) with low-latency input handling.
 
 ---
 
@@ -41,16 +38,6 @@ Airdribble is built with a modern, high-performance stack designed for responsiv
 | **Backend** | [Go (Golang)](https://go.dev/) |
 | **Database** | [Turso](https://turso.tech/) (SQLite) |
 | **Deployment** | [Vercel](https://vercel.com/) |
-
----
-
-## 🏗️ Architecture Overview
-
-The core simulation uses a **fixed-step physics engine** to ensure consistent behavior across different hardware and frame rates.
-
-- **Fixed Timestep**: The engine runs at `1/136s` (FIXED_DT), separating simulation stability from monitor refresh rate.
-- **Ray-Based Hit Detection**: Precision ball interactions using directional rays and DPS-limited damage systems.
-- **Modular Design**: Orchestrated by [src/Engine.js](src/Engine.js), connecting the [Controller](src/Controller.js), [Car](src/Car/Car.js), and [BallManager](src/Ball/BallManager.js).
 
 
 ## 💬 Community & Feedback
