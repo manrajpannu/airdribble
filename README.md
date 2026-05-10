@@ -1,180 +1,76 @@
-# airdribble
+# <img src="public/logos/logo-white.png" />
 
-A Rocket League aim training platform. This project helps players practice and visualize mechanics, featuring a customizable car model, ball, and camera system.
+**A Rocket League aim training platform.**
 
-[Live demo](https://manrajpannu.github.io/airdribble/)
+Master your aerial mechanics, visualize your rotations, and perfect your ball control with a professional-grade simulation engine built for the community.
 
-https://github.com/user-attachments/assets/6278cd9b-d782-4125-8ba6-1a806838323a
+[![Live App](https://img.shields.io/badge/Live-airdribble.net-blue?style=for-the-badge&logo=vercel)](https://airdribble.net)
+[![Reddit Discussion](https://img.shields.io/badge/Community-Reddit-FF4500?style=for-the-badge&logo=reddit)](https://www.reddit.com/r/RocketLeagueSchool/comments/1ovdu2o/directional_air_roll_visualized_in_real_time/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-## Features
-- Real-time 3D visualization of car and ball using Three.js
-- Directional air roll and rotation physics simulation
-- Customizable car models (Octane, Fennec, Dominus, Lambo, Ball)
-- Interactive camera controls and presets (ball cam, FOV, distance, height)
-- lil-gui panel for live tweaking of physics, visuals, and camera
-- Switch between rotation presets and car bodies instantly
-- Visualize axis of rotation, forward direction, and helper torus
-- Keyboard and controller support for all controls
-- Adjustable game speed, drag coefficients, and rotation limits
-- Ball chase, hit window, and timeout logic for realistic training
+---
 
-## Architecture Overview
+## 📽️ Demo
 
-The app uses a fixed-step simulation driven by the render loop in [src/main.js](src/main.js):
+<div align="center">
+  <video src="public/videos/demo/airdribble-demo.mp4" width="100%" controls autoplay muted loop style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"></video>
+</div>
 
-1. Frame time is measured and scaled by `physics.world.gameSpeed`.
-2. Time is accumulated into an accumulator.
-3. The engine is updated in fixed `FIXED_DT` steps (`1 / 136`) while enough time is available.
-4. The scene is rendered once per browser frame.
+---
 
-This separates simulation stability from monitor refresh rate and keeps control/physics behavior consistent.
+## ✨ Key Features
 
-Core runtime orchestration lives in [src/Engine.js](src/Engine.js). Per fixed update it:
+- **🎯 Real-time 3D Simulation**: High-fidelity car and ball physics powered by Three.js.
+- **🔄 Mechanics Visualization**: Real-time display of rotation axes, forward vectors, and helper donuts to demystify directional air roll.
+- **🎮 Precision Controls**: Full support for Keyboard and Gamepad (Xbox/PlayStation) with low-latency input handling.
+- **🏆 Training Modes**:
+    - **Freeplay**: Endless practice with score tracking and instant resets.
+    - **Challenge Mode**: Add pressure with countdowns and time limits to test your consistency.
 
-1. Reads normalized controls from [src/Controller.js](src/Controller.js).
-2. Updates ball interactions through [src/Ball/BallManager.js](src/Ball/BallManager.js).
-3. Applies car rotation/boost in [src/Car/Car.js](src/Car/Car.js).
-4. Updates camera target and smoothing.
-5. Advances active mode logic (`Freeplay` or `Challenge`).
+---
 
-## Gameplay Mechanics
+## 🛠️ Tech Stack
 
-### Ball Targeting and Damage
+Airdribble is built with a modern, high-performance stack designed for responsiveness and scalability.
 
-Ball hit detection is ray-based. The car provides a forward ray and the ball system computes intersections each fixed update.
+| Layer | Technology |
+|---|---|
+| **Frontend** | [Next.js 15+](https://nextjs.org/), [React 19](https://react.dev/), [TypeScript](https://www.typescriptlang.org/) |
+| **3D Rendering** | [Three.js](https://threejs.org/) |
+| **Styling** | [Tailwind CSS v4](https://tailwindcss.com/), [Shadcn UI](https://ui.shadcn.com/) |
+| **Backend** | [Go (Golang)](https://go.dev/) |
+| **Database** | [Turso](https://turso.tech/) (SQLite) |
+| **Deployment** | [Vercel](https://vercel.com/) |
 
-Important rule: only the first ball intersected by the ray can be damaged in that frame.
+---
 
-- [src/Ball/BallManager.js](src/Ball/BallManager.js) finds the nearest intersection (`findFirstIntersectedBall`) and passes a hit gate into each ball update.
-- [src/Ball/Ball.js](src/Ball/Ball.js) respects that gate (`canBeHit`) so non-front balls are ignored for damage even if they are also intersected.
+## 🏗️ Architecture Overview
 
-### Health, Hit Rate, and Respawn
+The core simulation uses a **fixed-step physics engine** to ensure consistent behavior across different hardware and frame rates.
 
-- Balls can have health (`maxHealth`, current `health`, `damageAmount`).
-- Damage is rate-limited per ball using DPS timing (`hitAccumulator`).
-- When health reaches zero, kill events are emitted and the ball is respawned/reset.
+- **Fixed Timestep**: The engine runs at `1/136s` (FIXED_DT), separating simulation stability from monitor refresh rate.
+- **Ray-Based Hit Detection**: Precision ball interactions using directional rays and DPS-limited damage systems.
+- **Modular Design**: Orchestrated by [src/Engine.js](src/Engine.js), connecting the [Controller](src/Controller.js), [Car](src/Car/Car.js), and [BallManager](src/Ball/BallManager.js).
 
-### Modes
 
-- Freeplay ([src/modes/Freeplay.js](src/modes/Freeplay.js)): endless training with score counters.
-- Challenge ([src/modes/ChallengeMode.js](src/modes/ChallengeMode.js)): adds countdown + time limit on top of freeplay behavior.
-- Base mode contract is in [src/modes/Mode.js](src/modes/Mode.js) (`start`, `update`, `stop`).
+## 💬 Community & Feedback
 
-### Tuning
+> *"The single most incredible thing I've seen RL related in such a long time."*
+> — **r/RocketLeagueSchool User**
 
-Gameplay and camera tuning are centralized in [src/physicsConfig.js](src/physicsConfig.js):
+Airdribble was born out of a desire to provide better visualization for complex aerial mechanics. The project has received overwhelming support from the Rocket League community for helping players bridge the gap between "feel" and "physics."
 
-- `physics.car`: rotation speed, drag, max speed, helper scale
-- `physics.camera`: FOV and chase camera framing
-- `physics.ball`: trainer targeting/chase settings
-- `physics.world`: global simulation speed
+Read the full discussion [here](https://www.reddit.com/r/RocketLeagueSchool/comments/1ovdu2o/directional_air_roll_visualized_in_real_time/).
 
-## UI Features & Controls
+---
 
-The lil-gui panel (top-right) provides live controls for the following features:
+## 📜 Credits & Licenses
 
-| Feature                | Description |
-|------------------------|-------------|
-| **Game Speed**         | Adjusts the speed of the physics simulation. |
-| **Show Forward Axis**  | Toggles a line showing the car's forward direction. |
-| **Show Axis of Rotation** | Displays the current axis of rotation for the car. |
-| **Show Helper Donut**  | Shows a torus visualizing the axis of rotation. |
-| **Car Body**           | Switches between available car models (e.g., Octane, Fennec). |
-| **Rotation Preset**    | Selects between rotation behavior presets (e.g., default, snappy). |
-| **Rotation Speed**     | Sets the car's rotation speed. |
-| **Air Drag Coefficient** | Adjusts rotational drag (higher = slower rotation decay). |
-| **Max Rotation Speed** | Limits the maximum rotation speed. |
-| **Ball Scale**         | Changes the size of the ball. |
-| **Hit Window Duration**| Sets the time window for ball hit detection. |
-| **Timeout**            | Enables/disables ball timeout logic. |
-| **Chase Timeout**      | Sets the chase timeout duration for the ball. |
-| **Ball Camera**        | Toggles camera to follow the ball or car. |
-| **Field of View**      | Adjusts camera FOV. |
-| **Distance**           | Sets camera distance from the car. |
-| **Height**             | Sets camera height above the car. |
+This project uses professional 3D models from Sketchfab, licensed under [CC-BY-4.0](http://creativecommons.org/licenses/by/4.0/):
+- **Octane, Fennec, Dominus, & Ball** by [Jako](https://sketchfab.com/fairlight51).
 
-You can interact with these controls to customize the simulation and visualization in real time.
+---
 
-## Controls
+## ⚖️ License
+MIT © [Manraj Pannu](https://github.com/manrajpannu)
 
-### Keyboard
-- W/S: Pitch (up/down)
-- A/D: Yaw (left/right)
-- Q: Air roll left
-- E: Air roll right
-
-### Controller
-- Left joystick: Yaw (left/right) and Pitch (up/down)
-- X: Air roll left
-- Y: Air roll right
-
-## Community Discussion & Feedback
-
-This project received a lot of positive feedback from the Rocket League community on Reddit:
-- Shared on [r/RocketLeagueSchool](https://www.reddit.com/r/RocketLeagueSchool/comments/1ovdu2o/directional_air_roll_visualized_in_real_time/), the tool was praised for its usefulness in visualizing and practicing directional air roll in real time.
-- Many users described it as "the single most incredible thing I've seen RL related in such a long time" and "amazing work."
-
-Read the full discussion and feedback [here](https://www.reddit.com/r/RocketLeagueSchool/comments/1ovdu2o/directional_air_roll_visualized_in_real_time/).
-
-## Getting Started
-
-### Prerequisites
-- Node.js (v16 or newer recommended)
-- npm (comes with Node.js)
-
-### Installation
-1. Clone the repository:
-   ```sh
-   git clone https://github.com/manrajpannu/airdribble.git
-   cd airdribble
-   ```
-2. Install dependencies:
-   ```sh
-   npm install
-   ```
-
-### Running Locally
-Start the development server:
-```sh
-npx vite
-```
-Open your browser to [http://localhost:3000](http://localhost:3000) (or the port shown in your terminal).
-
-## Project Structure
-```
-airdribble/
-├── index.html
-├── styles.css
-├── src/
-│   ├── main.js
-│   ├── Car.js
-│   ├── Ball.js
-│   ├── Map.js
-│   ├── Ui.js
-│   └── ...
-├── public/
-│   └── models/
-│       └── octane/
-│           └── ...
-├── package.json
-└── README.md
-```
-
-## 3D Model Asset Licenses & Credits
-
-This project uses several 3D models from Sketchfab. Please see below for license and credit information for each asset:
-
-### Octane - Rocket League Car
-This work is based on "Octane - Rocket League Car" (https://sketchfab.com/3d-models/octane-rocket-league-car-9910f0a5d158425bbc7deb60c7a81f69) by Jako (https://sketchfab.com/fairlight51) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
-
-### Fennec - Rocket League Car
-This work is based on "Fennec - Rocket League Car" (https://sketchfab.com/3d-models/fennec-rocket-league-car-5b43b50b6eeb4a12a29671df3418f57a) by Jako (https://sketchfab.com/fairlight51) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
-
-### Dominus - Rocket League Car
-This work is based on "Dominus - Rocket League Car" (https://sketchfab.com/3d-models/dominus-rocket-league-car-f592f249a65f41cd81a0e5aa3d418cb2) by Jako (https://sketchfab.com/fairlight51) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
-
-### Ball - Rocket League
-This work is based on "Ball - Rocket League" (https://sketchfab.com/3d-models/ball-rocket-league-2c8911aa1dcd4c53bad842f2d354dfe2) by Jako (https://sketchfab.com/fairlight51) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
-
-## License
-MIT
