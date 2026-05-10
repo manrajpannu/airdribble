@@ -9,12 +9,12 @@ Master your aerial mechanics, visualize your rotations, and perfect your ball co
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
 
-Demo:
+## Demo
 https://raw.githubusercontent.com/manrajpannu/airdribble/a2bcd02cbc8db8a132f1a3b4d0761cdbb594e361/public/videos/demo/airdribble-demo-low.mp4
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 - **Competitive Scenarios**: Play diverse training scenarios, track your performance with real-time scoring, and compete on the global leaderboards.
 - **Real-time 3D Simulation**: High-fidelity car and ball physics powered by Three.js, featuring advanced visualization of rotation axes and mechanics.
@@ -22,7 +22,7 @@ https://raw.githubusercontent.com/manrajpannu/airdribble/a2bcd02cbc8db8a132f1a3b
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 Airdribble is built with a modern, high-performance stack designed for responsiveness and scalability.
 
@@ -36,7 +36,7 @@ Airdribble is built with a modern, high-performance stack designed for responsiv
 | **Deployment** | [Vercel](https://vercel.com/) |
 
 
-## 💬 Community & Feedback
+## Community & Feedback
 
 > *"The single most incredible thing I've seen RL related in such a long time."*
 > — **r/RocketLeagueSchool User**
@@ -47,13 +47,13 @@ Read the full discussion [here](https://www.reddit.com/r/RocketLeagueSchool/comm
 
 ---
 
-## 📜 Credits & Licenses
+## Credits & Licenses
 
 This project uses professional 3D models from Sketchfab, licensed under [CC-BY-4.0](http://creativecommons.org/licenses/by/4.0/):
 - **Octane, Fennec, Dominus, & Ball** by [Jako](https://sketchfab.com/fairlight51).
 
 ---
 
-## ⚖️ License
+## License
 MIT © [Manraj Pannu](https://github.com/manrajpannu)
 
